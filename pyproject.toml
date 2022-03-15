@@ -1,0 +1,39 @@
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+extend-exclude = '''
+/(
+    \.git
+  | \.venv
+  | build
+  | dist
+)/
+'''
+
+[tool.isort]
+profile = "black"
+skip_gitignore = true
+
+[tool.poetry]
+name = "cairo-horus"
+version = "0.0.1"
+authors = ["Nethermind <hello@nethermind.io>"]
+description = "Use formally verified annotations in your Cairo code"
+classifiers = [
+    "Programming Language :: Python :: 3.7",
+    "License :: OSI Approved :: Apache Software License",
+    ]
+packages = [ { include = "horus", from = "src" } ]
+
+[tool.poetry.scripts]
+horus-test = "horus.test:run"
+
+[tool.poetry.dependencies]
+python = ">=3.7"
+cairo-lang = "0.8.0"
+
+[tool.poetry.dev-dependencies]
+isort = "*"
+black = "*"

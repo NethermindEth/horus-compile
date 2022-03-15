@@ -1,0 +1,452 @@
+# Horus-Compile
+
+```
+Horus-Compile is a component of Horus, a SMT-checker-based formal verification tool.
+
+Copyright (C) 2023 Nethermind
+
+Cairo Toolchain License (Source Available)
+
+This license contains the terms and conditions under which Demerzel Solutions Ltd ("Nethermind") makes available its Horus-Compile Tool ("Horus-Compile"). Your use of Horus-Compile is subject to these terms and conditions.
+
+Nethermind grants you ("Licensee") a license to use Horus-Compile, only for the purpose of developing and compiling Cairo programs. Licensee's other use of Horus-Compile is limited to non-commercial use, which means academic,
+scientific, or research use, or evaluating the Cairo language and Toolchain.
+
+Nethermind grants Licensee a license to modify Horus-Compile, only as
+necessary to fix errors. Licensee may, but is not obligated to, provide
+any of Licensee's modifications to Nethermind. This license grants Licensee no
+right to distribute Horus-Compile or make copies of Horus-Compile available
+to others.
+
+These terms do not allow Licensee to sublicense or transfer any of Licensee's
+rights to anyone else. These terms do not imply any other licenses not
+expressly granted in this license.
+
+If Licensee violates any of these terms, or uses Horus-Compile in a way not
+authorized under this license, the license granted to Licensee ends immediately.
+If Licensee makes, or authorizes any other person to make, any written claim
+that Horus-Compile infringes or contributes to infringement of any patent, all
+rights granted to Licensee under this license end immediately.
+
+As far as the law allows, Horus-Compile is provided AS IS, without any warranty or condition, and Nethermind will not be liable to Licensee for any damages
+arising out of these terms or the use or nature of Horus-Compile, under any kind of legal claim.
+
+If you would like to contact us in respect of this licence, please use the following email address: legalnotices@nethermind.io .
+```
+
+****************LICENCE - DEPENDENCIES****************
+
+Horus-Compile incorporates and modifies **cairo-lang**, pursuant to an exception granted to Nethermind by Starkware Industries Ltd. As a result, Horus-Compile has been released under the terms of the Cairo Toolchain License.
+
+**Horus-Compile is a component of Horus, a SMT-checker-based formal verification tool.**
+
+**Copyright 2023 Nethermind; Licensed under the Cairo Toolchain License**
+
+**This product includes dependencies released under separate licenses and copyright ownership.**
+
+**All relevant licenses and copyright notices of the dependencies are listed below:**
+
+**************cairo-lang**************
+
+[https://github.com/starkware-libs/cairo-lang](https://github.com/starkware-libs/cairo-lang)
+
+```
+Cairo Toolchain License (Source Available)
+
+Version 1.1 dated January 18, 2022
+
+This license contains the terms and conditions under which StarkWare
+Industries, Ltd ("StarkWare") makes available its Cairo Toolchain
+("Toolchain"). Your use of the Toolchain is subject to these terms and
+conditions.
+
+StarkWare grants you ("Licensee") a license to use the Toolchain, only
+for the purpose of developing and compiling Cairo programs. Licensee's other
+use of the Toolchain is limited to non-commercial use, which means academic,
+scientific, or research use, or evaluating the Cairo language and Toolchain.
+
+StarkWare grants Licensee a license to modify the Toolchain, only as
+necessary to fix errors. Licensee may, but is not obligated to, provide
+any of Licensee's modifications to StarkWare. This license grants Licensee no
+right to distribute the Toolchain or make copies of the Toolchain available
+to others.
+
+These terms do not allow Licensee to sublicense or transfer any of Licensee's
+rights to anyone else. These terms do not imply any other licenses not
+expressly granted in this license.
+
+If Licensee violates any of these terms, or uses the Toolchain in a way not
+authorized under this license, the license granted to Licensee ends immediately.
+If Licensee makes, or authorizes any other person to make, any written claim
+that the Toolchain infringes or contributes to infringement of any patent, all
+rights granted to Licensee under this license end immediately.
+
+As far as the law allows, the Toolchain is provided AS IS, without any warranty
+or condition, and StarkWare will not be liable to Licensee for any damages
+arising out of these terms or the use or nature of the Toolchain, under any kind
+of legal claim.
+```
+
+************************marshmallow-dataclass************************
+
+[https://pypi.org/project/marshmallow-dataclass/](https://pypi.org/project/marshmallow-dataclass/)
+
+```
+MIT License
+
+Copyright (c) 2019 Ophir LOJKINE
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```
+
+********************eth-utils********************
+
+[https://pypi.org/project/eth-utils/1.1.2/](https://pypi.org/project/eth-utils/1.1.2/)
+
+```
+The MIT License (MIT)
+
+Copyright (c) 2020 The Ethereum Foundation
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```
+
+********************marshmallow********************
+
+[https://pypi.org/project/marshmallow/](https://pypi.org/project/marshmallow/)
+
+```
+Copyright 2021 Steven Loria and contributors
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+```
+
+****z3 solver****
+
+[https://pypi.org/project/z3-solver/](https://pypi.org/project/z3-solver/)
+
+```
+Z3
+Copyright (c) Microsoft Corporation
+All rights reserved. 
+MIT License
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE
+```
+
+********lark********
+
+[https://pypi.org/project/lark/](https://pypi.org/project/lark/)
+
+```
+Copyright © 2017 Erez Shinan
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+the Software, and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE AUTHORS OR
+COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+```
+
+********************python 3.7********************
+
+[https://www.python.org/](https://www.python.org/)
+
+```
+1. This LICENSE AGREEMENT is between the Python Software Foundation ("PSF"), and
+   the Individual or Organization ("Licensee") accessing and otherwise using Python
+   3.7.14 software in source or binary form and its associated documentation.
+
+2. Subject to the terms and conditions of this License Agreement, PSF hereby
+   grants Licensee a nonexclusive, royalty-free, world-wide license to reproduce,
+   analyze, test, perform and/or display publicly, prepare derivative works,
+   distribute, and otherwise use Python 3.7.14 alone or in any derivative
+   version, provided, however, that PSF's License Agreement and PSF's notice of
+   copyright, i.e., "Copyright © 2001-2022 Python Software Foundation; All Rights
+   Reserved" are retained in Python 3.7.14 alone or in any derivative version
+   prepared by Licensee.
+
+3. In the event Licensee prepares a derivative work that is based on or
+   incorporates Python 3.7.14 or any part thereof, and wants to make the
+   derivative work available to others as provided herein, then Licensee hereby
+   agrees to include in any such work a brief summary of the changes made to Python
+   3.7.14.
+
+4. PSF is making Python 3.7.14 available to Licensee on an "AS IS" basis.
+   PSF MAKES NO REPRESENTATIONS OR WARRANTIES, EXPRESS OR IMPLIED.  BY WAY OF
+   EXAMPLE, BUT NOT LIMITATION, PSF MAKES NO AND DISCLAIMS ANY REPRESENTATION OR
+   WARRANTY OF MERCHANTABILITY OR FITNESS FOR ANY PARTICULAR PURPOSE OR THAT THE
+   USE OF PYTHON 3.7.14 WILL NOT INFRINGE ANY THIRD PARTY RIGHTS.
+
+5. PSF SHALL NOT BE LIABLE TO LICENSEE OR ANY OTHER USERS OF PYTHON 3.7.14
+   FOR ANY INCIDENTAL, SPECIAL, OR CONSEQUENTIAL DAMAGES OR LOSS AS A RESULT OF
+   MODIFYING, DISTRIBUTING, OR OTHERWISE USING PYTHON 3.7.14, OR ANY DERIVATIVE
+   THEREOF, EVEN IF ADVISED OF THE POSSIBILITY THEREOF.
+
+6. This License Agreement will automatically terminate upon a material breach of
+   its terms and conditions.
+
+7. Nothing in this License Agreement shall be deemed to create any relationship
+   of agency, partnership, or joint venture between PSF and Licensee.  This License
+   Agreement does not grant permission to use PSF trademarks or trade name in a
+   trademark sense to endorse or promote products or services of Licensee, or any
+   third party.
+
+8. By copying, installing or otherwise using Python 3.7.14, Licensee agrees
+   to be bound by the terms and conditions of this License Agreement.
+```
+
+**GHC**
+
+[https://www.haskell.org/ghc/](https://www.haskell.org/ghc/)
+
+```
+The Glasgow Haskell Compiler License
+
+Copyright 2004, The University Court of the University of Glasgow.
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+- Redistributions of source code must retain the above copyright notice,
+this list of conditions and the following disclaimer.
+
+- Redistributions in binary form must reproduce the above copyright notice,
+this list of conditions and the following disclaimer in the documentation
+and/or other materials provided with the distribution.
+
+- Neither name of the University nor the names of its contributors may be
+used to endorse or promote products derived from this software without
+specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE UNIVERSITY COURT OF THE UNIVERSITY OF
+GLASGOW AND THE CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND
+FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+UNIVERSITY COURT OF THE UNIVERSITY OF GLASGOW OR THE CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
+DAMAGE.
+```
+
+********************************************bats-core********************************************
+
+[https://github.com/bats-core/bats-core](https://github.com/bats-core/bats-core)
+
+```
+Copyright (c) 2017 bats-core contributors
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+bats-core is a continuation of bats. Copyright for portions of the bats-core project are held by Sam Stephenson, 2014 as part of the project bats, licensed under MIT:
+Copyright (c) 2014 Sam Stephenson
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+For details, please see the version control history.
+```
+
+********CVC5********
+
+[https://github.com/cvc5/cvc5](https://github.com/cvc5/cvc5)
+
+```
+cvc5 is copyright (C) 2009-2021 by its authors and contributors (see the file
+AUTHORS) and their institutional affiliations.  All rights reserved.
+
+The source code of cvc5 is open and available to students, researchers,
+software companies, and everyone else to study, to modify, and to redistribute
+original or modified versions; distribution is under the terms of the modified
+BSD license (reproduced below).  Please note that cvc5 can be configured
+(however, by default it is not) to link against some GPLed libraries, and
+therefore the use of these builds may be restricted in non-GPL-compatible
+projects.  See below for a discussion of CLN and GLPK (the two GPLed optional
+library dependences for cvc5), and how to ensure you have a build that doesn't
+link against GPLed libraries.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are
+met:
+
+1. Redistributions of source code must retain the above copyright
+   notice, this list of conditions and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright
+   notice, this list of conditions and the following disclaimer in the
+   documentation and/or other materials provided with the distribution.
+
+3. Neither the name of the copyright holder nor the names of its
+   contributors may be used to endorse or promote products derived from
+   this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT OWNERS AND CONTRIBUTORS
+''AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+OWNERS OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+-------------------------------------------------------------------------------
+ Third-Party Software
+-------------------------------------------------------------------------------
+
+The cvc5 source code includes third-party software which has its own copyright
+and licensing terms, as described below.
+
+The following file contains third-party software.
+
+  cmake/CodeCoverage.cmake
+
+The copyright and licensing information of this file is in its header.
+
+cvc5 incorporates MiniSat code (see src/prop/minisat and src/prop/bvminisat),
+excluded from the above copyright.  See src/prop/minisat/LICENSE and
+src/prop/bvminisat/LICENSE for copyright and licensing information.
+
+cvc5 incorporates code from ANTLR3 (http://www.antlr3.org/), the files
+src/parser/bounded_token_buffer.h, src/parser/bounded_token_buffer.cpp, and
+src/parser/antlr_input_imports.cpp are excluded from the above copyright.
+See licenses/antlr3-LICENSE for copyright and licensing information.
+
+cvc5 by default links against The GNU Multiple Precision (GMP) Arithmetic
+Library, which is licensed under GNU LGPL v3. See the file
+licenses/lgpl-3.0.txt for a copy of that license.  Note that according to the
+terms of the LGPL, both cvc5's source, and the combined work (cvc5 linked with
+GMP) may (and do) remain under the more permissive modified BSD license.
+
+The implementation of the floating point solver in cvc5 depends on symfpu
+(https://github.com/martin-cs/symfpu) written by Martin Brain.
+See https://raw.githubusercontent.com/martin-cs/symfpu/cvc5/LICENSE for
+copyright and licensing information.
+
+cvc5 optionally links against the following libraries:
+
+  ABC                (https://bitbucket.org/alanmi/abc)
+  CaDiCaL            (https://github.com/arminbiere/cadical)
+  CryptoMiniSat      (https://github.com/msoos/cryptominisat)
+  LibPoly            (https://github.com/SRI-CSL/libpoly)
+  libedit            (https://thrysoee.dk/editline)
+
+Linking cvc5 against these libraries does not affect the license terms of the
+cvc5 code.  See the respective projects for copyright and licensing
+information.
+
+-------------------------------------------------------------------------------
+ OPTIONAL GPLv3 libraries
+-------------------------------------------------------------------------------
+
+Please be advised that the following libraries are covered under the GPLv3
+license.  If you choose to link cvc5 against one of these libraries, the
+resulting combined work is also covered under the GPLv3. If you want to make
+sure you build a version of cvc5 that uses no GPLed libraries, configure cvc5
+with the "--no-gpl" option before building (which is the default).  cvc5 can
+then be used in contexts where you want to use cvc5 under the terms of the
+(modified) BSD license.  See licenses/gpl-3.0.txt for more information.
+
+cvc5 can be optionally configured to link against CLN, the Class Library for
+Numbers, available here:
+
+  http://www.ginac.de/CLN/
+
+cvc5 can be optionally configured to link against glpk-cut-log, a modified
+version of GLPK, the GNU Linear Programming Kit, available here:
+
+  https://github.com/timothy-king/glpk-cut-log
+```
+
+****Z3****
+
+[https://github.com/Z3Prover/z3](https://github.com/Z3Prover/z3)
+
+```
+Copyright (c) Microsoft Corporation
+All rights reserved. 
+MIT License
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+```
