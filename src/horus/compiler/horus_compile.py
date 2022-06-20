@@ -1,24 +1,34 @@
 import argparse
 import json
 import sys
+from tabnanny import check
 from typing import Callable, Tuple
 
+import starkware.cairo.lang.compiler.ast.visitor
+import starkware.cairo.lang.compiler.parser
 from starkware.cairo.lang.compiler.cairo_compile import (
     cairo_compile_add_common_args,
     cairo_compile_common,
 )
 from starkware.cairo.lang.compiler.error_handling import LocationError
+from starkware.cairo.lang.compiler.expression_transformer import ExpressionTransformer
 from starkware.cairo.lang.compiler.module_reader import ModuleReader
 from starkware.cairo.lang.compiler.preprocessor.default_pass_manager import (
     PreprocessorStage,
 )
-from starkware.cairo.lang.compiler.preprocessor.pass_manager import PassManager
+from starkware.cairo.lang.compiler.preprocessor.pass_manager import (
+    PassManager,
+    PassManagerContext,
+    Stage,
+)
 from starkware.starknet.compiler.compile import assemble_starknet_contract, get_abi
 from starkware.starknet.compiler.starknet_pass_manager import starknet_pass_manager
 from starkware.starknet.compiler.validation_utils import verify_account_contract
 
-from horus.compiler.horus_definition import HorusChecks, HorusDefinition
-from horus.compiler.horus_preprocessor import HorusPreprocessor, HorusProgram
+import horus.compiler.parser
+from horus.compiler.code_elements import CheckedCodeElement
+from horus.compiler.contract_definition import HorusDefinition
+from horus.compiler.preprocessor import HorusPreprocessor, HorusProgram
 
 
 def assemble_horus_contract(
@@ -31,7 +41,8 @@ def assemble_horus_contract(
     return HorusDefinition(
         **contract_definition.__dict__,
         checks=preprocessed_program.checks,
-        ret_map=preprocessed_program.ret_map
+        ret_map=preprocessed_program.ret_map,
+        logical_variables=preprocessed_program.logical_variables,
     )
 
 
@@ -44,10 +55,34 @@ def horus_pass_manager(
     manager = starknet_pass_manager(
         prime, read_module, opt_unused_functions, disable_hint_validation
     )
+    manager.stages.insert(0, ("monkeypatch", MonkeyPatchStage()))
     preprocessor_stage = manager.stages[manager.get_stage_index("preprocessor")][1]
     assert isinstance(preprocessor_stage, PreprocessorStage)
     preprocessor_stage.preprocessor_cls = HorusPreprocessor
     return manager
+
+
+class MonkeyPatchStage(Stage):
+    """
+    Additional compilation stage we add before
+    any other stage is performed in order to monkey-patch
+    StarkWare definitions.
+    All future monkey-patching should be done here.
+    """
+
+    def run(self, context: PassManagerContext):
+        def visit_CheckedCodeElement(self, checked_code_element):
+            return CheckedCodeElement(
+                check=checked_code_element.check,
+                code_elm=self.visit(checked_code_element.code_elm),
+                location=checked_code_element.location,
+            )
+
+        starkware.cairo.lang.compiler.ast.visitor.Visitor.visit_CheckedCodeElement = (
+            visit_CheckedCodeElement
+        )
+        starkware.cairo.lang.compiler.parser.parse = horus.compiler.parser.parse
+        ExpressionTransformer.visit_ExprLogicalIdentifier = lambda self, expr: expr
 
 
 def main():

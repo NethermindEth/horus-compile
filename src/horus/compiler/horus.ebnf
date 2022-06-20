@@ -1,0 +1,54 @@
+%import starkware.cairo.lang.compiler.cairo.IDENTIFIER
+%import starkware.cairo.lang.compiler.cairo.COMMENT
+%import starkware.cairo.lang.compiler.cairo.HEXINT
+%import starkware.cairo.lang.compiler.cairo.cairo_file 
+%import starkware.cairo.lang.compiler.cairo.code_block
+%import starkware.cairo.lang.compiler.cairo.instruction
+%import starkware.cairo.lang.compiler.cairo.identifier
+%import starkware.cairo.lang.compiler.cairo.identifier_def
+%import starkware.cairo.lang.compiler.cairo.expr
+%import starkware.cairo.lang.compiler.cairo.bool_expr
+%import starkware.cairo.lang.compiler.cairo.atom
+%import starkware.cairo.lang.compiler.cairo.type
+%import starkware.cairo.lang.compiler.cairo.code_element
+%import starkware.cairo.lang.compiler.cairo.typed_identifier
+
+%import common.INT
+%import common.WS_INLINE
+
+%ignore WS_INLINE
+
+LOGICAL_IDENTIFIER: "$"IDENTIFIER
+
+logical_identifier_def: LOGICAL_IDENTIFIER
+logical_identifier: LOGICAL_IDENTIFIER ("." IDENTIFIER)*
+%extend ?atom: logical_identifier -> atom_logical_identifier
+
+?bool_formula: bool_or
+             | bool_or "->" bool_formula -> bool_formula_impl
+
+?bool_or: bool_and
+        | bool_or "||" bool_and -> bool_formula_or
+
+?bool_and: bool_unary
+         | bool_and "&&" bool_unary -> bool_formula_and
+
+?bool_unary: bool_atom
+           | "!" bool_atom -> bool_unary_neg
+
+bool_atom: bool_expr
+         | expr "<=" expr   -> bool_expr_le
+         | expr "<" expr    -> bool_expr_lt
+         | expr ">=" expr   -> bool_expr_ge
+         | expr ">" expr    -> bool_expr_gt
+         | "True"           -> bool_expr_true
+         | "False"          -> bool_expr_false
+         | "(" bool_formula ")" -> bool_expr_parentheses
+
+
+annotation: "@pre" bool_formula  -> precond_annotation
+          | "@post" bool_formula -> postcond_annotation
+          | "@assert" bool_formula -> assert_annotation
+          | "@require" bool_formula -> require_annotation
+          | "@invariant" bool_formula -> invariant_annotation
+          | "@declare" logical_identifier_def ":" type -> declare_annotation
