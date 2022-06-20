@@ -26,7 +26,7 @@ classifiers = [
     "License :: OSI Approved :: Apache Software License",
     ]
 packages = [ { include = "horus", from = "src" } ]
-include = [ "src/horus/compiler/check_language.ebnf" ]
+include = [ "src/horus/compiler/horus.ebnf" ]
 
 [tool.poetry.scripts]
 horus-compile = "horus.compiler.horus_compile:main"

@@ -1,4 +1,4 @@
-# @pre True
+# @pre ap == fp
 # @post [ap - 1] == [fp - 3] * [fp - 4]
 func main():
   [ap] = [fp - 3]; ap++ # n

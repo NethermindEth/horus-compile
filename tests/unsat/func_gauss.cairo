@@ -1,11 +1,11 @@
-# @pre True
+# @pre fp == ap
 # @post [ap - 1] == 15
 func main():
     [ap] = 5; ap++
     call gauss
     ret
 end
-# @pre [fp - 3] > 0 /\ True
+# @pre [fp - 3] > 0 /\ fp == ap
 # @post 2 * [ap - 1] == (([fp - 3] + 1) * [fp - 3])
 func gauss(n):
     [ap] = 0; ap++                       # sum

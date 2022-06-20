@@ -1,4 +1,4 @@
-# @pre True
+# @pre ap == fp
 # @post [ap - 1] == 0
 func main():
   [ap] = 5; ap++ # n                           

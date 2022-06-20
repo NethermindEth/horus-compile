@@ -1,4 +1,4 @@
-# @pre [fp + 2] > 0 /\ True
+# @pre [fp + 2] > 0 /\ fp == ap
 # @post 2 * [ap - 3] == (([fp + 2] + 1) * [fp + 2])
 func main():
     [ap] = 0; ap++                       # sum
