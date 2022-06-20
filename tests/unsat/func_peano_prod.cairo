@@ -1,4 +1,4 @@
-# @pre True
+# @pre ap == fp
 # @post [ap - 1] == 32
 func main():
     [ap] = 5; ap++
@@ -7,7 +7,7 @@ func main():
     [ap] = [ap - 1] + 2; ap++
     ret
 end
-# @pre True
+# @pre ap == fp
 # @post [ap - 1] == [fp - 3] * [fp - 4]
 func prod(x, y):
   [ap] = [fp - 3]; ap++ # n

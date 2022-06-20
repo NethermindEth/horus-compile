@@ -1,4 +1,4 @@
-# @pre True
+# @pre ap == fp
 # @post [ap - 1] == [fp - 3] + [fp - 4]
 func add(m, n):
     jmp next if [fp - 4] != 0
@@ -12,7 +12,7 @@ func add(m, n):
         [ap] = [ap - 1] + 1; ap++
         ret
 end
-# @pre True
+# @pre ap == fp
 # @post [ap - 1] == 5
 func main():
     [ap] = 2; ap++
