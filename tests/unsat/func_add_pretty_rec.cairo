@@ -1,4 +1,4 @@
-# @pre True
+# @pre ap == fp
 # @post [ap - 1] == [fp - 3] + [fp - 4]
 func add(m, n) -> (res):
     jmp next if m != 0
@@ -8,7 +8,7 @@ func add(m, n) -> (res):
         let (added) = add(m - 1, n)
         return (added + 1)
 end
-# @pre True
+# @pre ap == fp
 # @post [ap - 1] == 5
 func main():
     let (res) = add(2, 3)

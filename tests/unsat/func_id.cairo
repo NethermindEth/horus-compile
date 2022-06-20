@@ -1,11 +1,11 @@
-# @pre True
+# @pre fp == ap
 # @post [ap - 1] == 42
 func main():
     [ap] = 42; ap++
     call id
     ret
 end
-# @pre True
+# @pre fp == ap
 # @post [ap - 1] == [fp - 3]
 func id(x):
     [ap] = [fp - 3]; ap++

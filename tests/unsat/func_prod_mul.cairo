@@ -1,4 +1,4 @@
-# @pre True
+# @pre ap == fp
 # @post [ap - 1] == 93
 func main():
     [ap] = 6; ap++
@@ -8,7 +8,7 @@ func main():
     call mul
     ret
 end
-# @pre True
+# @pre ap == fp
 # @post [ap - 1] == [fp - 3] * [fp - 4]
 func prod(x, y):
   [ap] = [fp - 3]; ap++
@@ -21,7 +21,7 @@ func prod(x, y):
     jmp loop if [ap - 2] != 0                     
   ret                                             
 end
-# @pre True
+# @pre fp == ap
 # @post [ap - 1] == 3 * [fp - 3]
 func mul(x):
     [ap] = [fp - 3]; ap++
