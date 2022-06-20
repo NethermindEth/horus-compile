@@ -1,0 +1,44 @@
+%import starkware.cairo.lang.compiler.cairo.IDENTIFIER
+%import starkware.cairo.lang.compiler.cairo.HEXINT
+%import starkware.cairo.lang.compiler.cairo (identifier, identifier_def, expr, bool_expr, atom, type)
+
+%import common.INT
+%import common.WS_INLINE
+
+%ignore WS_INLINE
+
+LOGICAL_IDENTIFIER: "$"IDENTIFIER
+
+logical_identifier: LOGICAL_IDENTIFIER
+%extend ?atom: logical_identifier
+               | "(" expr ")" -> atom_tuple_or_parentheses
+!reg: "ap" -> reg_ap
+    | "fp" -> reg_fp
+
+?bool_formula: bool_or
+             | bool_or "->" bool_formula -> bool_formula_impl
+
+?bool_or: bool_and
+        | bool_or "\\/" bool_and -> bool_formula_or
+
+?bool_and: bool_unary
+         | bool_and "/\\" bool_unary -> bool_formula_and
+
+?bool_unary: bool_expr
+           | "~" bool_expr -> bool_unary_neg
+
+%extend bool_expr: expr "<=" expr   -> bool_expr_le
+                 | expr "<" expr    -> bool_expr_lt
+                 | expr ">=" expr   -> bool_expr_ge
+                 | expr ">" expr    -> bool_expr_gt
+                 | "True"           -> bool_expr_true
+                 | "False"          -> bool_expr_false
+                 | "(" bool_formula ")" -> bool_expr_parentheses
+
+
+annotation: "@pre" bool_formula  -> precond_annotation
+          | "@post" bool_formula -> postcond_annotation
+          | "@assert" bool_formula -> assert_annotation
+          | "@require" bool_formula -> require_annotation
+          | "@invariant" bool_formula -> invariant_annotation
+          | "@declare" logical_identifier -> declare_annotation

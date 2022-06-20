@@ -1,0 +1,7 @@
+AP_VAR_NAME = "ap"
+PC_VAR_NAME = "pc"
+FP_VAR_NAME = "fp"
+MEMORY_MAP_NAME = "memory"
+MEMORY_BOUND_VAR_NAME = "memory_bound"
+PRIME_CONST_NAME = "prime"
+IDENT_UF_NAME = "MEM"
