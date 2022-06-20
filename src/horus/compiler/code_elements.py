@@ -156,7 +156,7 @@ class CheckedCodeElement(CodeElement):
     location: Optional[Location] = LocationField
 
     def format(self, allowed_line_length):
-        return f"{self.check.format()}\n{self.code_elm.format(allowed_line_length)}"
+        return f"{self.check.format(allowed_line_length)}\n{self.code_elm.format(allowed_line_length)}"
 
     def get_children(self) -> Sequence[Optional[AstNode]]:
         return [self.check, self.code_elm]

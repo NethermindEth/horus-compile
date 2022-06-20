@@ -2,8 +2,18 @@ from __future__ import annotations
 
 from typing import Optional
 
-from starkware.cairo.lang.compiler.ast.cairo_types import *
-from starkware.cairo.lang.compiler.ast.expr import *
+from starkware.cairo.lang.compiler.ast.cairo_types import (
+    CairoType,
+    TypeStruct,
+    TypeTuple,
+)
+from starkware.cairo.lang.compiler.ast.expr import (
+    ExprConst,
+    ExprDeref,
+    ExprDot,
+    Expression,
+    ExprSubscript,
+)
 from starkware.cairo.lang.compiler.expression_simplifier import ExpressionSimplifier
 from starkware.cairo.lang.compiler.identifier_manager import IdentifierManager
 from starkware.cairo.lang.compiler.identifier_utils import get_struct_definition
@@ -30,6 +40,9 @@ class HorusTypeChecker(TypeSystemVisitor):
     ):
         self.logical_identifiers = logical_identifiers
         super().__init__(identifiers)
+
+    def visit(self, expr: Expression) -> tuple[Expression, CairoType]:
+        return super().visit(expr)  # type: ignore
 
     def visit_ExprLogicalIdentifier(
         self, expr: ExprLogicalIdentifier

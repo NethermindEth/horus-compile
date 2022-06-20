@@ -44,7 +44,10 @@ class HorusChecks:
     asserts: dict[int, BoolRefWithAxiom] = field(
         metadata=dict(
             marshmallow_field=mfields.Dict(
-                keys=mfields.Int(), values=mfields.Nested(BoolRefWithAxiom.Schema())
+                keys=mfields.Int(),
+                values=mfields.Nested(
+                    marshmallow_dataclass.class_schema(BoolRefWithAxiom)
+                ),
             )
         ),
         default_factory=dict,
@@ -52,7 +55,10 @@ class HorusChecks:
     requires: dict[int, BoolRefWithAxiom] = field(
         metadata=dict(
             marshmallow_field=mfields.Dict(
-                keys=mfields.Int(), values=mfields.Nested(BoolRefWithAxiom.Schema())
+                keys=mfields.Int(),
+                values=mfields.Nested(
+                    marshmallow_dataclass.class_schema(BoolRefWithAxiom)
+                ),
             )
         ),
         default_factory=dict,
@@ -60,7 +66,10 @@ class HorusChecks:
     pre_conds: dict[str, BoolRefWithAxiom] = field(
         metadata=dict(
             marshmallow_field=mfields.Dict(
-                keys=mfields.Str(), values=mfields.Nested(BoolRefWithAxiom.Schema())
+                keys=mfields.Str(),
+                values=mfields.Nested(
+                    marshmallow_dataclass.class_schema(BoolRefWithAxiom)
+                ),
             )
         ),
         default_factory=dict,
@@ -68,7 +77,10 @@ class HorusChecks:
     post_conds: dict[str, BoolRefWithAxiom] = field(
         metadata=dict(
             marshmallow_field=mfields.Dict(
-                keys=mfields.Str(), values=mfields.Nested(BoolRefWithAxiom.Schema())
+                keys=mfields.Str(),
+                values=mfields.Nested(
+                    marshmallow_dataclass.class_schema(BoolRefWithAxiom)
+                ),
             )
         ),
         default_factory=dict,
@@ -76,7 +88,10 @@ class HorusChecks:
     invariants: dict[str, BoolRefWithAxiom] = field(
         metadata=dict(
             marshmallow_field=mfields.Dict(
-                keys=mfields.Str(), values=mfields.Nested(BoolRefWithAxiom.Schema())
+                keys=mfields.Str(),
+                values=mfields.Nested(
+                    marshmallow_dataclass.class_schema(BoolRefWithAxiom)
+                ),
             )
         ),
         default_factory=dict,
@@ -86,8 +101,12 @@ class HorusChecks:
 @marshmallow_dataclass.dataclass(frozen=True)
 class HorusDefinition(ContractDefinition):
     checks: HorusChecks = field(
-        metadata=dict(marshmallow_field=mfields.Nested(HorusChecks.Schema())),
-        default="None",
+        metadata=dict(
+            marshmallow_field=mfields.Nested(
+                marshmallow_dataclass.class_schema(HorusChecks)
+            )
+        ),
+        default=HorusChecks(),
     )
     ret_map: dict[int, str] = field(
         metadata=dict(

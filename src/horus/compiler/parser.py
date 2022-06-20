@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from importlib import resources
-from typing import Optional
+from typing import Optional, Tuple, Union
 
 import lark
 from lark.exceptions import LarkError, UnexpectedToken, VisitError
@@ -10,7 +12,9 @@ from starkware.cairo.lang.compiler.parser_transformer import ParserContext
 from horus.compiler.parser_transformer import HorusTransformer
 
 
-def starkware_grammar_loader(base_path: str, grammar_path: str):
+def starkware_grammar_loader(
+    base_path: Union[None, str, lark.PackageResource], grammar_path: str
+) -> tuple[str, str]:
     """
     A hack to load cairo.ebnf instead of cairo.lark.
     """
@@ -80,7 +84,7 @@ def parse(
                 if token.type == "LOGICAL_IDENTIFIER":
                     accepts = parser.accepts()
                     accepts.remove("LOGICAL_IDENTIFIER")
-                    raise UnexpectedToken(token=token, expected=accepts)
+                    raise UnexpectedToken(token=token, expected=accepts)  # type: ignore
 
             old_state_stack = list(parser_state.state_stack)
             old_value_stack = list(parser_state.value_stack)

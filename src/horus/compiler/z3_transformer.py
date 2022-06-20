@@ -3,11 +3,38 @@ from __future__ import annotations
 from typing import Optional
 
 import z3
-from starkware.cairo.lang.compiler.ast.cairo_types import *
-from starkware.cairo.lang.compiler.ast.expr import *
+from starkware.cairo.lang.compiler.ast.cairo_types import (
+    CairoType,
+    TypeFelt,
+    TypePointer,
+    TypeStruct,
+    TypeTuple,
+)
+from starkware.cairo.lang.compiler.ast.expr import (
+    ArgList,
+    ExprAddressOf,
+    ExprAssignment,
+    ExprCast,
+    ExprConst,
+    ExprDeref,
+    ExprDot,
+    Expression,
+    ExprFutureLabel,
+    ExprHint,
+    ExprIdentifier,
+    ExprNeg,
+    ExprNewOperator,
+    ExprOperator,
+    ExprParentheses,
+    ExprPow,
+    ExprReg,
+    ExprSubscript,
+    ExprTuple,
+)
 from starkware.cairo.lang.compiler.expression_transformer import ExpressionTransformer
 from starkware.cairo.lang.compiler.identifier_definition import StructDefinition
 from starkware.cairo.lang.compiler.identifier_manager import IdentifierManager
+from starkware.cairo.lang.compiler.identifier_utils import get_struct_definition
 from starkware.cairo.lang.compiler.instruction import Register
 from starkware.cairo.lang.compiler.preprocessor.identifier_aware_visitor import (
     IdentifierAwareVisitor,
@@ -17,7 +44,6 @@ from starkware.cairo.lang.compiler.preprocessor.preprocessor_error import (
     PreprocessorError,
 )
 from starkware.cairo.lang.compiler.resolve_search_result import resolve_search_result
-from starkware.cairo.lang.compiler.scoped_name import ScopedName
 from starkware.cairo.lang.compiler.substitute_identifiers import substitute_identifiers
 from starkware.cairo.lang.compiler.type_system_visitor import *
 from starkware.cairo.lang.compiler.type_system_visitor import simplify_type_system
@@ -39,7 +65,7 @@ class Z3ExpressionTransformer(IdentifierAwareVisitor):
     def __init__(
         self,
         identifiers: Optional[IdentifierManager] = None,
-        z3_transformer: Z3Transformer = None,
+        z3_transformer: Optional[Z3Transformer] = None,
     ):
         self.prime = z3.Int(PRIME_CONST_NAME)
         self.memory = z3.Function(MEMORY_MAP_NAME, z3.IntSort(), z3.IntSort())
@@ -83,6 +109,7 @@ class Z3ExpressionTransformer(IdentifierAwareVisitor):
         elif expr.op == "*":
             return (a * b) % self.prime
         elif expr.op == "/":
+            assert self.z3_transformer is not None, "z3_transformer should not be None"
             inverse_b = self.z3_transformer.add_inverse(b)
             return (a * inverse_b) % self.prime
 
@@ -90,6 +117,7 @@ class Z3ExpressionTransformer(IdentifierAwareVisitor):
         a = self.visit(expr.a)
         b = self.visit(expr.b)
 
+        assert self.z3_transformer is not None, "z3_transformer should not be None"
         inverse_a = self.z3_transformer.add_inverse(a)
 
         return z3.If(
@@ -185,16 +213,15 @@ def get_smt_expression(expr: Expression, identifiers: IdentifierManager):
 class Z3Transformer(IdentifierAwareVisitor):
     def __init__(
         self,
-        identifiers: Optional[IdentifierManager] = None,
-        preprocessor: Optional[Preprocessor] = None,
+        identifiers: IdentifierManager,
+        preprocessor: Preprocessor,
         logical_identifiers: dict[str, CairoType] = {},
     ):
+        super().__init__(identifiers)
         self.preprocessor = preprocessor
         self.z3_expression_transformer = Z3ExpressionTransformer(identifiers, self)
         self.logical_identifiers = logical_identifiers
         self.inverse_equations: list[z3.BoolRef] = []
-
-        super().__init__(identifiers)
 
     def add_inverse(self, z3_expr: z3.ArithRef):
         var = z3.FreshInt()
@@ -222,7 +249,7 @@ class Z3Transformer(IdentifierAwareVisitor):
             substitute_identifiers(expr, get_identifier)
         )
 
-    def simplify(self, expr: Expression) -> tuple[Expression]:
+    def simplify(self, expr: Expression) -> Expression:
         return self.simplify_and_get_type(expr)[0]
 
     def get_member(self, expr: Expression, name: str):
