@@ -1,0 +1,31 @@
+name: ci
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install poetry
+        run: pipx install poetry
+      - uses: actions/setup-python@v3
+        with:
+          python-version: '3.7'
+          cache: 'poetry'
+      - run: poetry install
+
+      - name: Check formatting
+        run: |
+          pipx install black[colors]
+          pipx install isort[colors]
+          black . --check --verbose --diff --color
+          isort . --check --verbose --diff --color
+
+      - name: Typing
+        run: |
+          poetry run pip install mypy
+          poetry run mypy .

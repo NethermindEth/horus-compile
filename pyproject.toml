@@ -17,7 +17,7 @@ profile = "black"
 skip_gitignore = true
 
 [tool.poetry]
-name = "cairo-horus"
+name = "horus-compile"
 version = "0.0.1"
 authors = ["Nethermind <hello@nethermind.io>"]
 description = "Use formally verified annotations in your Cairo code"
@@ -26,14 +26,21 @@ classifiers = [
     "License :: OSI Approved :: Apache Software License",
     ]
 packages = [ { include = "horus", from = "src" } ]
+include = [ "src/horus/compiler/check_language.ebnf" ]
 
 [tool.poetry.scripts]
-horus-test = "horus.test:run"
+horus-compile = "horus.compiler.horus_compile:main"
 
 [tool.poetry.dependencies]
-python = ">=3.7"
+python = ">=3.7,<3.11"
 cairo-lang = "0.8.0"
+marshmallow-dataclass = ">=7.1.0,<8.5.4"
+eth-utils = "^1.2.0"
+marshmallow = "^3.15.0"
+z3-solver = "^4.8.15"
+lark-parser = "^0.12.0"
 
 [tool.poetry.dev-dependencies]
 isort = "*"
 black = "*"
+autopep8 = "^1.6.0"

@@ -1,0 +1,40 @@
+func main():
+    [ap] = 0; ap++
+    [ap] = 2; ap++
+    [ap] = 1; ap++
+    [ap] = 1; ap++
+    [ap] = 1; ap++
+    [ap] = 1; ap++
+    [ap] = 1; ap++
+    [ap] = 1; ap++
+    [ap] = 1; ap++
+    [ap] = 1; ap++
+    [ap] = 1; ap++
+    [ap] = 1; ap++
+    [ap] = 1; ap++
+    [ap] = 1; ap++
+    [ap] = 1; ap++
+    [ap] = 1; ap++
+    [ap] = 1; ap++
+    [ap] = 1; ap++
+    [ap] = 1; ap++
+    [ap] = 1; ap++
+    [ap] = 1; ap++
+    [ap] = 1; ap++
+    [ap] = 1; ap++
+    [ap] = 1; ap++
+    [ap] = 1; ap++
+    [ap] = 1; ap++
+    [ap] = 1; ap++
+    [ap] = 1; ap++
+    [ap] = 1; ap++
+    [ap] = 1; ap++
+    [ap] = 1; ap++
+    [ap] = 1; ap++
+    [ap] = 1; ap++
+    [ap] = 1; ap++
+    [ap] = 1; ap++
+    [ap] = 1; ap++
+    [ap - 30] = 42
+    ret
+end
