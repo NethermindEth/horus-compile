@@ -1,4 +1,4 @@
-# @pre True
+# @pre ap == fp
 # @post [ap - 2] == 2 ** [fp + 1] 
 func main():
   [ap] = 1; ap++ # 2 ** (10-i)

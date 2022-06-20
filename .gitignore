@@ -1,9 +1,7 @@
 **/__pycache__
 /dist/
-/.mypy_cache/
 /.vscode/
 /out/
 *.json
 *.smt2
 /.venv/
-
