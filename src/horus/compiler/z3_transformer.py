@@ -1,260 +1,400 @@
 from __future__ import annotations
 
-import dataclasses
-from abc import ABC, abstractmethod
-from enum import Enum, auto
-from typing import Any, Callable, Optional, Union
+from typing import Optional
 
-import lark
 import z3
-from starkware.cairo.lang.compiler.ast.cairo_types import CairoType, TypeFelt
+from starkware.cairo.lang.compiler.ast.cairo_types import (
+    CairoType,
+    TypeFelt,
+    TypePointer,
+    TypeStruct,
+    TypeTuple,
+)
 from starkware.cairo.lang.compiler.ast.expr import (
+    ArgList,
+    ExprAddressOf,
+    ExprAssignment,
     ExprCast,
     ExprConst,
     ExprDeref,
+    ExprDot,
     Expression,
+    ExprFutureLabel,
+    ExprHint,
+    ExprIdentifier,
+    ExprNeg,
+    ExprNewOperator,
     ExprOperator,
+    ExprParentheses,
+    ExprPow,
     ExprReg,
+    ExprSubscript,
+    ExprTuple,
 )
-from starkware.cairo.lang.compiler.identifier_definition import (
-    IdentifierDefinition,
-    ReferenceDefinition,
-)
-from starkware.cairo.lang.compiler.identifier_manager import (
-    IdentifierError,
-    IdentifierManager,
-)
+from starkware.cairo.lang.compiler.expression_transformer import ExpressionTransformer
+from starkware.cairo.lang.compiler.identifier_definition import StructDefinition
+from starkware.cairo.lang.compiler.identifier_manager import IdentifierManager
+from starkware.cairo.lang.compiler.identifier_utils import get_struct_definition
 from starkware.cairo.lang.compiler.instruction import Register
-from starkware.cairo.lang.compiler.offset_reference import OffsetReferenceDefinition
-from starkware.cairo.lang.compiler.preprocessor.flow import FlowTracking
+from starkware.cairo.lang.compiler.preprocessor.identifier_aware_visitor import (
+    IdentifierAwareVisitor,
+)
 from starkware.cairo.lang.compiler.preprocessor.preprocessor import Preprocessor
 from starkware.cairo.lang.compiler.preprocessor.preprocessor_error import (
     PreprocessorError,
 )
 from starkware.cairo.lang.compiler.resolve_search_result import resolve_search_result
-from starkware.cairo.lang.compiler.scoped_name import ScopedName
-from starkware.crypto.signature.signature import FIELD_PRIME
+from starkware.cairo.lang.compiler.substitute_identifiers import substitute_identifiers
+from starkware.cairo.lang.compiler.type_system_visitor import *
+from starkware.cairo.lang.compiler.type_system_visitor import simplify_type_system
 
+from horus.compiler.code_elements import (
+    BoolConst,
+    BoolExprCompare,
+    BoolFormula,
+    BoolNegation,
+    BoolOperation,
+    ExprLogicalIdentifier,
+)
+from horus.compiler.type_checker import HorusTypeChecker
 from horus.compiler.var_names import *
-from horus.horus_error import HorusError
+from horus.utils import z3And, z3True
 
 
-@lark.v_args(inline=True)
-class Z3Transformer(lark.Transformer):
+class Z3ExpressionTransformer(IdentifierAwareVisitor):
+    def __init__(
+        self,
+        identifiers: Optional[IdentifierManager] = None,
+        z3_transformer: Optional[Z3Transformer] = None,
+    ):
+        self.prime = z3.Int(PRIME_CONST_NAME)
+        self.memory = z3.Function(MEMORY_MAP_NAME, z3.IntSort(), z3.IntSort())
+        self.z3_transformer = z3_transformer
+        super().__init__(identifiers)
+
+    def visit_ExprConst(self, expr: ExprConst):
+        return z3.IntVal(expr.val)
+
+    def visit_ExprHint(self, expr: ExprHint):
+        raise PreprocessorError(
+            "Usage of hints in assertions is not allowed", location=expr.location
+        )
+
+    def visit_ExprLogicalIdentifier(self, expr: ExprLogicalIdentifier):
+        return z3.Int(expr.name)
+
+    def visit_ExprIdentifier(self, expr: ExprIdentifier):
+        return ExprIdentifier(
+            name=expr.name, location=self.location_modifier(expr.location)
+        )
+
+    def visit_ExprFutureLabel(self, expr: ExprFutureLabel):
+        raise PreprocessorError(
+            "Usage of labels in assertions is not allowed", location=expr.location
+        )
+
+    def visit_ExprReg(self, expr: ExprReg):
+        if expr.reg == Register.AP:
+            return z3.Int(AP_VAR_NAME)
+        else:
+            return z3.Int(FP_VAR_NAME)
+
+    def visit_ExprOperator(self, expr: ExprOperator):
+        a = self.visit(expr.a)
+        b = self.visit(expr.b)
+        if expr.op == "+":
+            return (a + b) % self.prime
+        elif expr.op == "-":
+            return (a - b) % self.prime
+        elif expr.op == "*":
+            return (a * b) % self.prime
+        elif expr.op == "/":
+            assert self.z3_transformer is not None, "z3_transformer should not be None"
+            inverse_b = self.z3_transformer.add_inverse(b)
+            return (a * inverse_b) % self.prime
+
+    def visit_ExprPow(self, expr: ExprPow):
+        a = self.visit(expr.a)
+        b = self.visit(expr.b)
+
+        assert self.z3_transformer is not None, "z3_transformer should not be None"
+        inverse_a = self.z3_transformer.add_inverse(a)
+
+        return z3.If(
+            b >= 0,
+            z3.ToInt(a**b) % self.prime,
+            z3.ToInt(inverse_a ** (-b)) % self.prime,
+        )
+
+    def visit_ExprNeg(self, expr: ExprNeg):
+        return (-self.visit(expr.val)) % self.prime
+
+    def visit_ExprParentheses(self, expr: ExprParentheses):
+        return self.visit(expr.val)
+
+    def visit_ExprDeref(self, expr: ExprDeref):
+        return self.memory(self.visit(expr.addr))
+
+    def visit_ExprSubscript(self, expr: ExprSubscript):
+        return ExprSubscript(
+            expr=self.visit(expr.expr),
+            offset=self.visit(expr.offset),
+            location=self.location_modifier(expr.location),
+        )
+
+    def visit_ExprDot(self, expr: ExprDot):
+        return ExprDot(
+            expr=self.visit(expr.expr),
+            # Avoid visiting 'member' with an overridden visit_ExprIdentifier, as it is not a
+            # proper identifier.
+            member=ExpressionTransformer.visit_ExprIdentifier(self, expr.member),
+            location=self.location_modifier(expr.location),
+        )
+
+    def visit_ExprAddressOf(self, expr: ExprAddressOf):
+        inner_expr = self.visit(expr.expr)
+        return ExprAddressOf(
+            expr=inner_expr, location=self.location_modifier(expr.location)
+        )
+
+    def visit_ExprCast(self, expr: ExprCast):
+        inner_expr = self.visit(expr.expr)
+        return ExprCast(
+            expr=inner_expr,
+            dest_type=expr.dest_type,
+            cast_type=expr.cast_type,
+            location=self.location_modifier(expr.location),
+        )
+
+    def visit_ArgList(self, arg_list: ArgList):
+        return ArgList(
+            args=[
+                ExprAssignment(
+                    identifier=item.identifier,
+                    expr=self.visit(item.expr),
+                    location=self.location_modifier(item.location),
+                )
+                for item in arg_list.args
+            ],
+            notes=arg_list.notes,
+            has_trailing_comma=arg_list.has_trailing_comma,
+            location=self.location_modifier(arg_list.location),
+        )
+
+    def visit_ExprTuple(self, expr: ExprTuple):
+        return ExprTuple(
+            members=self.visit_ArgList(expr.members),
+            location=self.location_modifier(expr.location),
+        )
+
+    def visit_RvalueFuncCall(self, rvalue):
+        raise PreprocessorError(
+            "Usage of function calls in assertions is not allowed",
+            location=rvalue.location,
+        )
+
+    def visit_ExprFuncCall(self, expr):
+        raise PreprocessorError(
+            "Usage of function calls in assertions is not allowed",
+            location=expr.location,
+        )
+
+    def visit_ExprNewOperator(self, expr: ExprNewOperator):
+        raise PreprocessorError(
+            "Usage of the new operator in assertions is not allowed",
+            location=expr.location,
+        )
+
+
+def get_smt_expression(expr: Expression, identifiers: IdentifierManager):
+    return Z3ExpressionTransformer(identifiers).visit(expr)
+
+
+class Z3Transformer(IdentifierAwareVisitor):
     def __init__(
         self,
         identifiers: IdentifierManager,
-        accessible_scopes: list[ScopedName],
-        flow_tracking: FlowTracking,
         preprocessor: Preprocessor,
+        logical_identifiers: dict[str, CairoType] = {},
     ):
-        super().__init__()
-        self.identifiers = identifiers
-        self.accessible_scopes = accessible_scopes
-        self.flow_tracking = flow_tracking
+        super().__init__(identifiers)
         self.preprocessor = preprocessor
+        self.z3_expression_transformer = Z3ExpressionTransformer(identifiers, self)
+        self.logical_identifiers = logical_identifiers
+        self.inverse_equations: list[z3.BoolRef] = []
 
-        self.memory = z3.Function(MEMORY_MAP_NAME, z3.IntSort(), z3.IntSort())
-        self.ap, self.fp, self.prime = z3.Ints(
-            f"{AP_VAR_NAME} {FP_VAR_NAME} {PRIME_CONST_NAME}"
-        )
+    def add_inverse(self, z3_expr: z3.ArithRef):
+        var = z3.FreshInt()
 
-    def expr_add(self, lhs, _, rhs):
-        return (lhs + rhs) % self.prime
+        self.inverse_equations.append((z3_expr * var) % z3.Int(PRIME_CONST_NAME) == 1)
 
-    def expr_sub(self, lhs, _, rhs):
-        return (lhs - rhs) % self.prime
+        return var
 
-    def expr_mul(self, lhs, _, rhs):
-        return (lhs * rhs) % self.prime
+    def visit(self, formula: BoolFormula):
+        funcname = f"visit_{type(formula).__name__}"
+        return getattr(self, funcname)(formula)
 
-    def expr_div(self, lhs, _, rhs):
-        return (lhs / rhs) % self.prime
-
-    def unary_neg(self, v):
-        return (-v) % self.prime
-
-    def expr_pow(self, lhs, _, rhs):
-        return z3.ToInt(lhs**rhs) % self.prime
-
-    @lark.v_args(inline=False)
-    def identifier(self, parts: list[lark.Token]) -> z3.ExprRef:
-        full_name = ".".join(parts)
-        definition = self._search_identifier(full_name)
-        return self._smtify_definition(definition)
-
-    def logical_identifier(self, name):
-        return z3.Int(name)
-
-    def atom_number(self, value):
-        return z3.IntVal(value)
-
-    def atom_hex_number(self, value):
-        return int(value, base=16)
-
-    def atom_reg(self, reg):
-        return reg
-
-    def atom_deref(self, _, index):
-        return self.memory(index)
-
-    def atom_tuple_or_parentheses(self, expr):
-        return expr
-
-    def reg_ap(self, _):
-        return self.ap
-
-    def reg_fp(self, _):
-        return self.fp
-
-    def bool_formula_impl(self, lhs, rhs):
-        return z3.Implies(lhs, rhs)
-
-    def bool_formula_or(self, lhs, rhs):
-        return z3.Or(lhs, rhs)
-
-    def bool_formula_and(self, lhs, rhs):
-        return z3.And(lhs, rhs)
-
-    def bool_unary_neg(self, formula):
-        return z3.Not(formula)
-
-    def bool_expr_true(self):
-        return z3.BoolVal(True)
-
-    def bool_expr_false(self):
-        return z3.BoolVal(False)
-
-    def bool_expr_eq(self, lhs, rhs):
-        return lhs == rhs
-
-    def bool_expr_ne(self, lhs, rhs):
-        return lhs != rhs
-
-    def bool_expr_le(self, lhs, rhs):
-        return lhs <= rhs
-
-    def bool_expr_lt(self, lhs, rhs):
-        return lhs < rhs
-
-    def bool_expr_ge(self, lhs, rhs):
-        return lhs >= rhs
-
-    def bool_expr_gt(self, lhs, rhs):
-        return lhs > rhs
-
-    def bool_expr_parentheses(self, formula):
-        return formula
-
-    def precond_annotation(self, expr):
-        return PreprocessedCheck(CheckKind.PRE_COND, expr)
-
-    def postcond_annotation(self, expr):
-        return PreprocessedCheck(CheckKind.POST_COND, expr)
-
-    def assert_annotation(self, expr):
-        return PreprocessedCheck(CheckKind.ASSERT, expr)
-
-    def require_annotation(self, expr):
-        return PreprocessedCheck(CheckKind.REQUIRE, expr)
-
-    def invariant_annotation(self, expr):
-        return PreprocessedCheck(CheckKind.INVARIANT, expr)
-
-    def declare_annotation(self, identifier):
-        return LogicalVariableDeclaration(identifier, TypeFelt)
-
-    def transform(
-        self, tree: lark.Tree
-    ) -> Union[PreprocessedCheck, LogicalVariableDeclaration]:
-        # The nodes of the tree imported from cairo.ebnf appear with
-        # prefix starkware__cairo__lang__compiler__cairo__ which we remove here.
-        for node in tree.iter_subtrees():
-            node.data = node.data.replace(
-                "starkware__cairo__lang__compiler__cairo__", ""
+    def simplify_and_get_type(self, expr: Expression) -> tuple[Expression, CairoType]:
+        def get_identifier(expr: ExprIdentifier):
+            search_result = self.identifiers.search(
+                self.preprocessor.accessible_scopes, expr.name
+            )
+            definition = resolve_search_result(search_result, self.identifiers)
+            return definition.eval(
+                self.preprocessor.flow_tracking.reference_manager,
+                self.preprocessor.flow_tracking.data,
             )
 
-        result: Union[
-            PreprocessedCheck, LogicalVariableDeclaration
-        ] = super().transform(tree)
+        return HorusTypeChecker(self.identifiers, self.logical_identifiers).visit(
+            substitute_identifiers(expr, get_identifier)
+        )
+
+    def simplify(self, expr: Expression) -> Expression:
+        return self.simplify_and_get_type(expr)[0]
+
+    def get_member(self, expr: Expression, name: str):
+        if isinstance(expr, ExprTuple):
+            for member in expr.members.args:
+                if member.identifier is not None and member.identifier.name == name:
+                    return self.simplify(member.expr)
+
+            raise PreprocessorError(f"No member with the name {name}")
+        else:
+            return ExprDot(expr, ExprIdentifier(name))
+            # return self.simplify(ExprDot(expr, ExprIdentifier(name)))[0]
+
+    def get_element_at(self, expr: Expression, ind: int):
+        if isinstance(expr, ExprTuple):
+            member = expr.members.args[ind]
+            return member.expr
+        else:
+            return ExprSubscript(expr, ExprConst(ind))
+
+    def make_tuple_eq(self, a: Expression, b: Expression, type: TypeTuple):
+        result = z3True
+        for i, member in enumerate(type.members):
+            if member.name is not None:
+                member_a = self.get_member(a, member.name)
+                member_b = self.get_member(b, member.name)
+            else:
+                member_a = self.get_element_at(a, i)
+                member_b = self.get_element_at(b, i)
+
+            if isinstance(member.typ, (TypeFelt, TypePointer)):
+                result = z3And(
+                    result,
+                    get_smt_expression(self.simplify(member_a), self.identifiers)
+                    == get_smt_expression(self.simplify(member_b), self.identifiers),
+                )
+            elif isinstance(member.typ, TypeStruct):
+                result = z3And(
+                    result, self.make_struct_eq(member_a, member_b, member.typ)
+                )
+            elif isinstance(member.typ, TypeTuple):
+                result = z3And(
+                    result, self.make_tuple_eq(member_a, member_b, member.typ)
+                )
 
         return result
 
-    def _search_identifier(self, name: str) -> IdentifierDefinition:
-        """
-        Searches for the given identifier in self.identifiers and returns the corresponding
-        IdentifierDefinition.
-        """
-        try:
-            result = self.identifiers.search(
-                self.accessible_scopes, ScopedName.from_string(name)
-            )
-            return resolve_search_result(result, identifiers=self.identifiers)
-        except IdentifierError as exc:
-            # TODO add location within the hint
-            raise PreprocessorError(str(exc), location=None)
-
-    def _smtify_definition(self, definition: IdentifierDefinition) -> z3.ExprRef:
-        if isinstance(definition, (ReferenceDefinition, OffsetReferenceDefinition)):
-            expr = self.preprocessor.simplify_expr_as_felt(
-                definition.eval(
-                    self.flow_tracking.reference_manager, self.flow_tracking.data
+    def make_struct_eq(
+        self, a: Expression, b: Expression, type: TypeStruct
+    ) -> z3.BoolRef:
+        definition = get_struct_definition(
+            struct_name=type.resolved_scope, identifier_manager=self.identifiers
+        )
+        assert isinstance(
+            definition, StructDefinition
+        ), "TypeStruct must contain StructDefinition"
+        result = z3True
+        for member_name, member_definition in definition.members.items():
+            member_a = self.get_member(a, member_name)
+            member_b = self.get_member(b, member_name)
+            if isinstance(member_definition.cairo_type, (TypeFelt, TypePointer)):
+                result = z3And(
+                    result,
+                    get_smt_expression(self.simplify(member_a), self.identifiers)
+                    == get_smt_expression(self.simplify(member_b), self.identifiers),
                 )
-            )
-            return self._smtify_expression(expr)
-        else:
-            raise HorusError(f"Unsupported definition for smtification: {definition}")
-
-    def _smtify_expression(self, expr: Expression) -> z3.ExprRef:
-        if isinstance(expr, ExprConst):
-            return z3.IntVal(expr.val)
-        elif isinstance(expr, ExprDeref):
-            return self.memory(self._smtify_expression(expr.addr))
-        elif isinstance(expr, ExprCast):
-            return self._smtify_expression(expr.expr)
-        elif isinstance(expr, ExprOperator):
-            lhs = self._smtify_expression(expr.a)
-            rhs = self._smtify_expression(expr.b)
-            op = str2op(expr.op)
-            return op(lhs, rhs) % self.prime
-        elif isinstance(expr, ExprReg):
-            if expr.reg is Register.AP:
-                return self.ap
+            elif isinstance(member_definition.cairo_type, TypeStruct):
+                result = z3And(
+                    result,
+                    self.make_struct_eq(
+                        member_a, member_b, member_definition.cairo_type
+                    ),
+                )
+            elif isinstance(member_definition.cairo_type, TypeTuple):
+                result = z3And(
+                    result,
+                    self.make_tuple_eq(
+                        member_a, member_b, member_definition.cairo_type
+                    ),
+                )
             else:
-                assert expr.reg is Register.FP
-                return self.fp
+                raise NotImplementedError("test")
+
+        return result
+
+    def visit_BoolExprAtom(self, formula: BoolExprAtom):
+        bool_expr = formula.bool_expr
+        a, a_type = self.simplify_and_get_type(bool_expr.a)
+        b, b_type = self.simplify_and_get_type(bool_expr.b)
+
+        if isinstance(a_type, (TypeFelt, TypePointer)):
+            assert isinstance(
+                b_type, (TypeFelt, TypePointer)
+            ), "both lhs and rhs must be felts or pointers"
         else:
-            raise HorusError(
-                f"Unsupported expression for smtification of type {type(expr)}: '{expr.format()}'"
-            )
+            assert a_type == b_type, "Types of lhs and rhs must coincide"
 
+        if isinstance(a_type, TypeStruct):
+            result = self.make_struct_eq(bool_expr.a, bool_expr.b, a_type)
+        elif isinstance(a_type, TypeTuple):
+            result = self.make_tuple_eq(bool_expr.a, bool_expr.b, a_type)
+        else:
+            a = self.z3_expression_transformer.visit(a)
+            b = self.z3_expression_transformer.visit(b)
+            result = a == b
 
-def str2op(s: str) -> Callable:
-    if s == "+":
-        return lambda a, b: a + b
-    elif s == "-":
-        return lambda a, b: a - b
-    elif s == "*":
-        return lambda a, b: a * b
-    else:
-        raise NotImplementedError(f"Unsupported operator '{s}")
+        if bool_expr.eq:
+            return result
+        else:
+            return z3.Not(result)
 
+    def visit_BoolExprCompare(self, formula: BoolExprCompare):
+        a, a_type = self.simplify_and_get_type(formula.a)
+        b, b_type = self.simplify_and_get_type(formula.b)
 
-class CheckKind(Enum):
-    ASSERT = auto()
-    REQUIRE = auto()
-    POST_COND = auto()
-    PRE_COND = auto()
-    INVARIANT = auto()
+        assert a_type == b_type, "Types of lhs and rhs must coincide"
 
+        if isinstance(a_type, (TypeFelt, TypePointer)):
+            a = self.z3_expression_transformer.visit(a)
+            b = self.z3_expression_transformer.visit(b)
 
-@dataclasses.dataclass
-class LogicalVariableDeclaration:
-    name: str
-    type: Optional[CairoType]
+            if formula.comp == "<=":
+                return a <= b
+            elif formula.comp == "<":
+                return a < b
+            elif formula.comp == ">=":
+                return a >= b
+            elif formula.comp == ">":
+                return a > b
 
+    def visit_BoolConst(self, formula: BoolConst):
+        return z3.BoolVal(formula.const)
 
-@dataclasses.dataclass
-class PreprocessedCheck:
-    kind: CheckKind
-    expr: z3.BoolRef
+    def visit_BoolOperation(self, formula: BoolOperation):
+        a = self.visit(formula.a)
+        b = self.visit(formula.b)
+
+        if formula.op == "&":
+            return z3And(a, b)
+        elif formula.op == "|":
+            return z3.Or(a, b)
+        elif formula.op == "->":
+            return z3.Implies(a, b)
+        else:
+            raise PreprocessorError(f"unknown logical operation {formula.op}")
+
+    def visit_BoolNegation(self, formula: BoolNegation):
+        return z3.Not(self.visit(formula.operand))

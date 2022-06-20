@@ -1,11 +1,11 @@
-# @pre True
-# @post [ap - 1] == 43
+# @pre fp == ap
+# @post [ap - 1] == 6
 func main():
-    [ap] = 42; ap++
+    [ap] = 5; ap++
     call succ
     ret
 end
-# @pre [fp - 3] > 20
+# @pre fp == ap
 # @post [ap - 1] == [fp - 3] + 1
 func succ(x) -> (res):
     [ap] = [fp - 3]; ap++
