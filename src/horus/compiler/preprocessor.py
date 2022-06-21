@@ -23,9 +23,10 @@ from horus.compiler.code_elements import (
     CodeElementCheck,
     CodeElementLogicalVariableDeclaration,
 )
-from horus.compiler.contract_definition import BoolRefWithAxiom, HorusChecks
+from horus.compiler.contract_definition import Assertion, HorusChecks
 from horus.compiler.parser import *
 from horus.compiler.z3_transformer import *
+from horus.utils import z3And
 
 
 @dataclass
@@ -136,17 +137,17 @@ class HorusPreprocessor(StarknetPreprocessor):
 
     def compile_checks(self, code_elem: CodeElement):
         def append_check(
-            check_dict: dict[Any, z3.BoolRef],
+            check_dict: dict[Any, Assertion],
             key: Any,
             check: z3.BoolRef,
             axiom: z3.BoolRef,
         ):
             current_check_bool_ref = check_dict.get(
-                key, BoolRefWithAxiom(z3.BoolVal(True), z3.BoolVal(True))
+                key, Assertion(z3.BoolVal(True), z3.BoolVal(True))
             )
-            check_dict[key] = BoolRefWithAxiom(
-                z3.And(current_check_bool_ref.bool_ref, check),
-                z3.And(current_check_bool_ref.axiom, axiom),
+            check_dict[key] = Assertion(
+                z3And(current_check_bool_ref.bool_ref, check),
+                z3And(current_check_bool_ref.axiom, axiom),
             )
 
         is_function = isinstance(code_elem, CodeElementFunction)
