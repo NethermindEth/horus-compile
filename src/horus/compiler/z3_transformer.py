@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Optional
 
 import z3
+from starkware.cairo.lang.compiler.ast.bool_expr import BoolExpr
 from starkware.cairo.lang.compiler.ast.cairo_types import (
     CairoType,
     TypeFelt,
@@ -333,17 +334,11 @@ class Z3Transformer(IdentifierAwareVisitor):
 
         return result
 
-    def visit_BoolExprAtom(self, formula: BoolExprAtom):
-        bool_expr = formula.bool_expr
+    def visit_BoolExpr(self, bool_expr: BoolExpr):
         a, a_type = self.simplify_and_get_type(bool_expr.a)
         b, b_type = self.simplify_and_get_type(bool_expr.b)
 
-        if isinstance(a_type, (TypeFelt, TypePointer)):
-            assert isinstance(
-                b_type, (TypeFelt, TypePointer)
-            ), "both lhs and rhs must be felts or pointers"
-        else:
-            assert a_type == b_type, "Types of lhs and rhs must coincide"
+        assert a_type == b_type, "Types of lhs and rhs must coincide"
 
         if isinstance(a_type, TypeStruct):
             result = self.make_struct_eq(bool_expr.a, bool_expr.b, a_type)

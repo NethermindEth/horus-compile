@@ -141,17 +141,13 @@ class HorusPreprocessor(StarknetPreprocessor):
             check: z3.BoolRef,
             axiom: z3.BoolRef,
         ):
-            try:
-                current_check_bool_ref = check_dict[key]
-                check_dict[key] = BoolRefWithAxiom(
-                    z3.And(current_check_bool_ref.bool_ref, check),
-                    z3.And(current_check_bool_ref.axiom, axiom),
-                )
-            except KeyError:
-                check_dict[key] = BoolRefWithAxiom(
-                    check,
-                    axiom,
-                )
+            current_check_bool_ref = check_dict.get(
+                key, BoolRefWithAxiom(z3.BoolVal(True), z3.BoolVal(True))
+            )
+            check_dict[key] = BoolRefWithAxiom(
+                z3.And(current_check_bool_ref.bool_ref, check),
+                z3.And(current_check_bool_ref.axiom, axiom),
+            )
 
         is_function = isinstance(code_elem, CodeElementFunction)
 

@@ -1,0 +1,36 @@
+{
+  "checks": {
+    "asserts": {},
+    "invariants": {},
+    "post_conds": {
+      "__main__._Stack.add": {
+        "axiom": "(assert (and true true))\n",
+        "bool_ref": "(declare-fun memory (Int) Int)\n(declare-fun prime () Int)\n(declare-fun fp () Int)\n(declare-fun ap () Int)\n(assert (let ((a!1 (memory (mod (+ fp (- 3)) prime))))\n(let ((a!2 (memory (memory (mod (+ a!1 1) prime))))\n      (a!4 (+ (memory (mod (+ a!1 1) prime)) 1)))\n(let ((a!3 (= (memory (mod (- ap 2) prime)) (mod (+ (memory a!1) a!2) prime)))\n      (a!5 (= (memory (mod (- ap 1) prime)) (memory (mod a!4 prime)))))\n  (and true a!3 a!5)))))\n"
+      },
+      "__main__._Stack.lit": {
+        "axiom": "(assert (and true true))\n",
+        "bool_ref": "(declare-fun memory (Int) Int)\n(declare-fun prime () Int)\n(declare-fun fp () Int)\n(declare-fun ap () Int)\n(assert (let ((a!1 (memory (mod (+ fp (- 3)) prime)))\n      (a!3 (memory (mod (+ fp (- 4)) prime))))\n(let ((a!2 (= (memory (mod (- ap 2) prime)) a!1))\n      (a!4 (= (memory (mod (- ap 1) prime)) a!3)))\n  (and true a!2 a!4))))\n"
+      },
+      "__main__._Stack.top": {
+        "axiom": "(assert (and true true))\n",
+        "bool_ref": "(declare-fun memory (Int) Int)\n(declare-fun prime () Int)\n(declare-fun fp () Int)\n(declare-fun ap () Int)\n(assert (let ((a!1 (memory (mod (+ fp (- 3)) prime))))\n(let ((a!2 (= (memory (mod (- ap 1) prime)) (memory a!1))))\n  (and true a!2))))\n"
+      },
+      "__main__.main_": {
+        "axiom": "(assert (and true true))\n",
+        "bool_ref": "(declare-fun memory (Int) Int)\n(declare-fun prime () Int)\n(declare-fun ap () Int)\n(assert (let ((a!1 (= 11 (memory (mod (- ap 1) prime)))))\n  (and true a!1)))\n"
+      }
+    },
+    "pre_conds": {
+      "__main__._Stack.add": {
+        "axiom": "(assert (and true true))\n",
+        "bool_ref": "(declare-fun memory (Int) Int)\n(declare-fun prime () Int)\n(declare-fun fp () Int)\n(assert (let ((a!1 (memory (mod (+ fp (- 3)) prime))))\n(let ((a!2 (= 0 (memory (mod (+ a!1 1) prime)))))\n  (and true (not (= 0 a!1)) (not a!2)))))\n"
+      },
+      "__main__._Stack.top": {
+        "axiom": "(assert (and true true))\n",
+        "bool_ref": "(declare-fun memory (Int) Int)\n(declare-fun prime () Int)\n(declare-fun fp () Int)\n(assert (let ((a!1 (memory (mod (+ fp (- 3)) prime))))\n  (and true (not (= 0 a!1)))))\n"
+      }
+    },
+    "requires": {}
+  },
+  "logical_variables": {}
+}

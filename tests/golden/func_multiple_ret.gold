@@ -1,0 +1,24 @@
+{
+  "checks": {
+    "asserts": {},
+    "invariants": {
+      "__main__.succpred.add": {
+        "axiom": "(assert (and true true))\n",
+        "bool_ref": "(declare-fun memory (Int) Int)\n(declare-fun prime () Int)\n(declare-fun fp () Int)\n(assert (let ((a!1 (< 0 (memory (mod (- fp 3) prime)))))\n  (and true a!1)))\n"
+      }
+    },
+    "post_conds": {
+      "__main__.main": {
+        "axiom": "(assert (and true true))\n",
+        "bool_ref": "(declare-fun memory (Int) Int)\n(declare-fun prime () Int)\n(declare-fun ap () Int)\n(assert (let ((a!1 (= 41 (memory (mod (- ap 1) prime)))))\n  (and true a!1)))\n"
+      },
+      "__main__.succpred": {
+        "axiom": "(assert (and true true))\n",
+        "bool_ref": "(declare-fun memory (Int) Int)\n(declare-fun prime () Int)\n(declare-fun fp () Int)\n(declare-fun ap () Int)\n(assert (let ((a!1 (+ (memory (mod (- fp 3) prime)) 1))\n      (a!3 (= 0 (memory (mod (- fp 3) prime))))\n      (a!4 (- (memory (mod (- fp 3) prime)) 1))\n      (a!6 (< 0 (memory (mod (- fp 3) prime)))))\n(let ((a!2 (= (memory (mod (- ap 1) prime)) (mod a!1 prime)))\n      (a!5 (= (memory (mod (- ap 1) prime)) (mod a!4 prime))))\n  (and true (or (and a!2 a!3) (and a!5 a!6))))))\n"
+      }
+    },
+    "pre_conds": {},
+    "requires": {}
+  },
+  "logical_variables": {}
+}
