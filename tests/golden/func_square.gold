@@ -1,0 +1,33 @@
+{
+  "checks": {
+    "asserts": {},
+    "invariants": {},
+    "post_conds": {
+      "__main__.main": {
+        "bool_ref": [
+          "(= 25 (memory (mod (- ap 1) prime)))"
+        ]
+      },
+      "__main__.square": {
+        "bool_ref": [
+          "(let ((a!1 (* (memory (mod (- fp 3) prime)) (memory (mod (- fp 3) prime)))))",
+          "  (= (memory (mod (- ap 1) prime)) (mod a!1 prime)))"
+        ]
+      }
+    },
+    "pre_conds": {
+      "__main__.main": {
+        "bool_ref": [
+          "(= fp ap)"
+        ]
+      },
+      "__main__.square": {
+        "bool_ref": [
+          "(= fp ap)"
+        ]
+      }
+    },
+    "requires": {}
+  },
+  "logical_variables": {}
+}

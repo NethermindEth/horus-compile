@@ -1,0 +1,55 @@
+{
+  "checks": {
+    "asserts": {},
+    "invariants": {},
+    "post_conds": {
+      "__main__._Stack.add": {
+        "bool_ref": [
+          "(let ((a!1 (memory (mod (+ fp (- 3)) prime))))",
+          "(let ((a!2 (memory (memory (mod (+ a!1 1) prime))))",
+          "      (a!4 (+ (memory (mod (+ a!1 1) prime)) 1)))",
+          "(let ((a!3 (= (memory (mod (- ap 2) prime)) (mod (+ (memory a!1) a!2) prime)))",
+          "      (a!5 (= (memory (mod (- ap 1) prime)) (memory (mod a!4 prime)))))",
+          "  (and a!3 a!5))))"
+        ]
+      },
+      "__main__._Stack.lit": {
+        "bool_ref": [
+          "(let ((a!1 (memory (mod (+ fp (- 3)) prime)))",
+          "      (a!3 (memory (mod (+ fp (- 4)) prime))))",
+          "(let ((a!2 (= (memory (mod (- ap 2) prime)) a!1))",
+          "      (a!4 (= (memory (mod (- ap 1) prime)) a!3)))",
+          "  (and a!2 a!4)))"
+        ]
+      },
+      "__main__._Stack.top": {
+        "bool_ref": [
+          "(let ((a!1 (memory (mod (+ fp (- 3)) prime))))",
+          "  (= (memory (mod (- ap 1) prime)) (memory a!1)))"
+        ]
+      },
+      "__main__.main_": {
+        "bool_ref": [
+          "(= 11 (memory (mod (- ap 1) prime)))"
+        ]
+      }
+    },
+    "pre_conds": {
+      "__main__._Stack.add": {
+        "bool_ref": [
+          "(let ((a!1 (memory (mod (+ fp (- 3)) prime))))",
+          "(let ((a!2 (= 0 (memory (mod (+ a!1 1) prime)))))",
+          "  (and (not (= 0 a!1)) (not a!2))))"
+        ]
+      },
+      "__main__._Stack.top": {
+        "bool_ref": [
+          "(let ((a!1 (memory (mod (+ fp (- 3)) prime))))",
+          "  (not (= 0 a!1)))"
+        ]
+      }
+    },
+    "requires": {}
+  },
+  "logical_variables": {}
+}

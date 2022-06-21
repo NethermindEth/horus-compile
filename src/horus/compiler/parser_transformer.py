@@ -130,6 +130,7 @@ class HorusTransformer(ParserTransformer):
     def bool_expr_gt(self, lhs, rhs):
         return BoolExprCompare(lhs, rhs, ">")
 
+    @lark.v_args(inline=True)
     def bool_expr_parentheses(self, formula):
         return formula
 

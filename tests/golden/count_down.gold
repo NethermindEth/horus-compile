@@ -1,0 +1,24 @@
+{
+  "checks": {
+    "asserts": {},
+    "invariants": {
+      "__main__.main.loop": {
+        "bool_ref": [
+          "(let ((a!1 (< 0 (memory (mod (- ap 1) prime))))",
+          "      (a!2 (>= 123456789987654321 (memory (mod (- ap 1) prime)))))",
+          "  (and a!1 a!2))"
+        ]
+      }
+    },
+    "post_conds": {
+      "__main__.main": {
+        "bool_ref": [
+          "(= 0 (memory (mod (- ap 1) prime)))"
+        ]
+      }
+    },
+    "pre_conds": {},
+    "requires": {}
+  },
+  "logical_variables": {}
+}
