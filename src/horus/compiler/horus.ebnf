@@ -36,7 +36,7 @@ logical_identifier: LOGICAL_IDENTIFIER ("." IDENTIFIER)*
 ?bool_unary: bool_atom
            | "!" bool_atom -> bool_unary_neg
 
-bool_atom: bool_expr
+?bool_atom: bool_expr
          | expr "<=" expr   -> bool_expr_le
          | expr "<" expr    -> bool_expr_lt
          | expr ">=" expr   -> bool_expr_ge
