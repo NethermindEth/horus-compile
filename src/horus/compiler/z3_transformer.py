@@ -51,7 +51,6 @@ from starkware.cairo.lang.compiler.type_system_visitor import simplify_type_syst
 
 from horus.compiler.code_elements import (
     BoolConst,
-    BoolExprAtom,
     BoolExprCompare,
     BoolFormula,
     BoolNegation,
@@ -60,6 +59,7 @@ from horus.compiler.code_elements import (
 )
 from horus.compiler.type_checker import HorusTypeChecker
 from horus.compiler.var_names import *
+from horus.utils import z3And, z3True
 
 
 class Z3ExpressionTransformer(IdentifierAwareVisitor):
@@ -272,7 +272,7 @@ class Z3Transformer(IdentifierAwareVisitor):
             return ExprSubscript(expr, ExprConst(ind))
 
     def make_tuple_eq(self, a: Expression, b: Expression, type: TypeTuple):
-        result = True
+        result = z3True
         for i, member in enumerate(type.members):
             if member.name is not None:
                 member_a = self.get_member(a, member.name)
@@ -282,48 +282,50 @@ class Z3Transformer(IdentifierAwareVisitor):
                 member_b = self.get_element_at(b, i)
 
             if isinstance(member.typ, (TypeFelt, TypePointer)):
-                result = z3.And(
+                result = z3And(
                     result,
                     get_smt_expression(self.simplify(member_a), self.identifiers)
                     == get_smt_expression(self.simplify(member_b), self.identifiers),
                 )
             elif isinstance(member.typ, TypeStruct):
-                result = z3.And(
+                result = z3And(
                     result, self.make_struct_eq(member_a, member_b, member.typ)
                 )
             elif isinstance(member.typ, TypeTuple):
-                result = z3.And(
+                result = z3And(
                     result, self.make_tuple_eq(member_a, member_b, member.typ)
                 )
 
         return result
 
-    def make_struct_eq(self, a: Expression, b: Expression, type: TypeStruct):
+    def make_struct_eq(
+        self, a: Expression, b: Expression, type: TypeStruct
+    ) -> z3.BoolRef:
         definition = get_struct_definition(
             struct_name=type.resolved_scope, identifier_manager=self.identifiers
         )
         assert isinstance(
             definition, StructDefinition
         ), "TypeStruct must contain StructDefinition"
-        result = True
+        result = z3True
         for member_name, member_definition in definition.members.items():
             member_a = self.get_member(a, member_name)
             member_b = self.get_member(b, member_name)
             if isinstance(member_definition.cairo_type, (TypeFelt, TypePointer)):
-                result = z3.And(
+                result = z3And(
                     result,
                     get_smt_expression(self.simplify(member_a), self.identifiers)
                     == get_smt_expression(self.simplify(member_b), self.identifiers),
                 )
             elif isinstance(member_definition.cairo_type, TypeStruct):
-                result = z3.And(
+                result = z3And(
                     result,
                     self.make_struct_eq(
                         member_a, member_b, member_definition.cairo_type
                     ),
                 )
             elif isinstance(member_definition.cairo_type, TypeTuple):
-                result = z3.And(
+                result = z3And(
                     result,
                     self.make_tuple_eq(
                         member_a, member_b, member_definition.cairo_type
@@ -381,7 +383,7 @@ class Z3Transformer(IdentifierAwareVisitor):
         b = self.visit(formula.b)
 
         if formula.op == "&":
-            return z3.And(a, b)
+            return z3And(a, b)
         elif formula.op == "|":
             return z3.Or(a, b)
         elif formula.op == "->":
