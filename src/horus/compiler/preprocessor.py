@@ -118,7 +118,7 @@ class HorusPreprocessor(StarknetPreprocessor):
                 if member.name is not None:
                     member_name = f"{declaration.name}.{member.name}"
                 else:
-                    member_name = f"{declaration.name}_{i}"
+                    member_name = f"{declaration.name}.{i}"
                 self.add_logical_variable(
                     CodeElementLogicalVariableDeclaration(member_name, member.typ),
                     is_member=True,

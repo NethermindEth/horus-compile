@@ -21,15 +21,15 @@
       "12": {
         "bool_ref": [
           "(let ((a!1 (mod (+ (mod (- ap 0) prime) (- 3)) prime)))",
-          "(let ((a!2 (= $m_0 (memory (mod (+ a!1 0) prime))))",
-          "      (a!3 (= $m_1.x (memory (mod (+ a!1 1) prime))))",
+          "(let ((a!2 (= $m.0 (memory (mod (+ a!1 0) prime))))",
+          "      (a!3 (= $m.1.x (memory (mod (+ a!1 1) prime))))",
           "      (a!4 (mod (+ (mod (+ a!1 1) prime) 1) prime)))",
-          "  (and a!2 a!3 (= $m_1.y (memory a!4)))))"
+          "  (and a!2 a!3 (= $m.1.y (memory a!4)))))"
         ],
         "decls": {
-          "$m_0": 0,
-          "$m_1.x": 0,
-          "$m_1.y": 0
+          "$m.0": 0,
+          "$m.1.x": 0,
+          "$m.1.y": 0
         }
       }
     }

@@ -97,7 +97,7 @@ class HorusTypeChecker(TypeSystemVisitor):
                         f"Tuple index {offset_value} is out of range [0, {tuple_len}).",
                         location=expr.location,
                     )
-                logical_identifier_name = f"{inner_expr.name}_{offset_value}"
+                logical_identifier_name = f"{inner_expr.name}.{offset_value}"
                 return (
                     ExprLogicalIdentifier(logical_identifier_name),
                     self.logical_identifiers[logical_identifier_name],
