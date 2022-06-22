@@ -6,31 +6,12 @@
     "pre_conds": {},
     "requires": {
       "6": {
-        "bool_ref": [
-          "(let ((a!1 (mod (+ (mod (- ap 0) prime) (- 3)) prime)))",
-          "(let ((a!2 (= $n.point.y (memory (mod (+ a!1 1) prime))))",
-          "      (a!3 (= $n.z (memory (mod (+ a!1 2) prime)))))",
-          "  (and (= $n.point.x (memory a!1)) a!2 a!3)))"
-        ],
-        "decls": {
-          "$n.point.x": 0,
-          "$n.point.y": 0,
-          "$n.z": 0
-        }
+        "axiom": "(assert (and true true))\n",
+        "bool_ref": "(declare-fun memory (Int) Int)\n(declare-fun prime () Int)\n(declare-fun ap () Int)\n(declare-fun $n.z () Int)\n(declare-fun $n.point.y () Int)\n(declare-fun $n.point.x () Int)\n(assert (let ((a!1 (mod (+ (mod (- ap 0) prime) (- 3)) prime)))\n(let ((a!2 (= $n.point.y (memory (mod (+ a!1 1) prime))))\n      (a!3 (= $n.z (memory (mod (+ a!1 2) prime)))))\n  (and true true true (= $n.point.x (memory a!1)) a!2 a!3))))\n"
       },
       "12": {
-        "bool_ref": [
-          "(let ((a!1 (mod (+ (mod (- ap 0) prime) (- 3)) prime)))",
-          "(let ((a!2 (= $m_0 (memory (mod (+ a!1 0) prime))))",
-          "      (a!3 (= $m_1.x (memory (mod (+ a!1 1) prime))))",
-          "      (a!4 (mod (+ (mod (+ a!1 1) prime) 1) prime)))",
-          "  (and a!2 a!3 (= $m_1.y (memory a!4)))))"
-        ],
-        "decls": {
-          "$m_0": 0,
-          "$m_1.x": 0,
-          "$m_1.y": 0
-        }
+        "axiom": "(assert (and true true))\n",
+        "bool_ref": "(declare-fun memory (Int) Int)\n(declare-fun prime () Int)\n(declare-fun ap () Int)\n(declare-fun $m_1.y () Int)\n(declare-fun $m_1.x () Int)\n(declare-fun $m_0 () Int)\n(assert (let ((a!1 (mod (+ (mod (- ap 0) prime) (- 3)) prime)))\n(let ((a!2 (= $m_0 (memory (mod (+ a!1 0) prime))))\n      (a!3 (= $m_1.x (memory (mod (+ a!1 1) prime))))\n      (a!4 (mod (+ (mod (+ a!1 1) prime) 1) prime)))\n  (and true true a!2 true a!3 (= $m_1.y (memory a!4))))))\n"
       }
     }
   },

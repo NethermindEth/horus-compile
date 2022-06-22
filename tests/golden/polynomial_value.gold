@@ -2,14 +2,8 @@
   "checks": {
     "asserts": {
       "10": {
-        "bool_ref": [
-          "(let ((a!1 (= 123 (memory (mod (+ fp 1) prime))))",
-          "      (a!2 (= 12300 (memory (mod (+ fp 2) prime))))",
-          "      (a!3 (= 12345 (memory (mod (+ fp 3) prime))))",
-          "      (a!4 (= 1234500 (memory (mod (+ fp 4) prime))))",
-          "      (a!5 (= 1234567 (memory (mod (+ fp 5) prime)))))",
-          "  (and (= 100 (memory fp)) a!1 a!2 a!3 a!4 a!5))"
-        ]
+        "axiom": "(assert (and true true true true true true true))\n",
+        "bool_ref": "(declare-fun memory (Int) Int)\n(declare-fun prime () Int)\n(declare-fun fp () Int)\n(assert (let ((a!1 (= 123 (memory (mod (+ fp 1) prime))))\n      (a!2 (= 12300 (memory (mod (+ fp 2) prime))))\n      (a!3 (= 12345 (memory (mod (+ fp 3) prime))))\n      (a!4 (= 1234500 (memory (mod (+ fp 4) prime))))\n      (a!5 (= 1234567 (memory (mod (+ fp 5) prime)))))\n  (and true (= 100 (memory fp)) a!1 a!2 a!3 a!4 a!5)))\n"
       }
     },
     "invariants": {},

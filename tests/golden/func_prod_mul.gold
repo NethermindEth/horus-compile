@@ -3,31 +3,22 @@
     "asserts": {},
     "invariants": {
       "__main__.prod.loop": {
-        "bool_ref": [
-          "(let ((a!1 (* (memory (mod (- fp 3) prime)) (memory (mod (- ap 2) prime))))",
-          "      (a!3 (* (memory (mod (- fp 3) prime)) (memory (mod (- fp 4) prime)))))",
-          "(let ((a!2 (+ (memory (mod (- ap 1) prime)) (mod a!1 prime))))",
-          "  (= (mod a!2 prime) (mod a!3 prime))))"
-        ]
+        "axiom": "(assert (and true true))\n",
+        "bool_ref": "(declare-fun prime () Int)\n(declare-fun memory (Int) Int)\n(declare-fun fp () Int)\n(declare-fun ap () Int)\n(assert (let ((a!1 (* (memory (mod (- fp 3) prime)) (memory (mod (- ap 2) prime))))\n      (a!3 (* (memory (mod (- fp 3) prime)) (memory (mod (- fp 4) prime)))))\n(let ((a!2 (+ (memory (mod (- ap 1) prime)) (mod a!1 prime))))\n  (and true (= (mod a!2 prime) (mod a!3 prime))))))\n"
       }
     },
     "post_conds": {
       "__main__.main": {
-        "bool_ref": [
-          "(= 93 (memory (mod (- ap 1) prime)))"
-        ]
+        "axiom": "(assert (and true true))\n",
+        "bool_ref": "(declare-fun memory (Int) Int)\n(declare-fun prime () Int)\n(declare-fun ap () Int)\n(assert (let ((a!1 (= 93 (memory (mod (- ap 1) prime)))))\n  (and true a!1)))\n"
       },
       "__main__.mul": {
-        "bool_ref": [
-          "(let ((a!1 (* 3 (memory (mod (- fp 3) prime)))))",
-          "  (= (memory (mod (- ap 1) prime)) (mod a!1 prime)))"
-        ]
+        "axiom": "(assert (and true true))\n",
+        "bool_ref": "(declare-fun prime () Int)\n(declare-fun memory (Int) Int)\n(declare-fun fp () Int)\n(declare-fun ap () Int)\n(assert (let ((a!1 (* 3 (memory (mod (- fp 3) prime)))))\n(let ((a!2 (= (memory (mod (- ap 1) prime)) (mod a!1 prime))))\n  (and true a!2))))\n"
       },
       "__main__.prod": {
-        "bool_ref": [
-          "(let ((a!1 (* (memory (mod (- fp 3) prime)) (memory (mod (- fp 4) prime)))))",
-          "  (= (memory (mod (- ap 1) prime)) (mod a!1 prime)))"
-        ]
+        "axiom": "(assert (and true true))\n",
+        "bool_ref": "(declare-fun prime () Int)\n(declare-fun memory (Int) Int)\n(declare-fun fp () Int)\n(declare-fun ap () Int)\n(assert (let ((a!1 (* (memory (mod (- fp 3) prime)) (memory (mod (- fp 4) prime)))))\n(let ((a!2 (= (memory (mod (- ap 1) prime)) (mod a!1 prime))))\n  (and true a!2))))\n"
       }
     },
     "pre_conds": {},

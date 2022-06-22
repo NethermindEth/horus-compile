@@ -4,15 +4,12 @@
     "invariants": {},
     "post_conds": {
       "__main__.main": {
-        "bool_ref": [
-          "(= 53 (memory (mod (- ap 1) prime)))"
-        ]
+        "axiom": "(assert (and true true))\n",
+        "bool_ref": "(declare-fun memory (Int) Int)\n(declare-fun prime () Int)\n(declare-fun ap () Int)\n(assert (let ((a!1 (= 53 (memory (mod (- ap 1) prime)))))\n  (and true a!1)))\n"
       },
       "__main__.succ": {
-        "bool_ref": [
-          "(let ((a!1 (+ (memory (mod (- fp 3) prime)) 1)))",
-          "  (= (memory (mod (- ap 1) prime)) (mod a!1 prime)))"
-        ]
+        "axiom": "(assert (and true true))\n",
+        "bool_ref": "(declare-fun prime () Int)\n(declare-fun memory (Int) Int)\n(declare-fun fp () Int)\n(declare-fun ap () Int)\n(assert (let ((a!1 (+ (memory (mod (- fp 3) prime)) 1)))\n(let ((a!2 (= (memory (mod (- ap 1) prime)) (mod a!1 prime))))\n  (and true a!2))))\n"
       }
     },
     "pre_conds": {},

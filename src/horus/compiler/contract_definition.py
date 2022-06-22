@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import field
 
 import marshmallow.fields as mfields
 import marshmallow_dataclass
@@ -9,11 +9,25 @@ from marshmallow.exceptions import ValidationError
 from starkware.starknet.services.api.contract_definition import ContractDefinition
 
 from horus.compiler.var_names import *
-from horus.utils import get_decls, make_declare_funs
 
 
-@dataclass
-class Assertion:
+class Z3BoolRefField(mfields.Field):
+    def _serialize(self, value: z3.BoolRef, attr, obj, **kwargs):
+        # The purpose of creating a solver instance here
+        # is to have variable declarations at the resulting smtlib expressions.
+        solver = z3.Solver()
+        solver.add(value)
+        return super()._serialize(solver.sexpr(), attr, obj, **kwargs)
+
+    def _deserialize(self, value, attr, data, **kwargs):
+        parsed = z3.parse_smt2_string(value)
+        if len(parsed) != 1:
+            raise ValidationError("Can't deserialize z3.BoolRef")
+        return parsed[0]
+
+
+@marshmallow_dataclass.dataclass(frozen=True)
+class BoolRefWithAxiom:
     """
     A check with an additional constraint which must be
     added to solver's goal in a positive way.
@@ -21,71 +35,64 @@ class Assertion:
     condition for some variable.
     """
 
-    bool_ref: z3.BoolRef
-    axiom: z3.BoolRef
-
-
-class AssertionField(mfields.Field):
-    def _serialize(self, value: Assertion, attr, obj, **kwargs):
-        decls = get_decls(value.bool_ref)
-        for var in HORUS_DECLS.keys():
-            decls.pop(var, None)
-        v = {
-            "axiom": value.axiom.sexpr().split("\n"),
-            "bool_ref": value.bool_ref.sexpr().split("\n"),
-            "decls": decls,
-        }
-        if not decls:
-            del v["decls"]
-        if z3.is_true(value.axiom):
-            del v["axiom"]
-        return super()._serialize(v, attr, obj, **kwargs)
-
-    def _deserialize(self, value, attr, data, **kwargs):
-        v = super()._deserialize(value, attr, data, **kwargs)
-        declare_funs = make_declare_funs(v.get("decls", {}))
-        axiom_str = "\n".join(v.get("axiom", ["true"]))
-        bool_ref_str = "\n".join(v["bool_ref"])
-        axiom_full = f"{declare_funs}\n(assert {axiom_str})"
-        bool_ref_full = f"{declare_funs}\n(assert {bool_ref_str})"
-        axioms = z3.parse_smt2_string(axiom_full, decls=HORUS_DECLS)
-        bool_refs = z3.parse_smt2_string(bool_ref_full, decls=HORUS_DECLS)
-        if len(axioms) != 1:
-            raise ValidationError(f"Can't deserialize '{axiom_full}'")
-        if len(bool_refs) != 1:
-            raise ValidationError(f"Can't deserialize '{bool_ref_full}'")
-        return Assertion(bool_ref=bool_refs[0], axiom=axioms[0])  # type: ignore
+    bool_ref: z3.BoolRef = field(metadata=dict(marshmallow_field=Z3BoolRefField()))
+    axiom: z3.BoolRef = field(metadata=dict(marshmallow_field=Z3BoolRefField()))
 
 
 @marshmallow_dataclass.dataclass(frozen=True)
 class HorusChecks:
-    asserts: dict[int, Assertion] = field(
+    asserts: dict[int, BoolRefWithAxiom] = field(
         metadata=dict(
-            marshmallow_field=mfields.Dict(keys=mfields.Int(), values=AssertionField())
+            marshmallow_field=mfields.Dict(
+                keys=mfields.Int(),
+                values=mfields.Nested(
+                    marshmallow_dataclass.class_schema(BoolRefWithAxiom)
+                ),
+            )
         ),
         default_factory=dict,
     )
-    requires: dict[int, Assertion] = field(
+    requires: dict[int, BoolRefWithAxiom] = field(
         metadata=dict(
-            marshmallow_field=mfields.Dict(keys=mfields.Int(), values=AssertionField())
+            marshmallow_field=mfields.Dict(
+                keys=mfields.Int(),
+                values=mfields.Nested(
+                    marshmallow_dataclass.class_schema(BoolRefWithAxiom)
+                ),
+            )
         ),
         default_factory=dict,
     )
-    pre_conds: dict[str, Assertion] = field(
+    pre_conds: dict[str, BoolRefWithAxiom] = field(
         metadata=dict(
-            marshmallow_field=mfields.Dict(keys=mfields.Str(), values=AssertionField())
+            marshmallow_field=mfields.Dict(
+                keys=mfields.Str(),
+                values=mfields.Nested(
+                    marshmallow_dataclass.class_schema(BoolRefWithAxiom)
+                ),
+            )
         ),
         default_factory=dict,
     )
-    post_conds: dict[str, Assertion] = field(
+    post_conds: dict[str, BoolRefWithAxiom] = field(
         metadata=dict(
-            marshmallow_field=mfields.Dict(keys=mfields.Str(), values=AssertionField())
+            marshmallow_field=mfields.Dict(
+                keys=mfields.Str(),
+                values=mfields.Nested(
+                    marshmallow_dataclass.class_schema(BoolRefWithAxiom)
+                ),
+            )
         ),
         default_factory=dict,
     )
-    invariants: dict[str, Assertion] = field(
+    invariants: dict[str, BoolRefWithAxiom] = field(
         metadata=dict(
-            marshmallow_field=mfields.Dict(keys=mfields.Str(), values=AssertionField())
+            marshmallow_field=mfields.Dict(
+                keys=mfields.Str(),
+                values=mfields.Nested(
+                    marshmallow_dataclass.class_schema(BoolRefWithAxiom)
+                ),
+            )
         ),
         default_factory=dict,
     )

@@ -3,30 +3,24 @@
     "asserts": {},
     "invariants": {
       "__main__.main.end_loop": {
-        "bool_ref": [
-          "(= 0 (memory (mod (- ap 1) prime)))"
-        ]
+        "axiom": "(assert (and true true))\n",
+        "bool_ref": "(declare-fun memory (Int) Int)\n(declare-fun prime () Int)\n(declare-fun ap () Int)\n(assert (let ((a!1 (= 0 (memory (mod (- ap 1) prime)))))\n  (and true a!1)))\n"
       },
       "__main__.main.loop": {
-        "bool_ref": [
-          "(let ((a!1 (< 0 (memory (mod (- ap 1) prime))))",
-          "      (a!2 (>= 5 (memory (mod (- ap 1) prime)))))",
-          "  (and a!1 a!2))"
-        ]
+        "axiom": "(assert (and true true))\n",
+        "bool_ref": "(declare-fun memory (Int) Int)\n(declare-fun prime () Int)\n(declare-fun ap () Int)\n(assert (let ((a!1 (< 0 (memory (mod (- ap 1) prime))))\n      (a!2 (>= 5 (memory (mod (- ap 1) prime)))))\n  (and true a!1 a!2)))\n"
       }
     },
     "post_conds": {
       "__main__.main": {
-        "bool_ref": [
-          "(= 0 (memory (mod (- ap 1) prime)))"
-        ]
+        "axiom": "(assert (and true true))\n",
+        "bool_ref": "(declare-fun memory (Int) Int)\n(declare-fun prime () Int)\n(declare-fun ap () Int)\n(assert (let ((a!1 (= 0 (memory (mod (- ap 1) prime)))))\n  (and true a!1)))\n"
       }
     },
     "pre_conds": {
       "__main__.main": {
-        "bool_ref": [
-          "(= ap fp)"
-        ]
+        "axiom": "(assert (and true true))\n",
+        "bool_ref": "(declare-fun fp () Int)\n(declare-fun ap () Int)\n(assert (and true (= ap fp)))\n"
       }
     },
     "requires": {}

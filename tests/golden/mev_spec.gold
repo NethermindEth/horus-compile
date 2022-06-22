@@ -3,17 +3,14 @@
     "asserts": {},
     "invariants": {
       "__main__.main.loop": {
-        "bool_ref": [
-          "(let ((a!1 (- 123456789987654321 (memory (mod (- ap 2) prime)))))",
-          "  (= (memory (mod (- ap 1) prime)) (mod (* 2 (mod a!1 prime)) prime)))"
-        ]
+        "axiom": "(assert (and true true))\n",
+        "bool_ref": "(declare-fun prime () Int)\n(declare-fun memory (Int) Int)\n(declare-fun ap () Int)\n(assert (let ((a!1 (- 123456789987654321 (memory (mod (- ap 2) prime)))))\n(let ((a!2 (= (memory (mod (- ap 1) prime)) (mod (* 2 (mod a!1 prime)) prime))))\n  (and true a!2))))\n"
       }
     },
     "post_conds": {
       "__main__.main": {
-        "bool_ref": [
-          "(= (memory (mod (- ap 1) prime)) (mod (* 2 123456789987654321) prime))"
-        ]
+        "axiom": "(assert (and true true))\n",
+        "bool_ref": "(declare-fun prime () Int)\n(declare-fun memory (Int) Int)\n(declare-fun ap () Int)\n(assert (let ((a!1 (= (memory (mod (- ap 1) prime))\n              (mod (* 2 123456789987654321) prime))))\n  (and true a!1)))\n"
       }
     },
     "pre_conds": {},
