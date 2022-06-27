@@ -39,5 +39,6 @@
       "$m": "(felt, __main__.Point)",
       "$n": "__main__.NestedStruct"
     }
-  }
+  },
+  "smt": ""
 }

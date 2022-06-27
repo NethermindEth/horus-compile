@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Optional
 
 import lark
+import z3
 from starkware.cairo.lang.compiler.ast.expr import *
 from starkware.cairo.lang.compiler.error_handling import InputFile
 from starkware.cairo.lang.compiler.parser_transformer import (
@@ -20,7 +21,9 @@ from horus.compiler.code_elements import (
     CheckedCodeElement,
     CodeElementCheck,
     CodeElementLogicalVariableDeclaration,
+    CodeElementSmt,
     ExprLogicalIdentifier,
+    HorusCodeElement,
 )
 
 
@@ -53,16 +56,14 @@ class HorusTransformer(ParserTransformer):
                 "@require",
                 "@invariant",
                 "@declare",
+                "@smt",
             ]:
                 if possible_annotation.startswith(annotation):
                     check = horus.compiler.parser.parse(
                         filename=self.input_file.filename,
                         code=possible_annotation,
                         code_type="annotation",
-                        expected_type=(
-                            CodeElementCheck,
-                            CodeElementLogicalVariableDeclaration,
-                        ),
+                        expected_type=(HorusCodeElement),
                         parser_context=self.parser_context,
                     )
                     code_elem = super().commented_code_element(value[:1], meta)
@@ -157,6 +158,10 @@ class HorusTransformer(ParserTransformer):
     @lark.v_args(inline=True)
     def declare_annotation(self, identifier, type):
         return CodeElementLogicalVariableDeclaration(identifier.name, type)
+
+    @lark.v_args(inline=True)
+    def smt_annotation(self, smt_string):
+        return CodeElementSmt(str(smt_string)[1:-1])
 
     def transform(self, tree: lark.Tree):
         # The nodes of the tree imported from cairo.ebnf appear with

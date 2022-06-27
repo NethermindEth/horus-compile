@@ -25,5 +25,6 @@
     },
     "requires": {}
   },
-  "logical_variables": {}
+  "logical_variables": {},
+  "smt": ""
 }

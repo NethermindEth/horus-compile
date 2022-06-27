@@ -22,6 +22,8 @@ from horus.compiler.code_elements import (
     CheckedCodeElement,
     CodeElementCheck,
     CodeElementLogicalVariableDeclaration,
+    CodeElementSmt,
+    HorusCodeElement,
 )
 from horus.compiler.contract_definition import Assertion, HorusChecks
 from horus.compiler.parser import *
@@ -34,6 +36,7 @@ class HorusProgram(StarknetPreprocessedProgram):
     checks: HorusChecks
     ret_map: dict[int, str]
     logical_variables: dict[str, dict[str, str]]
+    smt: str
 
 
 class HorusPreprocessor(StarknetPreprocessor):
@@ -47,8 +50,9 @@ class HorusPreprocessor(StarknetPreprocessor):
         # This is used to defer pre/postcondition unfolding
         # until the visitor steps into the body of the function
         # when the preprocessor stumbles upon a function.
-        self.current_checks: list[CodeElementCheck] = []
+        self.current_checks: list[HorusCodeElement] = []
         self.current_function = None
+        self.smt = ""
 
     def get_program(self) -> HorusProgram:
         starknet_program = super().get_program()
@@ -57,6 +61,7 @@ class HorusPreprocessor(StarknetPreprocessor):
             checks=self.checks,
             ret_map=self.ret_map,
             logical_variables=self.logical_signatures,
+            smt=self.smt,
         )
 
     def visit_CodeBlock(self, code_block: CodeBlock):
@@ -67,7 +72,9 @@ class HorusPreprocessor(StarknetPreprocessor):
 
     def visit_CheckedCodeElement(self, checked_code_element: CheckedCodeElement):
         result = self.visit(checked_code_element.code_elm)
-        self.current_checks.append(checked_code_element.check)
+        if isinstance(checked_code_element.annotation, CodeElementSmt):
+            self.smt += checked_code_element.annotation.smt_expr
+        self.current_checks.append(checked_code_element.annotation)
         return result
 
     def visit(self, obj):
@@ -126,10 +133,14 @@ class HorusPreprocessor(StarknetPreprocessor):
 
         if not is_member:
             try:
-                variables_of_the_function = self.logical_signatures[self.current_scope]
+                variables_of_the_function = self.logical_signatures[
+                    str(self.current_scope)
+                ]
             except KeyError:
-                self.logical_signatures[self.current_scope] = {}
-                variables_of_the_function = self.logical_signatures[self.current_scope]
+                self.logical_signatures[str(self.current_scope)] = {}
+                variables_of_the_function = self.logical_signatures[
+                    str(self.current_scope)
+                ]
 
             variables_of_the_function[declaration.name] = declaration.type.format()
 
@@ -160,7 +171,7 @@ class HorusPreprocessor(StarknetPreprocessor):
                     raise PreprocessorError(
                         "@declare annotation is not allowed here", code_elem.location
                     )
-            else:
+            elif isinstance(parsed_check, CodeElementCheck):
                 z3_transformer = Z3Transformer(
                     self.identifiers, self, self.logical_identifiers
                 )

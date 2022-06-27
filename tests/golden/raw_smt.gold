@@ -2,7 +2,7 @@
   "checks": {
     "asserts": {},
     "invariants": {
-      "__main__.main.loop": {
+      "__main__.prod.loop": {
         "bool_ref": [
           "(let ((a!1 (* (memory (mod (- fp 3) prime)) (memory (mod (- ap 2) prime))))",
           "      (a!3 (* (memory (mod (- fp 3) prime)) (memory (mod (- fp 4) prime)))))",
@@ -14,6 +14,17 @@
     "post_conds": {
       "__main__.main": {
         "bool_ref": [
+          "(= 93 (memory (mod (- ap 1) prime)))"
+        ]
+      },
+      "__main__.mul": {
+        "bool_ref": [
+          "(let ((a!1 (* 3 (memory (mod (- fp 3) prime)))))",
+          "  (= (memory (mod (- ap 1) prime)) (mod a!1 prime)))"
+        ]
+      },
+      "__main__.prod": {
+        "bool_ref": [
           "(let ((a!1 (* (memory (mod (- fp 3) prime)) (memory (mod (- fp 4) prime)))))",
           "  (= (memory (mod (- ap 1) prime)) (mod a!1 prime)))"
         ]
@@ -23,5 +34,5 @@
     "requires": {}
   },
   "logical_variables": {},
-  "smt": ""
+  "smt": "(declare-fun x () Int)(assert (= x 1))(declare-fun y () Int)(assert (= y 1))"
 }

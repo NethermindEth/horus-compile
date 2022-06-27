@@ -1,6 +1,5 @@
-from __future__ import annotations
-
 from dataclasses import dataclass, field
+from typing import Dict
 
 import marshmallow.fields as mfields
 import marshmallow_dataclass
@@ -59,31 +58,31 @@ class AssertionField(mfields.Field):
 
 @marshmallow_dataclass.dataclass(frozen=True)
 class HorusChecks:
-    asserts: dict[int, Assertion] = field(
+    asserts: Dict[int, Assertion] = field(
         metadata=dict(
             marshmallow_field=mfields.Dict(keys=mfields.Int(), values=AssertionField())
         ),
         default_factory=dict,
     )
-    requires: dict[int, Assertion] = field(
+    requires: Dict[int, Assertion] = field(
         metadata=dict(
             marshmallow_field=mfields.Dict(keys=mfields.Int(), values=AssertionField())
         ),
         default_factory=dict,
     )
-    pre_conds: dict[str, Assertion] = field(
+    pre_conds: Dict[str, Assertion] = field(
         metadata=dict(
             marshmallow_field=mfields.Dict(keys=mfields.Str(), values=AssertionField())
         ),
         default_factory=dict,
     )
-    post_conds: dict[str, Assertion] = field(
+    post_conds: Dict[str, Assertion] = field(
         metadata=dict(
             marshmallow_field=mfields.Dict(keys=mfields.Str(), values=AssertionField())
         ),
         default_factory=dict,
     )
-    invariants: dict[str, Assertion] = field(
+    invariants: Dict[str, Assertion] = field(
         metadata=dict(
             marshmallow_field=mfields.Dict(keys=mfields.Str(), values=AssertionField())
         ),
@@ -101,13 +100,13 @@ class HorusDefinition(ContractDefinition):
         ),
         default=HorusChecks(),
     )
-    ret_map: dict[int, str] = field(
+    ret_map: Dict[int, str] = field(
         metadata=dict(
             marshmallow_field=mfields.Dict(keys=mfields.Int(), values=mfields.Str())
         ),
         default_factory=dict,
     )
-    logical_variables: dict[str, dict[str, str]] = field(
+    logical_variables: Dict[str, Dict[str, str]] = field(
         metadata=dict(
             marshmallow_field=mfields.Dict(
                 mfields.Str(), mfields.Dict(keys=mfields.Str(), values=mfields.Str())
@@ -115,3 +114,4 @@ class HorusDefinition(ContractDefinition):
         ),
         default_factory=dict,
     )
+    smt: str = ""

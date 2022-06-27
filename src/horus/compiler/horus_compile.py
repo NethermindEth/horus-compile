@@ -43,6 +43,7 @@ def assemble_horus_contract(
         checks=preprocessed_program.checks,
         ret_map=preprocessed_program.ret_map,
         logical_variables=preprocessed_program.logical_variables,
+        smt=preprocessed_program.smt
     )
 
 
@@ -73,7 +74,7 @@ class MonkeyPatchStage(Stage):
     def run(self, context: PassManagerContext):
         def visit_CheckedCodeElement(self, checked_code_element):
             return CheckedCodeElement(
-                check=checked_code_element.check,
+                annotation=checked_code_element.annotation,
                 code_elm=self.visit(checked_code_element.code_elm),
                 location=checked_code_element.location,
             )

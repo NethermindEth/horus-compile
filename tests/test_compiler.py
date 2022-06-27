@@ -23,6 +23,7 @@ def test_golden(capsys, monkeypatch):
                     checks
                 ),
                 "logical_variables": contract_with_checks.logical_variables,
+                "smt": contract_with_checks.smt,
             }
             json.dump(out_json, checks_out, indent=2, sort_keys=True)
             return checks_out.getvalue()
