@@ -250,17 +250,11 @@ class Z3Transformer(IdentifierAwareVisitor):
                 )
                 definition = resolve_search_result(search_result, self.identifiers)
 
-                if isinstance(definition, MemberDefinition):
-                    raise IdentifierError()
-
                 return definition.eval(
                     self.preprocessor.flow_tracking.reference_manager,
                     self.preprocessor.flow_tracking.data,
                 )
             except IdentifierError as e:
-                if not expr.name.startswith("Return."):
-                    raise PreprocessorError(f"Unknown expression: {expr.format()}")
-
                 search_result = self.identifiers.search(
                     self.preprocessor.accessible_scopes, "Return"
                 )
@@ -276,7 +270,7 @@ class Z3Transformer(IdentifierAwareVisitor):
                 )
 
                 result = return_struct
-                for member_name in expr.name.split(".")[1:]:
+                for member_name in expr.name.split(".")[0:]:
                     result = ExprDot(result, ExprIdentifier(member_name))
 
                 return result
