@@ -1,0 +1,30 @@
+{
+  "checks": {
+    "asserts": {},
+    "invariants": {},
+    "post_conds": {
+      "__main__.complex_return": {
+        "bool_ref": [
+          "(let ((a!1 (mod (+ (mod (- ap 2) prime) 1) prime)))",
+          "  (= 10 (memory a!1)))"
+        ]
+      },
+      "__main__.more_complex_return": {
+        "bool_ref": [
+          "(let ((a!1 (mod (+ (mod (- ap 4) prime) 1) prime))",
+          "      (a!3 (mod (+ (mod (- ap 4) prime) 3) prime)))",
+          "(let ((a!2 (= 20 (memory (mod (+ a!1 1) prime)))))",
+          "  (and a!2 (= 30 (memory a!3)))))"
+        ]
+      },
+      "__main__.test": {
+        "bool_ref": [
+          "(= 10 (memory (mod (- ap 1) prime)))"
+        ]
+      }
+    },
+    "pre_conds": {},
+    "requires": {}
+  },
+  "logical_variables": {}
+}

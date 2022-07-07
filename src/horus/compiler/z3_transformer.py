@@ -33,8 +33,15 @@ from starkware.cairo.lang.compiler.ast.expr import (
     ExprTuple,
 )
 from starkware.cairo.lang.compiler.expression_transformer import ExpressionTransformer
-from starkware.cairo.lang.compiler.identifier_definition import StructDefinition
-from starkware.cairo.lang.compiler.identifier_manager import IdentifierManager
+from starkware.cairo.lang.compiler.identifier_definition import (
+    MemberDefinition,
+    StructDefinition,
+)
+from starkware.cairo.lang.compiler.identifier_manager import (
+    IdentifierError,
+    IdentifierManager,
+    MissingIdentifierError,
+)
 from starkware.cairo.lang.compiler.identifier_utils import get_struct_definition
 from starkware.cairo.lang.compiler.instruction import Register
 from starkware.cairo.lang.compiler.preprocessor.identifier_aware_visitor import (
@@ -237,14 +244,42 @@ class Z3Transformer(IdentifierAwareVisitor):
 
     def simplify_and_get_type(self, expr: Expression) -> tuple[Expression, CairoType]:
         def get_identifier(expr: ExprIdentifier):
-            search_result = self.identifiers.search(
-                self.preprocessor.accessible_scopes, expr.name
-            )
-            definition = resolve_search_result(search_result, self.identifiers)
-            return definition.eval(
-                self.preprocessor.flow_tracking.reference_manager,
-                self.preprocessor.flow_tracking.data,
-            )
+            try:
+                search_result = self.identifiers.search(
+                    self.preprocessor.accessible_scopes, expr.name
+                )
+                definition = resolve_search_result(search_result, self.identifiers)
+
+                if isinstance(definition, MemberDefinition):
+                    raise IdentifierError()
+
+                return definition.eval(
+                    self.preprocessor.flow_tracking.reference_manager,
+                    self.preprocessor.flow_tracking.data,
+                )
+            except IdentifierError as e:
+                if not expr.name.startswith("Return."):
+                    raise PreprocessorError(f"Unknown expression: {expr.format()}")
+
+                search_result = self.identifiers.search(
+                    self.preprocessor.accessible_scopes, "Return"
+                )
+                definition = resolve_search_result(search_result, self.identifiers)
+                assert isinstance(definition, StructDefinition)
+                return_type = TypeStruct(definition.full_name, is_fully_resolved=True)
+
+                return_struct = ExprCast(
+                    expr=ExprOperator(
+                        ExprReg(Register.AP), "-", ExprConst(definition.size)
+                    ),
+                    dest_type=TypePointer(return_type),
+                )
+
+                result = return_struct
+                for member_name in expr.name.split(".")[1:]:
+                    result = ExprDot(result, ExprIdentifier(member_name))
+
+                return result
 
         return HorusTypeChecker(self.identifiers, self.logical_identifiers).visit(
             substitute_identifiers(expr, get_identifier)
@@ -262,7 +297,6 @@ class Z3Transformer(IdentifierAwareVisitor):
             raise PreprocessorError(f"No member with the name {name}")
         else:
             return ExprDot(expr, ExprIdentifier(name))
-            # return self.simplify(ExprDot(expr, ExprIdentifier(name)))[0]
 
     def get_element_at(self, expr: Expression, ind: int):
         if isinstance(expr, ExprTuple):
