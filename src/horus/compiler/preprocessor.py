@@ -162,7 +162,11 @@ class HorusPreprocessor(StarknetPreprocessor):
                     )
             else:
                 z3_transformer = Z3Transformer(
-                    self.identifiers, self, self.logical_identifiers
+                    self.identifiers,
+                    self,
+                    self.logical_identifiers,
+                    is_post=parsed_check.check_kind
+                    == CodeElementCheck.CheckKind.POST_COND,
                 )
                 expr = z3_transformer.visit(parsed_check.formula)
                 axiom = z3.BoolVal(True)

@@ -52,6 +52,7 @@ from starkware.cairo.lang.compiler.preprocessor.preprocessor_error import (
     PreprocessorError,
 )
 from starkware.cairo.lang.compiler.resolve_search_result import resolve_search_result
+from starkware.cairo.lang.compiler.scoped_name import ScopedName
 from starkware.cairo.lang.compiler.substitute_identifiers import substitute_identifiers
 from starkware.cairo.lang.compiler.type_system_visitor import *
 from starkware.cairo.lang.compiler.type_system_visitor import simplify_type_system
@@ -224,12 +225,14 @@ class Z3Transformer(IdentifierAwareVisitor):
         identifiers: IdentifierManager,
         preprocessor: Preprocessor,
         logical_identifiers: dict[str, CairoType] = {},
+        is_post: bool = False,
     ):
         super().__init__(identifiers)
         self.preprocessor = preprocessor
         self.z3_expression_transformer = Z3ExpressionTransformer(identifiers, self)
         self.logical_identifiers = logical_identifiers
         self.inverse_equations: list[z3.BoolRef] = []
+        self.is_post = is_post
 
     def add_inverse(self, z3_expr: z3.ArithRef):
         var = z3.FreshInt()
@@ -244,6 +247,34 @@ class Z3Transformer(IdentifierAwareVisitor):
 
     def simplify_and_get_type(self, expr: Expression) -> tuple[Expression, CairoType]:
         def get_identifier(expr: ExprIdentifier):
+            if self.is_post:
+                definition = get_struct_definition(
+                    self.preprocessor.current_scope + "ImplicitArgs", self.identifiers
+                )
+
+                if definition.members.get(expr.name.split(".")[0]) is not None:
+                    implicit_args_type = TypeStruct(
+                        definition.full_name, is_fully_resolved=True
+                    )
+                    return_def = get_struct_definition(
+                        self.preprocessor.current_scope + "Return", self.identifiers
+                    )
+
+                    implicit_args_struct = ExprCast(
+                        expr=ExprOperator(
+                            ExprReg(Register.AP),
+                            "-",
+                            ExprConst(definition.size + return_def.size),
+                        ),
+                        dest_type=TypePointer(implicit_args_type),
+                    )
+
+                    result = implicit_args_struct
+                    for member_name in expr.name.split("."):
+                        result = ExprDot(result, ExprIdentifier(member_name))
+
+                    return result
+
             try:
                 search_result = self.identifiers.search(
                     self.preprocessor.accessible_scopes, expr.name
@@ -254,11 +285,10 @@ class Z3Transformer(IdentifierAwareVisitor):
                     self.preprocessor.flow_tracking.reference_manager,
                     self.preprocessor.flow_tracking.data,
                 )
-            except IdentifierError as e:
-                search_result = self.identifiers.search(
-                    self.preprocessor.accessible_scopes, "Return"
+            except IdentifierError:
+                definition = get_struct_definition(
+                    self.preprocessor.current_scope + "Return", self.identifiers
                 )
-                definition = resolve_search_result(search_result, self.identifiers)
                 assert isinstance(definition, StructDefinition)
                 return_type = TypeStruct(definition.full_name, is_fully_resolved=True)
 
@@ -270,7 +300,7 @@ class Z3Transformer(IdentifierAwareVisitor):
                 )
 
                 result = return_struct
-                for member_name in expr.name.split(".")[0:]:
+                for member_name in expr.name.split("."):
                     result = ExprDot(result, ExprIdentifier(member_name))
 
                 return result

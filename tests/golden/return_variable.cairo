@@ -26,6 +26,7 @@ func pointer_to_a_struct() -> (a: felt, test: Test*, b: felt):
     return (a=10, test=new Test(x=10,y=20), b=30)
 end
 
+# @pre hash_ptr0 == hash_ptr0
 # @post hash_ptr0 == hash_ptr0
 func implicit_variable{hash_ptr0 : HashBuiltin*}() -> (x : felt):
     let (x) = hash2{hash_ptr=hash_ptr0}(10, 10)
