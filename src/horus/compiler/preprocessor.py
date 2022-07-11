@@ -10,6 +10,7 @@ from starkware.cairo.lang.compiler.ast.code_elements import (
     CodeElementEmptyLine,
     CodeElementFunction,
     CodeElementLabel,
+    CodeElementScoped,
 )
 from starkware.cairo.lang.compiler.error_handling import Location
 from starkware.cairo.lang.compiler.resolve_search_result import resolve_search_result
@@ -79,6 +80,12 @@ class HorusPreprocessor(StarknetPreprocessor):
                     and unfolded_obj.element_type == "func"
                 ):
                     self.current_function = unfolded_obj
+                elif isinstance(unfolded_obj, CodeElementScoped):
+                    if (
+                        isinstance(unfolded_obj.code_elements[0], CodeElementFunction)
+                        and unfolded_obj.code_elements[0].element_type == "func"
+                    ):
+                        self.current_function = unfolded_obj.code_elements[0]
                 else:
                     self.compile_checks(unfolded_obj)
 
