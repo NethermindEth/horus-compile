@@ -12,7 +12,7 @@
     "post_conds": {
       "__main__.main": {
         "bool_ref": [
-          "(= (memory (mod (- ap 1) prime)) (mod (* 2 123456789987654321) prime))"
+          "(= 246913579975308642 (memory (mod (- ap 1) prime)))"
         ]
       }
     },
