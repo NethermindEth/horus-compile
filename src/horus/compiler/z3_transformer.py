@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Optional
+from typing import Any, Callable, Optional
 
 import z3
 from starkware.cairo.lang.compiler.ast.bool_expr import BoolExpr
@@ -56,6 +56,8 @@ from starkware.cairo.lang.compiler.scoped_name import ScopedName
 from starkware.cairo.lang.compiler.substitute_identifiers import substitute_identifiers
 from starkware.cairo.lang.compiler.type_system_visitor import *
 from starkware.cairo.lang.compiler.type_system_visitor import simplify_type_system
+from starkware.crypto.signature.math_utils import div_mod
+from starkware.crypto.signature.signature import FIELD_PRIME
 
 from horus.compiler.code_elements import (
     BoolConst,
@@ -111,6 +113,18 @@ class Z3ExpressionTransformer(IdentifierAwareVisitor):
     def visit_ExprOperator(self, expr: ExprOperator):
         a = self.visit(expr.a)
         b = self.visit(expr.b)
+
+        if z3.is_int_value(a) and z3.is_int_value(b):
+            if expr.op == "+":
+                return z3.IntVal((a.as_long() + b.as_long()) % FIELD_PRIME)
+            elif expr.op == "-":
+                return z3.IntVal((a.as_long() - b.as_long()) % FIELD_PRIME)
+            elif expr.op == "*":
+                return z3.IntVal((a.as_long() * b.as_long()) % FIELD_PRIME)
+            elif expr.op == "/":
+                inverse_b = div_mod(1, b.as_long(), FIELD_PRIME)
+                return z3.IntVal((a.as_long() * inverse_b) % FIELD_PRIME)
+
         if expr.op == "+":
             return (a + b) % self.prime
         elif expr.op == "-":
@@ -118,22 +132,29 @@ class Z3ExpressionTransformer(IdentifierAwareVisitor):
         elif expr.op == "*":
             return (a * b) % self.prime
         elif expr.op == "/":
-            assert self.z3_transformer is not None, "z3_transformer should not be None"
-            inverse_b = self.z3_transformer.add_inverse(b)
-            return (a * inverse_b) % self.prime
+            if z3.is_int_value(b):
+                inverse_b = div_mod(1, b.as_long(), FIELD_PRIME)
+                return (a * z3.IntVal(inverse_b)) % self.prime
+            else:
+                assert (
+                    self.z3_transformer is not None
+                ), "z3_transformer should not be None"
+                inverse_b = self.z3_transformer.add_inverse(b)
+                return (a * inverse_b) % self.prime
 
     def visit_ExprPow(self, expr: ExprPow):
         a = self.visit(expr.a)
         b = self.visit(expr.b)
 
-        assert self.z3_transformer is not None, "z3_transformer should not be None"
-        inverse_a = self.z3_transformer.add_inverse(a)
+        if z3.is_int_value(a) and z3.is_int_value(b):
+            b_long = b.as_long()
+            if b_long < 0:
+                a_inverse = div_mod(1, a.as_long(), FIELD_PRIME)
+                return z3.IntVal(a_inverse ** (-b_long) % FIELD_PRIME)
+            else:
+                return z3.IntVal(a.as_long() ** b_long % FIELD_PRIME)
 
-        return z3.If(
-            b >= 0,
-            z3.ToInt(a**b) % self.prime,
-            z3.ToInt(inverse_a ** (-b)) % self.prime,
-        )
+        raise PreprocessorError("Non-constant powers in assertions are not supported.")
 
     def visit_ExprNeg(self, expr: ExprNeg):
         return (-self.visit(expr.val)) % self.prime
