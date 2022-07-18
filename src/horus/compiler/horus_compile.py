@@ -6,6 +6,7 @@ from typing import Callable, Tuple
 
 import starkware.cairo.lang.compiler.ast.visitor
 import starkware.cairo.lang.compiler.parser
+import starkware.cairo.lang.version
 from starkware.cairo.lang.compiler.cairo_compile import (
     cairo_compile_add_common_args,
     cairo_compile_common,
@@ -87,7 +88,8 @@ class MonkeyPatchStage(Stage):
 
 def main():
     parser = argparse.ArgumentParser(
-        description="A tool to compile checked StarkNet contracts."
+        description="A tool to compile checked StarkNet contracts.",
+        conflict_handler="resolve",
     )
     parser.add_argument(
         "--abi", type=argparse.FileType("w"), help="Output the contract's ABI."
@@ -112,6 +114,12 @@ def main():
 
     try:
         cairo_compile_add_common_args(parser)
+        parser.add_argument(
+            "-v",
+            "--version",
+            action="version",
+            version=f"%(prog)s {horus.__version__}; cairo-compile {starkware.cairo.lang.version.__version__}",
+        )
         args = parser.parse_args()
         preprocessed = cairo_compile_common(
             args=args,
