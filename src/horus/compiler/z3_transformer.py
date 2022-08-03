@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Callable, Optional
+from typing import Optional
 
 import z3
 from starkware.cairo.lang.compiler.ast.bool_expr import BoolExpr
@@ -32,15 +32,12 @@ from starkware.cairo.lang.compiler.ast.expr import (
     ExprSubscript,
     ExprTuple,
 )
+from starkware.cairo.lang.compiler.expression_simplifier import ExpressionSimplifier
 from starkware.cairo.lang.compiler.expression_transformer import ExpressionTransformer
-from starkware.cairo.lang.compiler.identifier_definition import (
-    MemberDefinition,
-    StructDefinition,
-)
+from starkware.cairo.lang.compiler.identifier_definition import StructDefinition
 from starkware.cairo.lang.compiler.identifier_manager import (
     IdentifierError,
     IdentifierManager,
-    MissingIdentifierError,
 )
 from starkware.cairo.lang.compiler.identifier_utils import get_struct_definition
 from starkware.cairo.lang.compiler.instruction import Register
@@ -52,7 +49,6 @@ from starkware.cairo.lang.compiler.preprocessor.preprocessor_error import (
     PreprocessorError,
 )
 from starkware.cairo.lang.compiler.resolve_search_result import resolve_search_result
-from starkware.cairo.lang.compiler.scoped_name import ScopedName
 from starkware.cairo.lang.compiler.substitute_identifiers import substitute_identifiers
 from starkware.cairo.lang.compiler.type_system_visitor import *
 from starkware.cairo.lang.compiler.type_system_visitor import simplify_type_system
@@ -114,17 +110,6 @@ class Z3ExpressionTransformer(IdentifierAwareVisitor):
         a = self.visit(expr.a)
         b = self.visit(expr.b)
 
-        if z3.is_int_value(a) and z3.is_int_value(b):
-            if expr.op == "+":
-                return z3.IntVal((a.as_long() + b.as_long()) % FIELD_PRIME)
-            elif expr.op == "-":
-                return z3.IntVal((a.as_long() - b.as_long()) % FIELD_PRIME)
-            elif expr.op == "*":
-                return z3.IntVal((a.as_long() * b.as_long()) % FIELD_PRIME)
-            elif expr.op == "/":
-                inverse_b = div_mod(1, b.as_long(), FIELD_PRIME)
-                return z3.IntVal((a.as_long() * inverse_b) % FIELD_PRIME)
-
         if expr.op == "+":
             return (a + b) % self.prime
         elif expr.op == "-":
@@ -132,15 +117,9 @@ class Z3ExpressionTransformer(IdentifierAwareVisitor):
         elif expr.op == "*":
             return (a * b) % self.prime
         elif expr.op == "/":
-            if z3.is_int_value(b):
-                inverse_b = div_mod(1, b.as_long(), FIELD_PRIME)
-                return (a * z3.IntVal(inverse_b)) % self.prime
-            else:
-                assert (
-                    self.z3_transformer is not None
-                ), "z3_transformer should not be None"
-                inverse_b = self.z3_transformer.add_inverse(b)
-                return (a * inverse_b) % self.prime
+            assert self.z3_transformer is not None, "z3_transformer should not be None"
+            inverse_b = self.z3_transformer.add_inverse(b)
+            return (a * inverse_b) % self.prime
 
     def visit_ExprPow(self, expr: ExprPow):
         a = self.visit(expr.a)
@@ -418,6 +397,10 @@ class Z3Transformer(IdentifierAwareVisitor):
     def visit_BoolExpr(self, bool_expr: BoolExpr):
         a, a_type = self.simplify_and_get_type(bool_expr.a)
         b, b_type = self.simplify_and_get_type(bool_expr.b)
+
+        simplifier = ExpressionSimplifier(prime=FIELD_PRIME)
+        a = simplifier.visit(a)
+        b = simplifier.visit(b)
 
         assert a_type == b_type, "Types of lhs and rhs must coincide"
 

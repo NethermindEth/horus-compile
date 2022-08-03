@@ -13,7 +13,8 @@
     "post_conds": {
       "__main__.main": {
         "bool_ref": [
-          "(= 0 (memory (mod (- ap 1) prime)))"
+          "(let ((a!1 (memory (mod (+ ap (- 1)) prime))))",
+          "  (= 0 a!1))"
         ]
       }
     },

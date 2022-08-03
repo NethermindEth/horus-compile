@@ -5,34 +5,35 @@
     "post_conds": {
       "__main__.complex_return": {
         "bool_ref": [
-          "(let ((a!1 (mod (+ (mod (- ap 2) prime) 1) prime)))",
-          "  (= 10 (memory a!1)))"
+          "(let ((a!1 (memory (mod (+ ap (- 1)) prime))))",
+          "  (= 10 a!1))"
         ]
       },
       "__main__.implicit_variable": {
         "bool_ref": [
-          "(= (memory (mod (- ap 2) prime)) (memory (mod (- ap 2) prime)))"
+          "(let ((a!1 (memory (mod (+ ap (- 2)) prime))))",
+          "  (= a!1 a!1))"
         ]
       },
       "__main__.more_complex_return": {
         "bool_ref": [
-          "(let ((a!1 (mod (+ (mod (- ap 4) prime) 1) prime))",
-          "      (a!3 (mod (+ (mod (- ap 4) prime) 3) prime)))",
-          "(let ((a!2 (= 20 (memory (mod (+ a!1 1) prime)))))",
-          "  (and a!2 (= 30 (memory a!3)))))"
+          "(let ((a!1 (memory (mod (+ ap (- 2)) prime)))",
+          "      (a!2 (memory (mod (+ ap (- 1)) prime))))",
+          "  (and (= 20 a!1) (= 30 a!2)))"
         ]
       },
       "__main__.pointer_to_a_struct": {
         "bool_ref": [
-          "(let ((a!1 (mod (+ (mod (- ap 3) prime) 1) prime))",
-          "      (a!3 (mod (+ (mod (- ap 3) prime) 2) prime)))",
-          "(let ((a!2 (memory (mod (+ (memory a!1) 1) prime))))",
-          "  (and (= 20 a!2) (= 30 (memory a!3)))))"
+          "(let ((a!1 (memory (mod (+ ap (- 2)) prime)))",
+          "      (a!3 (memory (mod (+ ap (- 1)) prime))))",
+          "(let ((a!2 (= 20 (memory (mod (+ a!1 1) prime)))))",
+          "  (and a!2 (= 30 a!3))))"
         ]
       },
       "__main__.simple_ret": {
         "bool_ref": [
-          "(= 10 (memory (mod (- ap 1) prime)))"
+          "(let ((a!1 (memory (mod (+ ap (- 1)) prime))))",
+          "  (= 10 a!1))"
         ]
       }
     },

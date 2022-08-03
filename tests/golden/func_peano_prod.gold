@@ -4,23 +4,27 @@
     "invariants": {
       "__main__.prod.loop": {
         "bool_ref": [
-          "(let ((a!1 (* (memory fp) (memory (mod (- ap 2) prime))))",
-          "      (a!3 (* (memory fp) (memory (mod (+ fp 1) prime)))))",
-          "(let ((a!2 (+ (memory (mod (- ap 1) prime)) (mod a!1 prime))))",
-          "  (= (mod a!2 prime) (mod a!3 prime))))"
+          "(let ((a!1 (memory (mod (+ ap (- 1)) prime)))",
+          "      (a!2 (memory (mod (+ ap (- 2)) prime)))",
+          "      (a!4 (* (memory fp) (memory (mod (+ fp 1) prime)))))",
+          "(let ((a!3 (+ a!1 (mod (* (memory fp) a!2) prime))))",
+          "  (= (mod a!3 prime) (mod a!4 prime))))"
         ]
       }
     },
     "post_conds": {
       "__main__.main": {
         "bool_ref": [
-          "(= 32 (memory (mod (- ap 1) prime)))"
+          "(let ((a!1 (memory (mod (+ ap (- 1)) prime))))",
+          "  (= 32 a!1))"
         ]
       },
       "__main__.prod": {
         "bool_ref": [
-          "(let ((a!1 (* (memory (mod (- fp 3) prime)) (memory (mod (- fp 4) prime)))))",
-          "  (= (memory (mod (- ap 1) prime)) (mod a!1 prime)))"
+          "(let ((a!1 (memory (mod (+ ap (- 1)) prime)))",
+          "      (a!2 (memory (mod (+ fp (- 3)) prime)))",
+          "      (a!3 (memory (mod (+ fp (- 4)) prime))))",
+          "  (= a!1 (mod (* a!2 a!3) prime)))"
         ]
       }
     },
