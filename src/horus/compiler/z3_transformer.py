@@ -34,7 +34,10 @@ from starkware.cairo.lang.compiler.ast.expr import (
 )
 from starkware.cairo.lang.compiler.expression_simplifier import ExpressionSimplifier
 from starkware.cairo.lang.compiler.expression_transformer import ExpressionTransformer
-from starkware.cairo.lang.compiler.identifier_definition import StructDefinition
+from starkware.cairo.lang.compiler.identifier_definition import (
+    ConstDefinition,
+    StructDefinition,
+)
 from starkware.cairo.lang.compiler.identifier_manager import (
     IdentifierError,
     IdentifierManager,
@@ -49,6 +52,7 @@ from starkware.cairo.lang.compiler.preprocessor.preprocessor_error import (
     PreprocessorError,
 )
 from starkware.cairo.lang.compiler.resolve_search_result import resolve_search_result
+from starkware.cairo.lang.compiler.scoped_name import ScopedName
 from starkware.cairo.lang.compiler.substitute_identifiers import substitute_identifiers
 from starkware.cairo.lang.compiler.type_system_visitor import *
 from starkware.cairo.lang.compiler.type_system_visitor import simplify_type_system
@@ -293,21 +297,22 @@ class Z3Transformer(IdentifierAwareVisitor):
 
                     return result
 
-            try:
-                if expr.name.startswith("$Return."):
-                    return self.get_return_variable(expr.name[len("$Return.") :])
+            if expr.name.startswith("$Return."):
+                return self.get_return_variable(expr.name[len("$Return.") :])
 
-                search_result = self.identifiers.search(
-                    self.preprocessor.accessible_scopes, expr.name
-                )
-                definition = resolve_search_result(search_result, self.identifiers)
+            search_result = self.identifiers.search(
+                self.preprocessor.accessible_scopes,
+                ScopedName.from_string(expr.name),
+            )
+            definition = resolve_search_result(search_result, self.identifiers)
 
+            if isinstance(definition, ConstDefinition):
+                return ExprConst(definition.value)
+            else:
                 return definition.eval(
                     self.preprocessor.flow_tracking.reference_manager,
                     self.preprocessor.flow_tracking.data,
                 )
-            except IdentifierError as e:
-                raise PreprocessorError(str(e))
 
         return HorusTypeChecker(self.identifiers, self.logical_identifiers).visit(
             substitute_identifiers(expr, get_identifier)
