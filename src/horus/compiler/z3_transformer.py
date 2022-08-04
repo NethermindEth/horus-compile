@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Callable, Optional
+from typing import Optional
 
 import z3
 from starkware.cairo.lang.compiler.ast.bool_expr import BoolExpr
@@ -32,15 +32,15 @@ from starkware.cairo.lang.compiler.ast.expr import (
     ExprSubscript,
     ExprTuple,
 )
+from starkware.cairo.lang.compiler.expression_simplifier import ExpressionSimplifier
 from starkware.cairo.lang.compiler.expression_transformer import ExpressionTransformer
 from starkware.cairo.lang.compiler.identifier_definition import (
-    MemberDefinition,
+    ConstDefinition,
     StructDefinition,
 )
 from starkware.cairo.lang.compiler.identifier_manager import (
     IdentifierError,
     IdentifierManager,
-    MissingIdentifierError,
 )
 from starkware.cairo.lang.compiler.identifier_utils import get_struct_definition
 from starkware.cairo.lang.compiler.instruction import Register
@@ -114,17 +114,6 @@ class Z3ExpressionTransformer(IdentifierAwareVisitor):
         a = self.visit(expr.a)
         b = self.visit(expr.b)
 
-        if z3.is_int_value(a) and z3.is_int_value(b):
-            if expr.op == "+":
-                return z3.IntVal((a.as_long() + b.as_long()) % FIELD_PRIME)
-            elif expr.op == "-":
-                return z3.IntVal((a.as_long() - b.as_long()) % FIELD_PRIME)
-            elif expr.op == "*":
-                return z3.IntVal((a.as_long() * b.as_long()) % FIELD_PRIME)
-            elif expr.op == "/":
-                inverse_b = div_mod(1, b.as_long(), FIELD_PRIME)
-                return z3.IntVal((a.as_long() * inverse_b) % FIELD_PRIME)
-
         if expr.op == "+":
             return (a + b) % self.prime
         elif expr.op == "-":
@@ -132,15 +121,9 @@ class Z3ExpressionTransformer(IdentifierAwareVisitor):
         elif expr.op == "*":
             return (a * b) % self.prime
         elif expr.op == "/":
-            if z3.is_int_value(b):
-                inverse_b = div_mod(1, b.as_long(), FIELD_PRIME)
-                return (a * z3.IntVal(inverse_b)) % self.prime
-            else:
-                assert (
-                    self.z3_transformer is not None
-                ), "z3_transformer should not be None"
-                inverse_b = self.z3_transformer.add_inverse(b)
-                return (a * inverse_b) % self.prime
+            assert self.z3_transformer is not None, "z3_transformer should not be None"
+            inverse_b = self.z3_transformer.add_inverse(b)
+            return (a * inverse_b) % self.prime
 
     def visit_ExprPow(self, expr: ExprPow):
         a = self.visit(expr.a)
@@ -266,6 +249,24 @@ class Z3Transformer(IdentifierAwareVisitor):
         funcname = f"visit_{type(formula).__name__}"
         return getattr(self, funcname)(formula)
 
+    def get_return_variable(self, name: str):
+        definition = get_struct_definition(
+            self.preprocessor.current_scope + "Return", self.identifiers
+        )
+        assert isinstance(definition, StructDefinition)
+        return_type = TypeStruct(definition.full_name, is_fully_resolved=True)
+
+        return_struct = ExprCast(
+            expr=ExprOperator(ExprReg(Register.AP), "-", ExprConst(definition.size)),
+            dest_type=TypePointer(return_type),
+        )
+
+        result = return_struct
+        for member_name in name.split("."):
+            result = ExprDot(result, ExprIdentifier(member_name))
+
+        return result
+
     def simplify_and_get_type(self, expr: Expression) -> tuple[Expression, CairoType]:
         def get_identifier(expr: ExprIdentifier):
             if self.is_post:
@@ -296,35 +297,22 @@ class Z3Transformer(IdentifierAwareVisitor):
 
                     return result
 
-            try:
-                search_result = self.identifiers.search(
-                    self.preprocessor.accessible_scopes, expr.name
-                )
-                definition = resolve_search_result(search_result, self.identifiers)
+            if expr.name.startswith("$Return."):
+                return self.get_return_variable(expr.name[len("$Return.") :])
 
+            search_result = self.identifiers.search(
+                self.preprocessor.accessible_scopes,
+                ScopedName.from_string(expr.name),
+            )
+            definition = resolve_search_result(search_result, self.identifiers)
+
+            if isinstance(definition, ConstDefinition):
+                return ExprConst(definition.value)
+            else:
                 return definition.eval(
                     self.preprocessor.flow_tracking.reference_manager,
                     self.preprocessor.flow_tracking.data,
                 )
-            except IdentifierError:
-                definition = get_struct_definition(
-                    self.preprocessor.current_scope + "Return", self.identifiers
-                )
-                assert isinstance(definition, StructDefinition)
-                return_type = TypeStruct(definition.full_name, is_fully_resolved=True)
-
-                return_struct = ExprCast(
-                    expr=ExprOperator(
-                        ExprReg(Register.AP), "-", ExprConst(definition.size)
-                    ),
-                    dest_type=TypePointer(return_type),
-                )
-
-                result = return_struct
-                for member_name in expr.name.split("."):
-                    result = ExprDot(result, ExprIdentifier(member_name))
-
-                return result
 
         return HorusTypeChecker(self.identifiers, self.logical_identifiers).visit(
             substitute_identifiers(expr, get_identifier)
@@ -418,6 +406,10 @@ class Z3Transformer(IdentifierAwareVisitor):
     def visit_BoolExpr(self, bool_expr: BoolExpr):
         a, a_type = self.simplify_and_get_type(bool_expr.a)
         b, b_type = self.simplify_and_get_type(bool_expr.b)
+
+        simplifier = ExpressionSimplifier(prime=FIELD_PRIME)
+        a = simplifier.visit(a)
+        b = simplifier.visit(b)
 
         assert a_type == b_type, "Types of lhs and rhs must coincide"
 

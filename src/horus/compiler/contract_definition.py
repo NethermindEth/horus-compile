@@ -101,12 +101,6 @@ class HorusDefinition(ContractDefinition):
         ),
         default=HorusChecks(),
     )
-    ret_map: "dict[int, str]" = field(
-        metadata=dict(
-            marshmallow_field=mfields.Dict(keys=mfields.Int(), values=mfields.Str())
-        ),
-        default_factory=dict,
-    )
     logical_variables: "dict[str, dict[str, str]]" = field(
         metadata=dict(
             marshmallow_field=mfields.Dict(

@@ -6,8 +6,7 @@
       "__main__.test": {
         "bool_ref": [
           "(let ((a!1 (memory (mod (+ fp (- 4)) prime))))",
-          "(let ((a!2 (mod (+ 2 (mod (+ 3 a!1) prime)) prime)))",
-          "  (= 112 a!2)))"
+          "  (= 112 (mod (+ a!1 5) prime)))"
         ]
       }
     },

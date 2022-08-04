@@ -4,15 +4,18 @@
     "invariants": {
       "__main__.main.loop": {
         "bool_ref": [
-          "(let ((a!1 (- 123456789987654321 (memory (mod (- ap 2) prime)))))",
-          "  (= (memory (mod (- ap 1) prime)) (mod (* 2 (mod a!1 prime)) prime)))"
+          "(let ((a!1 (memory (mod (+ ap (- 1)) prime)))",
+          "      (a!2 (memory (mod (+ ap (- 2)) prime))))",
+          "(let ((a!3 (mod (* 2 (mod (- 123456789987654321 a!2) prime)) prime)))",
+          "  (= a!1 a!3)))"
         ]
       }
     },
     "post_conds": {
       "__main__.main": {
         "bool_ref": [
-          "(= 246913579975308642 (memory (mod (- ap 1) prime)))"
+          "(let ((a!1 (memory (mod (+ ap (- 1)) prime))))",
+          "  (= 246913579975308642 a!1))"
         ]
       }
     },
