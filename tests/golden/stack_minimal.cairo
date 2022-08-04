@@ -11,26 +11,26 @@ namespace _Stack:
     end
 
     # @pre (cast(stack, felt) != 0) && (cast(stack.next, felt) != 0)
-    # @post [ap - 2] == stack.value + stack.next.value && stack_ == stack.next.next
+    # @post [ap - 2] == stack.value + stack.next.value && $Return.stack_ == stack.next.next
     func add(stack : Stack*) -> (stack_: Stack*):
         let x = stack.value
         let y = stack.next.value
         return (new Stack(value=x + y, next=stack.next.next))
     end
 
-    # @post [ap - 2] == i && stack_.next == stack
+    # @post [ap - 2] == i && $Return.stack_.next == stack
     func lit(stack : Stack*, i : felt) -> (stack_: Stack*):
         return (new Stack(value=i, next=stack))
     end
 
     # @pre cast(stack, felt) != 0
-    # @post res == stack.value
+    # @post $Return.res == stack.value
     func top(stack : Stack*) -> (res : felt):
         return (stack.value)
     end
 end
 
-# @post res == 11
+# @post $Return.res == 11
 func main_() -> (res : felt):
     let (stack) = _Stack.empty()
     let (stack) = _Stack.lit(stack, 5)

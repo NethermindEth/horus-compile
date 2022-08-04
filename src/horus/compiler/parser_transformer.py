@@ -4,9 +4,11 @@ from typing import Optional
 
 import lark
 from starkware.cairo.lang.compiler.ast.expr import *
+from starkware.cairo.lang.compiler.ast.expr import ExprIdentifier
 from starkware.cairo.lang.compiler.error_handling import InputFile
 from starkware.cairo.lang.compiler.parser_transformer import (
     ParserContext,
+    ParserError,
     ParserTransformer,
 )
 
@@ -75,12 +77,20 @@ class HorusTransformer(ParserTransformer):
 
     @lark.v_args(meta=True)
     def logical_identifier(self, value, meta):
-        return ExprLogicalIdentifier(
-            name=".".join(x.value for x in value), location=self.meta2loc(meta)
-        )
+        identifier_name = ".".join(x.value for x in value)
+        if value[0].value == "$Return":
+            return ExprIdentifier(name=identifier_name, location=self.meta2loc(meta))
+        else:
+            return ExprLogicalIdentifier(
+                name=identifier_name, location=self.meta2loc(meta)
+            )
 
     @lark.v_args(meta=True)
     def logical_identifier_def(self, value, meta):
+        if value[0].value == "$Return":
+            raise ParserError(
+                f"'$Return' is a reserved name.", location=self.meta2loc(meta)
+            )
         return ExprLogicalIdentifier(name=value[0].value, location=self.meta2loc(meta))
 
     def atom_logical_identifier(self, value):

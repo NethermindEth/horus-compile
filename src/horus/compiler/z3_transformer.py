@@ -245,6 +245,24 @@ class Z3Transformer(IdentifierAwareVisitor):
         funcname = f"visit_{type(formula).__name__}"
         return getattr(self, funcname)(formula)
 
+    def get_return_variable(self, name: str):
+        definition = get_struct_definition(
+            self.preprocessor.current_scope + "Return", self.identifiers
+        )
+        assert isinstance(definition, StructDefinition)
+        return_type = TypeStruct(definition.full_name, is_fully_resolved=True)
+
+        return_struct = ExprCast(
+            expr=ExprOperator(ExprReg(Register.AP), "-", ExprConst(definition.size)),
+            dest_type=TypePointer(return_type),
+        )
+
+        result = return_struct
+        for member_name in name.split("."):
+            result = ExprDot(result, ExprIdentifier(member_name))
+
+        return result
+
     def simplify_and_get_type(self, expr: Expression) -> tuple[Expression, CairoType]:
         def get_identifier(expr: ExprIdentifier):
             if self.is_post:
@@ -276,6 +294,9 @@ class Z3Transformer(IdentifierAwareVisitor):
                     return result
 
             try:
+                if expr.name.startswith("$Return."):
+                    return self.get_return_variable(expr.name[len("$Return.") :])
+
                 search_result = self.identifiers.search(
                     self.preprocessor.accessible_scopes, expr.name
                 )
@@ -285,25 +306,8 @@ class Z3Transformer(IdentifierAwareVisitor):
                     self.preprocessor.flow_tracking.reference_manager,
                     self.preprocessor.flow_tracking.data,
                 )
-            except IdentifierError:
-                definition = get_struct_definition(
-                    self.preprocessor.current_scope + "Return", self.identifiers
-                )
-                assert isinstance(definition, StructDefinition)
-                return_type = TypeStruct(definition.full_name, is_fully_resolved=True)
-
-                return_struct = ExprCast(
-                    expr=ExprOperator(
-                        ExprReg(Register.AP), "-", ExprConst(definition.size)
-                    ),
-                    dest_type=TypePointer(return_type),
-                )
-
-                result = return_struct
-                for member_name in expr.name.split("."):
-                    result = ExprDot(result, ExprIdentifier(member_name))
-
-                return result
+            except IdentifierError as e:
+                raise PreprocessorError(str(e))
 
         return HorusTypeChecker(self.identifiers, self.logical_identifiers).visit(
             substitute_identifiers(expr, get_identifier)
