@@ -33,7 +33,6 @@ from horus.utils import z3And
 @dataclass
 class HorusProgram(StarknetPreprocessedProgram):
     checks: HorusChecks
-    ret_map: dict[int, str]
     logical_variables: dict[str, dict[str, str]]
 
 
@@ -41,7 +40,6 @@ class HorusPreprocessor(StarknetPreprocessor):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.checks: HorusChecks = HorusChecks()
-        self.ret_map: dict[int, str] = {}
         self.logical_identifiers: dict[str, CairoType] = {}
         self.logical_signatures: dict[str, dict[str, str]] = {}
 
@@ -56,7 +54,6 @@ class HorusPreprocessor(StarknetPreprocessor):
         return HorusProgram(
             **starknet_program.__dict__,
             checks=self.checks,
-            ret_map=self.ret_map,
             logical_variables=self.logical_signatures,
         )
 
