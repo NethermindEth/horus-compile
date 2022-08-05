@@ -20,7 +20,8 @@ from starkware.starknet.compiler.starknet_preprocessor import (
 )
 
 from horus.compiler.code_elements import (
-    CheckedCodeElement,
+    AnnotatedCodeElement,
+    CodeElementAnnotation,
     CodeElementCheck,
     CodeElementLogicalVariableDeclaration,
 )
@@ -46,7 +47,7 @@ class HorusPreprocessor(StarknetPreprocessor):
         # This is used to defer pre/postcondition unfolding
         # until the visitor steps into the body of the function
         # when the preprocessor stumbles upon a function.
-        self.current_checks: list[CodeElementCheck] = []
+        self.current_checks: list[CodeElementAnnotation] = []
         self.current_function = None
 
     def get_program(self) -> HorusProgram:
@@ -63,13 +64,13 @@ class HorusPreprocessor(StarknetPreprocessor):
     def visit_CodeElementCheck(self, check: CodeElementCheck):
         pass
 
-    def visit_CheckedCodeElement(self, checked_code_element: CheckedCodeElement):
-        result = self.visit(checked_code_element.code_elm)
-        self.current_checks.append(checked_code_element.check)
+    def visit_AnnotatedCodeElement(self, annotated_code_element: AnnotatedCodeElement):
+        result = self.visit(annotated_code_element.code_elm)
+        self.current_checks.append(annotated_code_element.annotation)
         return result
 
     def visit(self, obj):
-        unfolded_obj = obj.code_elm if isinstance(obj, CheckedCodeElement) else obj
+        unfolded_obj = obj.code_elm if isinstance(obj, AnnotatedCodeElement) else obj
         if self.current_checks:
             if not isinstance(unfolded_obj, CodeElementEmptyLine):
                 if (

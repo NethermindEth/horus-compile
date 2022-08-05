@@ -1,6 +1,6 @@
 import dataclasses
 from enum import Enum
-from typing import Optional, Sequence, Union
+from typing import Optional, Sequence
 
 from starkware.cairo.lang.compiler.ast.bool_expr import BoolExpr
 from starkware.cairo.lang.compiler.ast.cairo_types import CairoType
@@ -102,11 +102,15 @@ class BoolNegation(BoolFormula):
         return [self.operand]
 
 
+class CodeElementAnnotation(CodeElement):
+    pass
+
+
 @dataclasses.dataclass
-class CodeElementCheck(CodeElement):
+class CodeElementCheck(CodeElementAnnotation):
     """
-    Represent a particular Horus annotation which is not
-    a logical variable declaration.
+    Represents a logical annotation of a kind
+    specified by `check_kind`.
     """
 
     class CheckKind(Enum):
@@ -128,7 +132,7 @@ class CodeElementCheck(CodeElement):
 
 
 @dataclasses.dataclass
-class CodeElementLogicalVariableDeclaration(CodeElement):
+class CodeElementLogicalVariableDeclaration(CodeElementAnnotation):
     """
     Represents a logical variable declaration.
     """
@@ -144,19 +148,19 @@ class CodeElementLogicalVariableDeclaration(CodeElement):
 
 
 @dataclasses.dataclass
-class CheckedCodeElement(CodeElement):
+class AnnotatedCodeElement(CodeElement):
     """
-    Represents a code element with a check placed after.
-    E.g., `[ap] = 1; ap++ # @assert True` will be parsed
-    into one `CheckedCodeElement`.
+    Represents a code element with an annotation placed after.
+    Note that empty lines are also code elements, so usually
+    `code_elm` is a `CodeElementEmptyLine`.
     """
 
-    check: Union[CodeElementCheck, CodeElementLogicalVariableDeclaration]
+    annotation: CodeElementAnnotation
     code_elm: CodeElement
     location: Optional[Location] = LocationField
 
     def format(self, allowed_line_length):
-        return f"{self.check.format(allowed_line_length)}\n{self.code_elm.format(allowed_line_length)}"
+        return f"{self.annotation.format(allowed_line_length)}\n{self.code_elm.format(allowed_line_length)}"
 
     def get_children(self) -> Sequence[Optional[AstNode]]:
-        return [self.check, self.code_elm]
+        return [self.annotation, self.code_elm]

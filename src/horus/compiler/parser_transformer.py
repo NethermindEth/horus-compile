@@ -14,12 +14,13 @@ from starkware.cairo.lang.compiler.parser_transformer import (
 
 import horus.compiler.parser
 from horus.compiler.code_elements import (
+    AnnotatedCodeElement,
     BoolConst,
     BoolExprAtom,
     BoolExprCompare,
     BoolNegation,
     BoolOperation,
-    CheckedCodeElement,
+    CodeElementAnnotation,
     CodeElementCheck,
     CodeElementLogicalVariableDeclaration,
     ExprLogicalIdentifier,
@@ -61,14 +62,11 @@ class HorusTransformer(ParserTransformer):
                         filename=self.input_file.filename,
                         code=possible_annotation,
                         code_type="annotation",
-                        expected_type=(
-                            CodeElementCheck,
-                            CodeElementLogicalVariableDeclaration,
-                        ),
+                        expected_type=CodeElementAnnotation,
                         parser_context=self.parser_context,
                     )
                     code_elem = super().commented_code_element(value[:1], meta)
-                    code_elem.code_elm = CheckedCodeElement(
+                    code_elem.code_elm = AnnotatedCodeElement(
                         check, code_elm=code_elem.code_elm, location=code_elem.location
                     )
                     return code_elem

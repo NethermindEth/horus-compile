@@ -27,7 +27,7 @@ from starkware.starknet.compiler.starknet_pass_manager import starknet_pass_mana
 from starkware.starknet.compiler.validation_utils import verify_account_contract
 
 import horus.compiler.parser
-from horus.compiler.code_elements import CheckedCodeElement
+from horus.compiler.code_elements import AnnotatedCodeElement
 from horus.compiler.contract_definition import HorusDefinition
 from horus.compiler.preprocessor import HorusPreprocessor, HorusProgram
 
@@ -71,15 +71,15 @@ class MonkeyPatchStage(Stage):
     """
 
     def run(self, context: PassManagerContext):
-        def visit_CheckedCodeElement(self, checked_code_element):
-            return CheckedCodeElement(
-                check=checked_code_element.check,
-                code_elm=self.visit(checked_code_element.code_elm),
-                location=checked_code_element.location,
+        def visit_AnnotatedCodeElement(self, annotated_code_element):
+            return AnnotatedCodeElement(
+                annotation=annotated_code_element.annotation,
+                code_elm=self.visit(annotated_code_element.code_elm),
+                location=annotated_code_element.location,
             )
 
-        starkware.cairo.lang.compiler.ast.visitor.Visitor.visit_CheckedCodeElement = (
-            visit_CheckedCodeElement
+        starkware.cairo.lang.compiler.ast.visitor.Visitor.visit_AnnotatedCodeElement = (
+            visit_AnnotatedCodeElement
         )
         starkware.cairo.lang.compiler.parser.parse = horus.compiler.parser.parse
         ExpressionTransformer.visit_ExprLogicalIdentifier = lambda self, expr: expr
