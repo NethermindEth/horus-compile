@@ -1,32 +1,36 @@
 {
-  "checks": {
-    "asserts": {},
-    "invariants": {},
-    "post_conds": {
-      "__main__.main": {
-        "bool_ref": [
-          "(let ((a!1 (memory (mod (+ ap (- 1)) prime))))",
-          "  (= 26 a!1))"
-        ]
-      },
-      "__main__.square_succ": {
-        "bool_ref": [
-          "(let ((a!1 (memory (mod (+ ap (- 1)) prime)))",
-          "      (a!2 (memory (mod (+ fp (- 3)) prime))))",
-          "(let ((a!3 (mod (+ (mod (* a!2 a!2) prime) 1) prime)))",
-          "  (= a!1 a!3)))"
-        ]
-      },
-      "__main__.succ": {
-        "bool_ref": [
-          "(let ((a!1 (memory (mod (+ ap (- 1)) prime)))",
-          "      (a!2 (memory (mod (+ fp (- 3)) prime))))",
-          "  (= a!1 (mod (+ a!2 1) prime)))"
-        ]
-      }
+  "invariants": {},
+  "specifications": {
+    "__main__.main": {
+      "decls": {},
+      "logical_variables": {},
+      "post": [
+        "(= 26 (memory (+ ap (- 1))))"
+      ],
+      "pre": [
+        "true"
+      ]
     },
-    "pre_conds": {},
-    "requires": {}
-  },
-  "logical_variables": {}
+    "__main__.square_succ": {
+      "decls": {},
+      "logical_variables": {},
+      "post": [
+        "(let ((a!1 (+ (* (memory (+ fp (- 3))) (memory (+ fp (- 3)))) 1)))",
+        "  (= (memory (+ ap (- 1))) a!1))"
+      ],
+      "pre": [
+        "true"
+      ]
+    },
+    "__main__.succ": {
+      "decls": {},
+      "logical_variables": {},
+      "post": [
+        "(= (memory (+ ap (- 1))) (+ (memory (+ fp (- 3))) 1))"
+      ],
+      "pre": [
+        "true"
+      ]
+    }
+  }
 }

@@ -41,8 +41,8 @@ def assemble_horus_contract(
 
     return HorusDefinition(
         **contract_definition.__dict__,
-        checks=preprocessed_program.checks,
-        logical_variables=preprocessed_program.logical_variables,
+        specifications=preprocessed_program.specifications,
+        invariants=preprocessed_program.invariants,
     )
 
 

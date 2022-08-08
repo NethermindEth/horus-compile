@@ -1,37 +1,24 @@
 {
-  "checks": {
-    "asserts": {},
-    "invariants": {
-      "__main__.main.loop": {
-        "bool_ref": [
-          "(let ((a!1 (memory (mod (+ ap (- 2)) prime)))",
-          "      (a!2 (memory (mod (+ ap (- 1)) prime)))",
-          "      (a!3 (+ (memory (mod (+ fp 2) prime)) 1))",
-          "      (a!4 (memory (mod (+ ap (- 3)) prime))))",
-          "(let ((a!5 (* a!1 (mod (+ a!1 (- 1)) prime))))",
-          "  (and (= (mod (+ a!1 a!2) prime) (mod a!3 prime))",
-          "       (= (mod (* 2 a!4) prime) (mod a!5 prime)))))"
-        ]
-      }
-    },
-    "post_conds": {
-      "__main__.main": {
-        "bool_ref": [
-          "(let ((a!1 (memory (mod (+ ap (- 3)) prime)))",
-          "      (a!2 (+ (memory (mod (+ fp 2) prime)) 1)))",
-          "(let ((a!3 (* (mod a!2 prime) (memory (mod (+ fp 2) prime)))))",
-          "  (= (mod (* 2 a!1) prime) (mod a!3 prime))))"
-        ]
-      }
-    },
-    "pre_conds": {
-      "__main__.main": {
-        "bool_ref": [
-          "(< 0 (memory (mod (+ fp 2) prime)))"
-        ]
-      }
-    },
-    "requires": {}
+  "invariants": {
+    "__main__.main.loop": [
+      "(let ((a!1 (= (+ (memory (+ ap (- 2))) (memory (+ ap (- 1))))",
+      "              (+ (memory (+ fp 2)) 1)))",
+      "      (a!2 (* (memory (+ ap (- 2))) (+ (memory (+ ap (- 2))) (- 1)))))",
+      "(let ((a!3 (= (* 2 (memory (+ ap (- 3)))) a!2)))",
+      "  (and a!1 a!3)))"
+    ]
   },
-  "logical_variables": {}
+  "specifications": {
+    "__main__.main": {
+      "decls": {},
+      "logical_variables": {},
+      "post": [
+        "(let ((a!1 (* (+ (memory (+ fp 2)) 1) (memory (+ fp 2)))))",
+        "  (= (* 2 (memory (+ ap (- 3)))) a!1))"
+      ],
+      "pre": [
+        "(< 0 (memory (+ fp 2)))"
+      ]
+    }
+  }
 }

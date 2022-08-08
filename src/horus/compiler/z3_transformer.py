@@ -115,32 +115,19 @@ class Z3ExpressionTransformer(IdentifierAwareVisitor):
         b = self.visit(expr.b)
 
         if expr.op == "+":
-            return (a + b) % self.prime
+            return a + b
         elif expr.op == "-":
-            return (a - b) % self.prime
+            return a - b
         elif expr.op == "*":
-            return (a * b) % self.prime
+            return a * b
         elif expr.op == "/":
-            assert self.z3_transformer is not None, "z3_transformer should not be None"
-            inverse_b = self.z3_transformer.add_inverse(b)
-            return (a * inverse_b) % self.prime
+            return a / b
 
     def visit_ExprPow(self, expr: ExprPow):
-        a = self.visit(expr.a)
-        b = self.visit(expr.b)
-
-        if z3.is_int_value(a) and z3.is_int_value(b):
-            b_long = b.as_long()
-            if b_long < 0:
-                a_inverse = div_mod(1, a.as_long(), FIELD_PRIME)
-                return z3.IntVal(a_inverse ** (-b_long) % FIELD_PRIME)
-            else:
-                return z3.IntVal(a.as_long() ** b_long % FIELD_PRIME)
-
         raise PreprocessorError("Non-constant powers in assertions are not supported.")
 
     def visit_ExprNeg(self, expr: ExprNeg):
-        return (-self.visit(expr.val)) % self.prime
+        return -self.visit(expr.val)
 
     def visit_ExprParentheses(self, expr: ExprParentheses):
         return self.visit(expr.val)
@@ -235,15 +222,7 @@ class Z3Transformer(IdentifierAwareVisitor):
         self.preprocessor = preprocessor
         self.z3_expression_transformer = Z3ExpressionTransformer(identifiers, self)
         self.logical_identifiers = logical_identifiers
-        self.inverse_equations: list[z3.BoolRef] = []
         self.is_post = is_post
-
-    def add_inverse(self, z3_expr: z3.ArithRef):
-        var = z3.FreshInt()
-
-        self.inverse_equations.append((z3_expr * var) % z3.Int(PRIME_CONST_NAME) == 1)
-
-        return var
 
     def visit(self, formula: BoolFormula):
         funcname = f"visit_{type(formula).__name__}"

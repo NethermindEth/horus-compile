@@ -6,7 +6,7 @@ from os.path import exists
 
 import marshmallow_dataclass
 
-from horus.compiler.contract_definition import HorusChecks, HorusDefinition
+from horus.compiler.contract_definition import HorusDefinition
 from horus.compiler.horus_compile import main
 
 
@@ -15,16 +15,12 @@ def test_golden(capsys, monkeypatch):
         main()
         out = capsys.readouterr().out
         program_json = json.loads(out)
-        contract_with_checks = HorusDefinition.load(program_json)
-        checks = contract_with_checks.checks
         with StringIO() as checks_out:
-            out_json = {
-                "checks": marshmallow_dataclass.class_schema(HorusChecks)().dump(
-                    checks
-                ),
-                "logical_variables": contract_with_checks.logical_variables,
+            output = {
+                "specifications": program_json["specifications"],
+                "invariants": program_json["invariants"],
             }
-            json.dump(out_json, checks_out, indent=2, sort_keys=True)
+            json.dump(output, checks_out, indent=2, sort_keys=True)
             return checks_out.getvalue()
 
     with monkeypatch.context() as m:

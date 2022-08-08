@@ -14,6 +14,7 @@ from starkware.cairo.lang.compiler.ast.code_elements import (
 )
 from starkware.cairo.lang.compiler.error_handling import Location
 from starkware.cairo.lang.compiler.resolve_search_result import resolve_search_result
+from starkware.cairo.lang.compiler.scoped_name import ScopedName
 from starkware.starknet.compiler.starknet_preprocessor import (
     StarknetPreprocessedProgram,
     StarknetPreprocessor,
@@ -25,24 +26,24 @@ from horus.compiler.code_elements import (
     CodeElementCheck,
     CodeElementLogicalVariableDeclaration,
 )
-from horus.compiler.contract_definition import Assertion, HorusChecks
+from horus.compiler.contract_definition import FunctionAnnotations
 from horus.compiler.parser import *
 from horus.compiler.z3_transformer import *
-from horus.utils import z3And
+from horus.utils import get_decls, z3And
 
 
 @dataclass
 class HorusProgram(StarknetPreprocessedProgram):
-    checks: HorusChecks
-    logical_variables: dict[str, dict[str, str]]
+    specifications: dict[ScopedName, FunctionAnnotations]
+    invariants: dict[ScopedName, z3.BoolRef]
 
 
 class HorusPreprocessor(StarknetPreprocessor):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.checks: HorusChecks = HorusChecks()
+        self.specifications: dict[ScopedName, FunctionAnnotations] = {}
+        self.invariants: dict[ScopedName, z3.BoolRef] = {}
         self.logical_identifiers: dict[str, CairoType] = {}
-        self.logical_signatures: dict[str, dict[str, str]] = {}
 
         # This is used to defer pre/postcondition unfolding
         # until the visitor steps into the body of the function
@@ -52,10 +53,19 @@ class HorusPreprocessor(StarknetPreprocessor):
 
     def get_program(self) -> HorusProgram:
         starknet_program = super().get_program()
+
+        for specification in self.specifications.values():
+            specification.decls = {
+                **get_decls(specification.pre),
+                **get_decls(specification.post),
+            }
+            for var in HORUS_DECLS.keys():
+                specification.decls.pop(var, None)
+
         return HorusProgram(
             **starknet_program.__dict__,
-            checks=self.checks,
-            logical_variables=self.logical_signatures,
+            specifications=self.specifications,
+            invariants=self.invariants,
         )
 
     def visit_CodeBlock(self, code_block: CodeBlock):
@@ -130,30 +140,35 @@ class HorusPreprocessor(StarknetPreprocessor):
                 )
 
         if not is_member:
-            try:
-                variables_of_the_function = self.logical_signatures[self.current_scope]
-            except KeyError:
-                self.logical_signatures[self.current_scope] = {}
-                variables_of_the_function = self.logical_signatures[self.current_scope]
-
-            variables_of_the_function[declaration.name] = declaration.type.format()
+            current_annotations = self.specifications.get(
+                self.current_scope, FunctionAnnotations()
+            )
+            variables_of_the_function = current_annotations.logical_variables
+            variables_of_the_function[
+                ScopedName.from_string(declaration.name)
+            ] = declaration.type
+            self.specifications[self.current_scope] = current_annotations
 
         self.logical_identifiers[declaration.name] = declaration.type
 
     def compile_checks(self, code_elem: CodeElement):
         def append_check(
-            check_dict: dict[Any, Assertion],
-            key: Any,
+            check_kind: CodeElementCheck.CheckKind,
+            key: Optional[ScopedName],
             check: z3.BoolRef,
-            axiom: z3.BoolRef,
         ):
-            current_check_bool_ref = check_dict.get(
-                key, Assertion(z3.BoolVal(True), z3.BoolVal(True))
+            current_annotations = self.specifications.get(
+                self.current_scope, FunctionAnnotations()
             )
-            check_dict[key] = Assertion(
-                z3And(current_check_bool_ref.bool_ref, check),
-                z3And(current_check_bool_ref.axiom, axiom),
-            )
+            if check_kind is CodeElementCheck.CheckKind.PRE_COND:
+                current_annotations.pre = z3And(current_annotations.pre, check)
+            elif check_kind is CodeElementCheck.CheckKind.POST_COND:
+                current_annotations.post = z3And(current_annotations.post, check)
+            elif check_kind is CodeElementCheck.CheckKind.INVARIANT:
+                current_invariant = self.invariants.get(key, z3.BoolVal(True))
+                self.invariants[key] = z3And(current_invariant, check)
+
+            self.specifications[self.current_scope] = current_annotations
 
         is_function = isinstance(code_elem, CodeElementFunction)
 
@@ -176,22 +191,13 @@ class HorusPreprocessor(StarknetPreprocessor):
                     is_post,
                 )
                 expr = z3_transformer.visit(parsed_check.formula)
-                axiom = z3.BoolVal(True)
 
-                if z3_transformer.inverse_equations:
-                    axiom = z3.And(z3_transformer.inverse_equations)
-
-                if parsed_check.check_kind == CodeElementCheck.CheckKind.ASSERT:
-                    append_check(self.checks.asserts, self.current_pc, expr, axiom)
-                elif parsed_check.check_kind == CodeElementCheck.CheckKind.REQUIRE:
-                    append_check(self.checks.requires, self.current_pc, expr, axiom)
-                elif parsed_check.check_kind == CodeElementCheck.CheckKind.INVARIANT:
+                if parsed_check.check_kind == CodeElementCheck.CheckKind.INVARIANT:
                     if isinstance(code_elem, CodeElementLabel):
                         append_check(
-                            self.checks.invariants,
-                            str(self.current_scope + code_elem.identifier.name),
+                            parsed_check.check_kind,
+                            self.current_scope + code_elem.identifier.name,
                             expr,
-                            axiom,
                         )
                     else:
                         raise PreprocessorError(
@@ -203,23 +209,11 @@ class HorusPreprocessor(StarknetPreprocessor):
                     or parsed_check.check_kind == CodeElementCheck.CheckKind.PRE_COND
                 ):
                     if isinstance(code_elem, CodeElementFunction):
-                        if (
-                            parsed_check.check_kind
-                            == CodeElementCheck.CheckKind.PRE_COND
-                        ):
-                            append_check(
-                                self.checks.pre_conds,
-                                str(self.current_scope),
-                                expr,
-                                axiom,
-                            )
-                        else:
-                            append_check(
-                                self.checks.post_conds,
-                                str(self.current_scope),
-                                expr,
-                                axiom,
-                            )
+                        append_check(
+                            parsed_check.check_kind,
+                            None,
+                            expr,
+                        )
                     else:
                         raise PreprocessorError(
                             "@pre/@post annotation must be placed before a function",
