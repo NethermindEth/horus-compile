@@ -48,7 +48,5 @@ logical_identifier: LOGICAL_IDENTIFIER ("." IDENTIFIER)*
 
 annotation: "@pre" bool_formula  -> precond_annotation
           | "@post" bool_formula -> postcond_annotation
-          | "@assert" bool_formula -> assert_annotation
-          | "@require" bool_formula -> require_annotation
           | "@invariant" bool_formula -> invariant_annotation
           | "@declare" logical_identifier_def ":" type -> declare_annotation

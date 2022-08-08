@@ -10,10 +10,10 @@ end
 
 # @declare $n : NestedStruct
 # @declare $m : (felt, Point)
-func main():
+# @post $n == $Return.a
+# @post $m == $Return.b
+func _main() -> (a: NestedStruct, b: (felt, Point)):
     tempvar a: NestedStruct = NestedStruct(point=Point(x=10, y=20), z=30)
-    # @require $n == a
     tempvar b: (felt, Point) = (10, Point(x=20, y=30))
-    # @require $m == b
-    ret
+    return (a=a, b=b)
 end

@@ -52,8 +52,6 @@ class HorusTransformer(ParserTransformer):
             for annotation in [
                 "@pre",
                 "@post",
-                "@assert",
-                "@require",
                 "@invariant",
                 "@declare",
             ]:
@@ -149,14 +147,6 @@ class HorusTransformer(ParserTransformer):
     @lark.v_args(inline=True)
     def postcond_annotation(self, expr):
         return CodeElementCheck(CodeElementCheck.CheckKind.POST_COND, expr)
-
-    @lark.v_args(inline=True)
-    def assert_annotation(self, expr):
-        return CodeElementCheck(CodeElementCheck.CheckKind.ASSERT, expr)
-
-    @lark.v_args(inline=True)
-    def require_annotation(self, expr):
-        return CodeElementCheck(CodeElementCheck.CheckKind.REQUIRE, expr)
 
     @lark.v_args(inline=True)
     def invariant_annotation(self, expr):

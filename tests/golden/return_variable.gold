@@ -1,58 +1,66 @@
 {
-  "checks": {
-    "asserts": {},
-    "invariants": {},
-    "post_conds": {
-      "__main__.complex_return": {
-        "bool_ref": [
-          "(let ((a!1 (memory (mod (+ ap (- 1)) prime))))",
-          "  (= 10 a!1))"
-        ]
-      },
-      "__main__.implicit_variable": {
-        "bool_ref": [
-          "(let ((a!1 (memory (mod (+ ap (- 2)) prime))))",
-          "  (= a!1 a!1))"
-        ]
-      },
-      "__main__.inc": {
-        "bool_ref": [
-          "(let ((a!1 (memory (mod (+ ap (- 1)) prime)))",
-          "      (a!2 (memory (mod (+ fp (- 3)) prime))))",
-          "  (= a!1 a!2))"
-        ]
-      },
-      "__main__.more_complex_return": {
-        "bool_ref": [
-          "(let ((a!1 (memory (mod (+ ap (- 2)) prime)))",
-          "      (a!2 (memory (mod (+ ap (- 1)) prime))))",
-          "  (and (= 20 a!1) (= 30 a!2)))"
-        ]
-      },
-      "__main__.pointer_to_a_struct": {
-        "bool_ref": [
-          "(let ((a!1 (memory (mod (+ ap (- 2)) prime)))",
-          "      (a!3 (memory (mod (+ ap (- 1)) prime))))",
-          "(let ((a!2 (= 20 (memory (mod (+ a!1 1) prime)))))",
-          "  (and a!2 (= 30 a!3))))"
-        ]
-      },
-      "__main__.simple_ret": {
-        "bool_ref": [
-          "(let ((a!1 (memory (mod (+ ap (- 1)) prime))))",
-          "  (= 10 a!1))"
-        ]
-      }
+  "invariants": {},
+  "specifications": {
+    "__main__.complex_return": {
+      "decls": {},
+      "logical_variables": {},
+      "post": [
+        "(= 10 (memory (+ ap (- 1))))"
+      ],
+      "pre": [
+        "true"
+      ]
     },
-    "pre_conds": {
-      "__main__.implicit_variable": {
-        "bool_ref": [
-          "(let ((a!1 (memory (mod (+ fp (- 3)) prime))))",
-          "  (= a!1 a!1))"
-        ]
-      }
+    "__main__.implicit_variable": {
+      "decls": {},
+      "logical_variables": {},
+      "post": [
+        "(= (memory (+ ap (- 2))) (memory (+ ap (- 2))))"
+      ],
+      "pre": [
+        "(= (memory (+ fp (- 3))) (memory (+ fp (- 3))))"
+      ]
     },
-    "requires": {}
-  },
-  "logical_variables": {}
+    "__main__.inc": {
+      "decls": {},
+      "logical_variables": {},
+      "post": [
+        "(= (memory (+ ap (- 1))) (memory (+ fp (- 3))))"
+      ],
+      "pre": [
+        "true"
+      ]
+    },
+    "__main__.more_complex_return": {
+      "decls": {},
+      "logical_variables": {},
+      "post": [
+        "(and (= 20 (memory (+ ap (- 2)))) (= 30 (memory (+ ap (- 1)))))"
+      ],
+      "pre": [
+        "true"
+      ]
+    },
+    "__main__.pointer_to_a_struct": {
+      "decls": {},
+      "logical_variables": {},
+      "post": [
+        "(let ((a!1 (memory (+ (memory (+ ap (- 2))) 1))))",
+        "  (and (= 20 a!1) (= 30 (memory (+ ap (- 1))))))"
+      ],
+      "pre": [
+        "true"
+      ]
+    },
+    "__main__.simple_ret": {
+      "decls": {},
+      "logical_variables": {},
+      "post": [
+        "(= 10 (memory (+ ap (- 1))))"
+      ],
+      "pre": [
+        "true"
+      ]
+    }
+  }
 }

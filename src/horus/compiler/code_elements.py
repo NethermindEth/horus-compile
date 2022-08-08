@@ -114,8 +114,6 @@ class CodeElementCheck(CodeElementAnnotation):
     """
 
     class CheckKind(Enum):
-        ASSERT = "@assert"
-        REQUIRE = "@require"
         POST_COND = "@post"
         PRE_COND = "@pre"
         INVARIANT = "@invariant"

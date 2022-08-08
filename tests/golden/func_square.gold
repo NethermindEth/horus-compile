@@ -1,35 +1,25 @@
 {
-  "checks": {
-    "asserts": {},
-    "invariants": {},
-    "post_conds": {
-      "__main__.main": {
-        "bool_ref": [
-          "(let ((a!1 (memory (mod (+ ap (- 1)) prime))))",
-          "  (= 25 a!1))"
-        ]
-      },
-      "__main__.square": {
-        "bool_ref": [
-          "(let ((a!1 (memory (mod (+ ap (- 1)) prime)))",
-          "      (a!2 (memory (mod (+ fp (- 3)) prime))))",
-          "  (= a!1 (mod (* a!2 a!2) prime)))"
-        ]
-      }
+  "invariants": {},
+  "specifications": {
+    "__main__.main": {
+      "decls": {},
+      "logical_variables": {},
+      "post": [
+        "(= 25 (memory (+ ap (- 1))))"
+      ],
+      "pre": [
+        "(= fp ap)"
+      ]
     },
-    "pre_conds": {
-      "__main__.main": {
-        "bool_ref": [
-          "(= fp ap)"
-        ]
-      },
-      "__main__.square": {
-        "bool_ref": [
-          "(= fp ap)"
-        ]
-      }
-    },
-    "requires": {}
-  },
-  "logical_variables": {}
+    "__main__.square": {
+      "decls": {},
+      "logical_variables": {},
+      "post": [
+        "(= (memory (+ ap (- 1))) (* (memory (+ fp (- 3))) (memory (+ fp (- 3)))))"
+      ],
+      "pre": [
+        "(= fp ap)"
+      ]
+    }
+  }
 }

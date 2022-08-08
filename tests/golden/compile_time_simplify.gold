@@ -1,24 +1,16 @@
 {
-  "checks": {
-    "asserts": {},
-    "invariants": {},
-    "post_conds": {
-      "__main__.test": {
-        "bool_ref": [
-          "(let ((a!1 (memory (mod (+ fp (- 4)) prime))))",
-          "  (= 112 (mod (+ a!1 5) prime)))"
-        ]
-      }
-    },
-    "pre_conds": {
-      "__main__.test": {
-        "bool_ref": [
-          "(= 340282366920938463463392621830277693568",
-          "   340282366920938463463392621830277693568)"
-        ]
-      }
-    },
-    "requires": {}
-  },
-  "logical_variables": {}
+  "invariants": {},
+  "specifications": {
+    "__main__.test": {
+      "decls": {},
+      "logical_variables": {},
+      "post": [
+        "(= 112 (+ (memory (+ fp (- 4))) 5))"
+      ],
+      "pre": [
+        "(= 340282366920938463463392621830277693568",
+        "   340282366920938463463392621830277693568)"
+      ]
+    }
+  }
 }
