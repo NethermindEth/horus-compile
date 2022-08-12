@@ -9,7 +9,8 @@
       ],
       "pre": [
         "true"
-      ]
+      ],
+      "state": {}
     },
     "__main__.id": {
       "decls": {},
@@ -19,7 +20,8 @@
       ],
       "pre": [
         "true"
-      ]
+      ],
+      "state": {}
     },
     "__main__.main": {
       "decls": {},
@@ -29,7 +31,8 @@
       ],
       "pre": [
         "true"
-      ]
+      ],
+      "state": {}
     },
     "__main__.pred": {
       "decls": {},
@@ -39,7 +42,8 @@
       ],
       "pre": [
         "true"
-      ]
+      ],
+      "state": {}
     },
     "__main__.succ": {
       "decls": {},
@@ -49,7 +53,8 @@
       ],
       "pre": [
         "true"
-      ]
+      ],
+      "state": {}
     }
   }
 }

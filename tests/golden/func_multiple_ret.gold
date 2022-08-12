@@ -13,7 +13,8 @@
       ],
       "pre": [
         "true"
-      ]
+      ],
+      "state": {}
     },
     "__main__.succpred": {
       "decls": {},
@@ -27,7 +28,8 @@
       ],
       "pre": [
         "true"
-      ]
+      ],
+      "state": {}
     }
   }
 }

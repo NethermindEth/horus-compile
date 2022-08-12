@@ -75,7 +75,6 @@ class MonkeyPatchStage(Stage):
             return AnnotatedCodeElement(
                 annotation=annotated_code_element.annotation,
                 code_elm=self.visit(annotated_code_element.code_elm),
-                location=annotated_code_element.location,
             )
 
         starkware.cairo.lang.compiler.ast.visitor.Visitor.visit_AnnotatedCodeElement = (

@@ -9,7 +9,8 @@
       ],
       "pre": [
         "true"
-      ]
+      ],
+      "state": {}
     },
     "__main__.succ": {
       "decls": {},
@@ -19,7 +20,8 @@
       ],
       "pre": [
         "true"
-      ]
+      ],
+      "state": {}
     }
   }
 }
