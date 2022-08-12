@@ -9,7 +9,8 @@
       ],
       "pre": [
         "true"
-      ]
+      ],
+      "state": {}
     },
     "__main__.implicit_variable": {
       "decls": {},
@@ -19,7 +20,8 @@
       ],
       "pre": [
         "(= (memory (+ fp (- 3))) (memory (+ fp (- 3))))"
-      ]
+      ],
+      "state": {}
     },
     "__main__.inc": {
       "decls": {},
@@ -29,7 +31,8 @@
       ],
       "pre": [
         "true"
-      ]
+      ],
+      "state": {}
     },
     "__main__.more_complex_return": {
       "decls": {},
@@ -39,7 +42,8 @@
       ],
       "pre": [
         "true"
-      ]
+      ],
+      "state": {}
     },
     "__main__.pointer_to_a_struct": {
       "decls": {},
@@ -50,7 +54,8 @@
       ],
       "pre": [
         "true"
-      ]
+      ],
+      "state": {}
     },
     "__main__.simple_ret": {
       "decls": {},
@@ -60,7 +65,8 @@
       ],
       "pre": [
         "true"
-      ]
+      ],
+      "state": {}
     }
   }
 }

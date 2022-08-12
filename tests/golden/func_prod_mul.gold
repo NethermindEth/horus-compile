@@ -15,7 +15,8 @@
       ],
       "pre": [
         "true"
-      ]
+      ],
+      "state": {}
     },
     "__main__.mul": {
       "decls": {},
@@ -25,7 +26,8 @@
       ],
       "pre": [
         "true"
-      ]
+      ],
+      "state": {}
     },
     "__main__.prod": {
       "decls": {},
@@ -35,7 +37,8 @@
       ],
       "pre": [
         "true"
-      ]
+      ],
+      "state": {}
     }
   }
 }

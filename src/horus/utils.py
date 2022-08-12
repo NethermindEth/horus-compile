@@ -17,8 +17,8 @@ def get_decls(f: z3.ExprRef, rs: Optional[dict[str, int]] = None) -> dict[str, i
         if not z3.z3util.is_expr_val(f):
             rs.setdefault(str(f), 0)
         return rs
-    if f.decl().kind == z3.Z3_OP_UNINTERPRETED:
-        rs.setdefault(str(f), f.decl().arity())
+    if f.decl().kind() == z3.Z3_OP_UNINTERPRETED:
+        rs.setdefault(str(f.decl()), f.decl().arity())
     for f_ in f.children():
         get_decls(f_, rs)
     return rs

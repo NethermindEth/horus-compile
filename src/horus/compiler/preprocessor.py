@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Iterable, Optional
+from typing import Optional
 
 import z3
 from starkware.cairo.lang.compiler.ast.code_elements import (
@@ -13,6 +13,8 @@ from starkware.cairo.lang.compiler.ast.code_elements import (
     CodeElementScoped,
 )
 from starkware.cairo.lang.compiler.error_handling import Location
+from starkware.cairo.lang.compiler.identifier_definition import StructDefinition
+from starkware.cairo.lang.compiler.identifier_utils import get_struct_definition
 from starkware.cairo.lang.compiler.resolve_search_result import resolve_search_result
 from starkware.cairo.lang.compiler.scoped_name import ScopedName
 from starkware.starknet.compiler.starknet_preprocessor import (
@@ -25,8 +27,9 @@ from horus.compiler.code_elements import (
     CodeElementAnnotation,
     CodeElementCheck,
     CodeElementLogicalVariableDeclaration,
+    CodeElementStateAnnotation,
 )
-from horus.compiler.contract_definition import FunctionAnnotations
+from horus.compiler.contract_definition import FunctionAnnotations, StateAnnotation
 from horus.compiler.parser import *
 from horus.compiler.z3_transformer import *
 from horus.utils import get_decls, z3And
@@ -71,9 +74,6 @@ class HorusPreprocessor(StarknetPreprocessor):
     def visit_CodeBlock(self, code_block: CodeBlock):
         return super().visit_CodeBlock(code_block)
 
-    def visit_CodeElementCheck(self, check: CodeElementCheck):
-        pass
-
     def visit_AnnotatedCodeElement(self, annotated_code_element: AnnotatedCodeElement):
         result = self.visit(annotated_code_element.code_elm)
         self.current_checks.append(annotated_code_element.annotation)
@@ -95,7 +95,7 @@ class HorusPreprocessor(StarknetPreprocessor):
                     ):
                         self.current_function = unfolded_obj.code_elements[0]
                 else:
-                    self.compile_checks(unfolded_obj)
+                    self.compile_annotations(unfolded_obj)
 
         return super().visit(obj)
 
@@ -151,7 +151,70 @@ class HorusPreprocessor(StarknetPreprocessor):
 
         self.logical_identifiers[declaration.name] = declaration.type
 
-    def compile_checks(self, code_elem: CodeElement):
+    def add_state_change(self, decl: CodeElementStateAnnotation):
+        z3_transformer = Z3Transformer(
+            self.identifiers, self, self.logical_identifiers, is_post=True
+        )
+        z3_expr_transformer = Z3ExpressionTransformer(
+            identifiers=self.identifiers, z3_transformer=z3_transformer
+        )
+        search_result = self.identifiers.search(
+            self.accessible_scopes, ScopedName.from_string(decl.name)
+        )
+        storage_var_args = get_struct_definition(
+            search_result.canonical_name + "read" + "Args", self.identifiers
+        )
+        assert isinstance(storage_var_args, StructDefinition)
+
+        if len(storage_var_args.members) != len(decl.arguments.args):
+            raise PreprocessorError(
+                f"Incorrect number of arguments for a storage map.",
+                location=decl.location,
+            )
+
+        for storage_def in storage_var_args.members.values():
+            assert isinstance(
+                storage_def.cairo_type, TypeFelt
+            ), "Non-felt arguments of storage maps are not supported yet."
+
+        args = []
+        for [storage_arg_name, storage_def], arg in zip(
+            storage_var_args.members.items(), decl.arguments.args
+        ):
+            if arg.identifier.name != storage_arg_name:
+                raise PreprocessorError(
+                    f"Wrong argument name: {arg.identifier.name}",
+                    location=decl.location,
+                )
+
+            arg_expr, arg_type = simplify_and_get_type(
+                arg.expr, self, self.logical_identifiers, is_post=True
+            )
+
+            if not isinstance(arg_type, TypeFelt):
+                raise PreprocessorError(
+                    f"Argument value must have type {TypeFelt().format}",
+                    location=decl.location,
+                )
+            args.append(z3_expr_transformer.visit(arg_expr))
+
+        current_annotations = self.specifications.get(
+            self.current_scope, FunctionAnnotations()
+        )
+        state_annotations = current_annotations.state.get(
+            search_result.canonical_name, []
+        )
+        state_annotation = StateAnnotation(
+            args,
+            z3_expr_transformer.visit(
+                simplify(decl.value, self, self.logical_identifiers, is_post=True)
+            ),
+        )
+        state_annotations.append(state_annotation)
+        current_annotations.state[search_result.canonical_name] = state_annotations
+        self.specifications[self.current_scope] = current_annotations
+
+    def compile_annotations(self, code_elem: CodeElement):
         def append_check(
             check_kind: CodeElementCheck.CheckKind,
             key: Optional[ScopedName],
@@ -170,17 +233,31 @@ class HorusPreprocessor(StarknetPreprocessor):
 
             self.specifications[self.current_scope] = current_annotations
 
-        is_function = isinstance(code_elem, CodeElementFunction)
-
         for parsed_check in self.current_checks:
-            if isinstance(parsed_check, CodeElementLogicalVariableDeclaration):
-                if is_function:
-                    self.add_logical_variable(parsed_check)
-                else:
+            if (
+                isinstance(parsed_check, CodeElementCheck)
+                and parsed_check.check_kind is CodeElementCheck.CheckKind.INVARIANT
+            ):
+                if not isinstance(code_elem, CodeElementLabel):
                     raise PreprocessorError(
-                        "@declare annotation is not allowed here", code_elem.location
+                        "@invariant annotation must be placed before a label",
+                        code_elem.location,
                     )
             else:
+                if not (
+                    isinstance(code_elem, CodeElementFunction)
+                    and code_elem.element_type == "func"
+                ):
+                    raise PreprocessorError(
+                        f"{parsed_check.format()} annotation is not allowed here",
+                        code_elem.location,
+                    )
+
+            if isinstance(parsed_check, CodeElementLogicalVariableDeclaration):
+                self.add_logical_variable(parsed_check)
+            elif isinstance(parsed_check, CodeElementStateAnnotation):
+                self.add_state_change(parsed_check)
+            elif isinstance(parsed_check, CodeElementCheck):
                 is_post = (
                     parsed_check.check_kind == CodeElementCheck.CheckKind.POST_COND
                 )
@@ -193,32 +270,20 @@ class HorusPreprocessor(StarknetPreprocessor):
                 expr = z3_transformer.visit(parsed_check.formula)
 
                 if parsed_check.check_kind == CodeElementCheck.CheckKind.INVARIANT:
-                    if isinstance(code_elem, CodeElementLabel):
-                        append_check(
-                            parsed_check.check_kind,
-                            self.current_scope + code_elem.identifier.name,
-                            expr,
-                        )
-                    else:
-                        raise PreprocessorError(
-                            "@invariant annotation must be placed before a label",
-                            code_elem.location,
-                        )
+                    append_check(
+                        parsed_check.check_kind,
+                        self.current_scope + code_elem.identifier.name,
+                        expr,
+                    )
                 elif (
                     parsed_check.check_kind == CodeElementCheck.CheckKind.POST_COND
                     or parsed_check.check_kind == CodeElementCheck.CheckKind.PRE_COND
                 ):
-                    if isinstance(code_elem, CodeElementFunction):
-                        append_check(
-                            parsed_check.check_kind,
-                            None,
-                            expr,
-                        )
-                    else:
-                        raise PreprocessorError(
-                            "@pre/@post annotation must be placed before a function",
-                            code_elem.location,
-                        )
+                    append_check(
+                        parsed_check.check_kind,
+                        None,
+                        expr,
+                    )
 
         self.current_checks = []
 
@@ -230,7 +295,7 @@ class HorusPreprocessor(StarknetPreprocessor):
         # has stepped into the body of the function.
 
         if self.current_function is not None:
-            self.compile_checks(self.current_function)
+            self.compile_annotations(self.current_function)
             self.current_function = None
             self.current_checks = []
 
@@ -238,16 +303,3 @@ class HorusPreprocessor(StarknetPreprocessor):
         self.logical_identifiers = {}
 
         return result
-
-    def get_next_CodeElement(
-        self, code_elements: Iterable[tuple[int, CodeElement]]
-    ) -> Optional[tuple[int, CodeElement]]:
-        """
-        Returns the first non empty line code element in `code_elements`
-        if it has the type `code_elm_type`. Returns `None` otherwise.
-        """
-        for i, code_elm in code_elements:
-            if not isinstance(code_elm, CodeElementEmptyLine):
-                return (i, code_elm)
-
-        return None
