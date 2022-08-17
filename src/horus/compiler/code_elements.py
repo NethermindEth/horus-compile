@@ -163,6 +163,7 @@ class CodeElementStorageUpdate(CodeElementAnnotation):
     name: str
     arguments: ArgList
     value: Expression
+    member_path: "list[str]" = dataclasses.field(default_factory=list)
     location: Optional[Location] = LocationField
     unpreprocessed_rep: str = ""
 

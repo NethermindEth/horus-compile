@@ -185,10 +185,22 @@ class HorusTransformer(ParserTransformer):
             identifier.name, type, location=self.meta2loc(meta)
         )
 
-    @lark.v_args(inline=True, meta=True)
-    def storage_update_annotation(self, meta, identifier, args, result):
+    @lark.v_args(inline=False, meta=True)
+    def storage_update_annotation(self, meta, args):
+        """
+        Parses a storage update annotation.
+        In particular extracts its member name.
+        """
+        identifier_name = args[0].name
+        storage_args = args[1]
+        member_path = [iden.name for iden in args[2:-1]]
+        result = args[-1]
         return CodeElementStorageUpdate(
-            identifier.name, args, result, location=self.meta2loc(meta)
+            identifier_name,
+            storage_args,
+            result,
+            member_path,
+            location=self.meta2loc(meta),
         )
 
     def transform(self, tree: lark.Tree):

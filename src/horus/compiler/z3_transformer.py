@@ -8,6 +8,7 @@ from starkware.cairo.lang.compiler.ast.bool_expr import BoolEqExpr
 from starkware.cairo.lang.compiler.ast.cairo_types import (
     CairoType,
     TypeFelt,
+    TypeIdentifier,
     TypePointer,
     TypeStruct,
     TypeTuple,
@@ -36,8 +37,10 @@ from starkware.cairo.lang.compiler.ast.expr_func_call import ExprFuncCall
 from starkware.cairo.lang.compiler.expression_simplifier import ExpressionSimplifier
 from starkware.cairo.lang.compiler.identifier_definition import (
     FunctionDefinition,
+    MemberDefinition,
     NamespaceDefinition,
     StructDefinition,
+    TypeDefinition,
 )
 from starkware.cairo.lang.compiler.identifier_manager import IdentifierManager
 from starkware.cairo.lang.compiler.identifier_utils import get_struct_definition
@@ -64,6 +67,7 @@ from horus.compiler.code_elements import (
     BoolOperation,
     ExprLogicalIdentifier,
 )
+from horus.compiler.storage_info import StorageVarInfo
 from horus.compiler.type_checker import simplify, simplify_and_get_type
 from horus.compiler.var_names import *
 from horus.utils import z3And, z3True
@@ -258,8 +262,8 @@ class Z3Transformer(IdentifierAwareVisitor):
         self,
         identifiers: IdentifierManager,
         preprocessor: Preprocessor,
-        logical_identifiers: Dict[str, CairoType],
-        storage_vars: Dict[ScopedName, IdentifierList],
+        logical_identifiers: dict[str, CairoType],
+        storage_vars: dict[ScopedName, StorageVarInfo],
         is_post: bool = False,
     ):
         super().__init__(identifiers)
@@ -277,10 +281,16 @@ class Z3Transformer(IdentifierAwareVisitor):
         if isinstance(expr, ExprTuple):
             member = expr.members.args[ind]
             return member.expr
+        elif isinstance(expr, ExprDeref):
+            return ExprDeref(
+                ExprOperator(expr.addr, "+", ExprConst(ind)), location=expr.location
+            )
         else:
             return ExprSubscript(expr, ExprConst(ind))
 
-    def get_member(self, expr: Expression, name: str):
+    def get_member(
+        self, expr: Expression, name: str, mem_def: Optional[MemberDefinition] = None
+    ):
         if isinstance(expr, ExprTuple):
             for member in expr.members.args:
                 if member.identifier is not None and member.identifier.name == name:
@@ -293,8 +303,134 @@ class Z3Transformer(IdentifierAwareVisitor):
                     )
 
             raise PreprocessorError(f"No member with the name {name}")
+
+        if isinstance(expr, ExprDeref):
+            assert (
+                not mem_def is None
+            ), "Member definition 'mem_def' should not be None."
+            return ExprDeref(
+                addr=ExprOperator(expr.addr, "+", ExprConst(mem_def.offset)),
+                location=expr.location,
+            )
+
+        return ExprDot(expr, ExprIdentifier(name))
+
+    def flatten_typed_expr(
+        self,
+        a: Expression,
+        a_type: CairoType,
+        result: Optional[list[Expression]] = None,
+    ):
+        if result is None:
+            result = []
+        if isinstance(a_type, TypeStruct):
+            definition = get_struct_definition(
+                struct_name=a_type.scope, identifier_manager=self.identifiers
+            )
+            assert isinstance(
+                definition, StructDefinition
+            ), "TypeStruct with the name {a_type.scope} must yield a StructDefinition.\n Got {definition.TYPE()}"
+            for member_name, member_definition in definition.members.items():
+                member_a = self.get_member(a, member_name, member_definition)
+                if isinstance(member_definition.cairo_type, (TypeFelt, TypePointer)):
+                    result.append(
+                        z3.simplify(
+                            get_smt_expression(
+                                simplify(
+                                    member_a,
+                                    self.preprocessor,
+                                    self.logical_identifiers,
+                                    self.storage_vars,
+                                    self.is_post,
+                                ),
+                                self.identifiers,
+                            )
+                        )
+                    )
+                elif isinstance(member_definition.cairo_type, TypeIdentifier):
+                    res = self.identifiers.get(
+                        member_definition.cairo_type.name
+                    ).identifier_definition
+                    if isinstance(res, StructDefinition):
+                        self.flatten_typed_expr(
+                            member_a,
+                            TypeStruct(res.full_name, location=res.location),
+                            result,
+                        )
+                    elif isinstance(res, TypeDefinition):
+                        self.flatten_typed_expr(member_a, res.cairo_type, result)
+                elif isinstance(member_definition.cairo_type, TypeStruct):
+                    self.flatten_typed_expr(
+                        member_a, member_definition.cairo_type, result
+                    )
+                elif isinstance(member_definition.cairo_type, TypeTuple):
+                    self.flatten_typed_expr(
+                        member_a, member_definition.cairo_type, result
+                    )
+                else:
+                    raise NotImplementedError(
+                        f"Unsupported type {member_definition.cairo_type.format()}"
+                    )
+        elif isinstance(a_type, TypeTuple):
+            for i, member in enumerate(a_type.members):
+                if member.name is not None:
+                    member_a = self.get_member(
+                        a,
+                        member.name,
+                    )
+                else:
+                    member_a = self.get_element_at(a, i)
+
+                if isinstance(member.typ, (TypeFelt, TypePointer)):
+                    result.append(
+                        z3.simplify(
+                            get_smt_expression(
+                                simplify(
+                                    member_a,
+                                    self.preprocessor,
+                                    self.logical_identifiers,
+                                    self.storage_vars,
+                                    self.is_post,
+                                ),
+                                self.identifiers,
+                            )
+                        )
+                    )
+                elif isinstance(member.typ, TypeIdentifier):
+                    res = self.identifiers.get(member.typ.name).identifier_definition
+                    if isinstance(res, StructDefinition):
+                        self.flatten_typed_expr(
+                            member_a,
+                            TypeStruct(res.full_name, location=res.location),
+                            result,
+                        )
+                    elif isinstance(res, TypeDefinition):
+                        self.flatten_typed_expr(member_a, res.cairo_type, result)
+                elif isinstance(member.typ, TypeStruct):
+                    self.flatten_typed_expr(member_a, member.typ, result)
+                elif isinstance(member.typ, TypeTuple):
+                    self.flatten_typed_expr(member_a, member.typ, result)
         else:
-            return ExprDot(expr, ExprIdentifier(name))
+            a = self.z3_expression_transformer.visit(a)
+            result.append(a)
+
+        return result
+
+    def flatten_expr(self, expr: Expression):
+        a, _ = self.flatten_expr_and_get_type(expr)
+
+        return a
+
+    def flatten_expr_and_get_type(self, expr: Expression):
+        a, a_type = simplify_and_get_type(
+            expr,
+            self.preprocessor,
+            self.logical_identifiers,
+            self.storage_vars,
+            self.is_post,
+        )
+
+        return self.flatten_typed_expr(a, a_type, result=[]), a_type
 
     def make_tuple_eq(self, a: Expression, b: Expression, type: TypeTuple):
         result = z3True

@@ -3,29 +3,29 @@
   "specifications": {
     "__main__._main": {
       "decls": {
-        "$m.0": 0,
-        "$m.1.x": 0,
-        "$m.1.y": 0,
-        "$n.point.x": 0,
-        "$n.point.y": 0,
-        "$n.z": 0
+        "$a.point.x": 0,
+        "$a.point.y": 0,
+        "$a.z": 0,
+        "$b.0": 0,
+        "$b.1.x": 0,
+        "$b.1.y": 0
       },
       "logical_variables": {
-        "$m": "(felt, __main__.Point)",
-        "$n": "__main__.NestedStruct"
+        "$a": "__main__.NestedStruct",
+        "$b": "(felt, __main__.Point)"
       },
       "post": {
         "sexpr": [
-          "(and (= $n.point.x (memory (+ ap (- 6))))",
-          "     (= $n.point.y (memory (+ ap (- 5))))",
-          "     (= $n.z (memory (+ ap (- 4))))",
-          "     (= $m.0 (memory (+ ap (- 3))))",
-          "     (= $m.1.x (memory (+ ap (- 2))))",
-          "     (= $m.1.y (memory (+ ap (- 1)))))"
+          "(and (= $a.point.x (memory (+ ap (- 6))))",
+          "     (= $a.point.y (memory (+ ap (- 5))))",
+          "     (= $a.z (memory (+ ap (- 4))))",
+          "     (= $b.0 (memory (+ ap (- 3))))",
+          "     (= $b.1.x (memory (+ ap (- 2))))",
+          "     (= $b.1.y (memory (+ ap (- 1)))))"
         ],
         "source": [
-          "$n == $Return.a",
-          "$m == $Return.b"
+          "$a == $Return.a",
+          "$b == $Return.b"
         ]
       },
       "pre": {
