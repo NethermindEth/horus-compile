@@ -1,0 +1,99 @@
+{
+  "invariants": {},
+  "specifications": {
+    "__main__.main": {
+      "decls": {},
+      "logical_variables": {},
+      "post": [
+        "(= 11 (memory (+ ap (- 1))))"
+      ],
+      "pre": [
+        "true"
+      ],
+      "state": {
+        "__main__.stack": [
+          {
+            "arguments": [
+              "(- __main__.stack_ptr 1)"
+            ],
+            "value": "11"
+          }
+        ],
+        "__main__.stack_ptr": [
+          {
+            "arguments": [],
+            "value": "(+ __main__.stack_ptr 1)"
+          }
+        ]
+      }
+    },
+    "__main__.stack_add": {
+      "decls": {
+        "__main__.stack_ptr": 0
+      },
+      "logical_variables": {},
+      "post": [
+        "true"
+      ],
+      "pre": [
+        "(<= 2 __main__.stack_ptr)"
+      ],
+      "state": {
+        "__main__.stack": [
+          {
+            "arguments": [
+              "(- __main__.stack_ptr 1)"
+            ],
+            "value": "(+ (__main__.stack (- __main__.stack_ptr 2))\n   (__main__.stack (- __main__.stack_ptr 1)))"
+          }
+        ],
+        "__main__.stack_ptr": [
+          {
+            "arguments": [],
+            "value": "(- __main__.stack_ptr 1)"
+          }
+        ]
+      }
+    },
+    "__main__.stack_lit": {
+      "decls": {},
+      "logical_variables": {},
+      "post": [
+        "true"
+      ],
+      "pre": [
+        "true"
+      ],
+      "state": {
+        "__main__.stack": [
+          {
+            "arguments": [
+              "(- __main__.stack_ptr 1)"
+            ],
+            "value": "(memory (+ fp (- 3)))"
+          }
+        ],
+        "__main__.stack_ptr": [
+          {
+            "arguments": [],
+            "value": "(+ __main__.stack_ptr 1)"
+          }
+        ]
+      }
+    },
+    "__main__.stack_top": {
+      "decls": {
+        "__main__.stack": 1,
+        "__main__.stack_ptr": 0
+      },
+      "logical_variables": {},
+      "post": [
+        "(= (memory (+ ap (- 1))) (__main__.stack (+ __main__.stack_ptr (- 1))))"
+      ],
+      "pre": [
+        "(<= 1 __main__.stack_ptr)"
+      ],
+      "state": {}
+    }
+  }
+}
