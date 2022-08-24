@@ -1,43 +1,36 @@
 {
-  "checks": {
-    "asserts": {},
-    "invariants": {},
-    "post_conds": {},
-    "pre_conds": {},
-    "requires": {
-      "6": {
-        "bool_ref": [
-          "(let ((a!1 (mod (+ (mod (- ap 0) prime) (- 3)) prime)))",
-          "(let ((a!2 (= $n.point.y (memory (mod (+ a!1 1) prime))))",
-          "      (a!3 (= $n.z (memory (mod (+ a!1 2) prime)))))",
-          "  (and (= $n.point.x (memory a!1)) a!2 a!3)))"
-        ],
-        "decls": {
-          "$n.point.x": 0,
-          "$n.point.y": 0,
-          "$n.z": 0
-        }
+  "invariants": {},
+  "specifications": {
+    "__main__._main": {
+      "decls": {
+        "$m.0": 0,
+        "$m.1.x": 0,
+        "$m.1.y": 0,
+        "$n.point.x": 0,
+        "$n.point.y": 0,
+        "$n.z": 0
       },
-      "12": {
-        "bool_ref": [
-          "(let ((a!1 (mod (+ (mod (- ap 0) prime) (- 3)) prime)))",
-          "(let ((a!2 (= $m.0 (memory (mod (+ a!1 0) prime))))",
-          "      (a!3 (= $m.1.x (memory (mod (+ a!1 1) prime))))",
-          "      (a!4 (mod (+ (mod (+ a!1 1) prime) 1) prime)))",
-          "  (and a!2 a!3 (= $m.1.y (memory a!4)))))"
-        ],
-        "decls": {
-          "$m.0": 0,
-          "$m.1.x": 0,
-          "$m.1.y": 0
-        }
-      }
-    }
-  },
-  "logical_variables": {
-    "__main__.main": {
-      "$m": "(felt, __main__.Point)",
-      "$n": "__main__.NestedStruct"
+      "logical_variables": {
+        "$m": "(felt, __main__.Point)",
+        "$n": "__main__.NestedStruct"
+      },
+      "post": [
+        "(let ((a!1 (= $n.point.y (memory (+ (- ap 6) 1))))",
+        "      (a!2 (= $n.z (memory (+ (- ap 6) 2))))",
+        "      (a!3 (memory (+ (+ (- ap 6) 3) 0)))",
+        "      (a!4 (memory (+ (+ (- ap 6) 3) 1)))",
+        "      (a!5 (+ (+ (+ (- ap 6) 3) 1) 1)))",
+        "  (and (= $n.point.x (memory (- ap 6)))",
+        "       a!1",
+        "       a!2",
+        "       (= $m.0 a!3)",
+        "       (= $m.1.x a!4)",
+        "       (= $m.1.y (memory a!5))))"
+      ],
+      "pre": [
+        "true"
+      ],
+      "state": {}
     }
   }
 }

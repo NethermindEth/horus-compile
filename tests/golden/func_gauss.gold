@@ -1,43 +1,36 @@
 {
-  "checks": {
-    "asserts": {},
-    "invariants": {
-      "__main__.gauss.loop": {
-        "bool_ref": [
-          "(let ((a!1 (memory (mod (+ ap (- 2)) prime)))",
-          "      (a!2 (memory (mod (+ ap (- 1)) prime)))",
-          "      (a!3 (memory (mod (+ fp (- 3)) prime)))",
-          "      (a!4 (memory (mod (+ ap (- 3)) prime))))",
-          "(let ((a!5 (* a!1 (mod (+ a!1 (- 1)) prime))))",
-          "  (and (= (mod (+ a!1 a!2) prime) (mod (+ a!3 1) prime))",
-          "       (= (mod (* 2 a!4) prime) (mod a!5 prime)))))"
-        ]
-      }
-    },
-    "post_conds": {
-      "__main__.gauss": {
-        "bool_ref": [
-          "(let ((a!1 (memory (mod (+ ap (- 1)) prime)))",
-          "      (a!2 (memory (mod (+ fp (- 3)) prime))))",
-          "(let ((a!3 (mod (* (mod (+ a!2 1) prime) a!2) prime)))",
-          "  (= (mod (* 2 a!1) prime) a!3)))"
-        ]
-      },
-      "__main__.main": {
-        "bool_ref": [
-          "(let ((a!1 (memory (mod (+ ap (- 1)) prime))))",
-          "  (= 15 a!1))"
-        ]
-      }
-    },
-    "pre_conds": {
-      "__main__.gauss": {
-        "bool_ref": [
-          "(< 0 (memory (mod (- fp 3) prime)))"
-        ]
-      }
-    },
-    "requires": {}
+  "invariants": {
+    "__main__.gauss.loop": [
+      "(let ((a!1 (= (+ (memory (+ ap (- 2))) (memory (+ ap (- 1))))",
+      "              (+ (memory (+ fp (- 3))) 1)))",
+      "      (a!2 (* (memory (+ ap (- 2))) (+ (memory (+ ap (- 2))) (- 1)))))",
+      "(let ((a!3 (= (* 2 (memory (+ ap (- 3)))) a!2)))",
+      "  (and a!1 a!3)))"
+    ]
   },
-  "logical_variables": {}
+  "specifications": {
+    "__main__.gauss": {
+      "decls": {},
+      "logical_variables": {},
+      "post": [
+        "(let ((a!1 (* (+ (memory (+ fp (- 3))) 1) (memory (+ fp (- 3))))))",
+        "  (= (* 2 (memory (+ ap (- 1)))) a!1))"
+      ],
+      "pre": [
+        "(< 0 (memory (- fp 3)))"
+      ],
+      "state": {}
+    },
+    "__main__.main": {
+      "decls": {},
+      "logical_variables": {},
+      "post": [
+        "(= 15 (memory (+ ap (- 1))))"
+      ],
+      "pre": [
+        "true"
+      ],
+      "state": {}
+    }
+  }
 }

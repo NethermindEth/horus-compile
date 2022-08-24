@@ -1,11 +1,11 @@
 import dataclasses
 from enum import Enum
-from typing import Optional, Sequence, Union
+from typing import Optional, Sequence
 
 from starkware.cairo.lang.compiler.ast.bool_expr import BoolExpr
 from starkware.cairo.lang.compiler.ast.cairo_types import CairoType
 from starkware.cairo.lang.compiler.ast.code_elements import CodeElement
-from starkware.cairo.lang.compiler.ast.expr import Expression
+from starkware.cairo.lang.compiler.ast.expr import ArgList, Expression
 from starkware.cairo.lang.compiler.ast.formatting_utils import LocationField
 from starkware.cairo.lang.compiler.ast.node import AstNode
 from starkware.cairo.lang.compiler.error_handling import Location
@@ -102,22 +102,25 @@ class BoolNegation(BoolFormula):
         return [self.operand]
 
 
+class CodeElementAnnotation(CodeElement):
+    pass
+
+
 @dataclasses.dataclass
-class CodeElementCheck(CodeElement):
+class CodeElementCheck(CodeElementAnnotation):
     """
-    Represent a particular Horus annotation which is not
-    a logical variable declaration.
+    Represents a logical annotation of a kind
+    specified by `check_kind`.
     """
 
     class CheckKind(Enum):
-        ASSERT = "@assert"
-        REQUIRE = "@require"
         POST_COND = "@post"
         PRE_COND = "@pre"
         INVARIANT = "@invariant"
 
     check_kind: CheckKind
     formula: BoolFormula
+    location: Optional[Location] = LocationField
 
     def format(self, allowed_line_length):
         # TODO: implement better formatting
@@ -128,13 +131,14 @@ class CodeElementCheck(CodeElement):
 
 
 @dataclasses.dataclass
-class CodeElementLogicalVariableDeclaration(CodeElement):
+class CodeElementLogicalVariableDeclaration(CodeElementAnnotation):
     """
     Represents a logical variable declaration.
     """
 
     name: str
     type: CairoType
+    location: Optional[Location] = LocationField
 
     def format(self, allowed_line_length):
         return f"@declare {self.name}: {self.type.format()}"
@@ -144,19 +148,39 @@ class CodeElementLogicalVariableDeclaration(CodeElement):
 
 
 @dataclasses.dataclass
-class CheckedCodeElement(CodeElement):
+class CodeElementStateAnnotation(CodeElementAnnotation):
     """
-    Represents a code element with a check placed after.
-    E.g., `[ap] = 1; ap++ # @assert True` will be parsed
-    into one `CheckedCodeElement`.
+    Represents a storage variable change annotation.
     """
 
-    check: Union[CodeElementCheck, CodeElementLogicalVariableDeclaration]
-    code_elm: CodeElement
+    name: str
+    arguments: ArgList
+    value: Expression
     location: Optional[Location] = LocationField
 
     def format(self, allowed_line_length):
-        return f"{self.check.format(allowed_line_length)}\n{self.code_elm.format(allowed_line_length)}"
+        return f"@state {self.name}[{self.arguments.format()}] = {self.value.format()}"
+
+    def get_children(self) -> Sequence[Optional["AstNode"]]:
+        return [
+            self.arguments,
+            self.value,
+        ]
+
+
+@dataclasses.dataclass
+class AnnotatedCodeElement(CodeElement):
+    """
+    Represents a code element with an annotation placed after.
+    Note that empty lines are also code elements, so usually
+    `code_elm` is a `CodeElementEmptyLine`.
+    """
+
+    annotation: CodeElementAnnotation
+    code_elm: CodeElement
+
+    def format(self, allowed_line_length):
+        return f"{self.annotation.format(allowed_line_length)}\n{self.code_elm.format(allowed_line_length)}"
 
     def get_children(self) -> Sequence[Optional[AstNode]]:
-        return [self.check, self.code_elm]
+        return [self.annotation, self.code_elm]
