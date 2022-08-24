@@ -1,91 +1,77 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import field
 
 import marshmallow.fields as mfields
 import marshmallow_dataclass
 import z3
 from marshmallow.exceptions import ValidationError
+from starkware.cairo.lang.compiler.ast.cairo_types import CairoType
+from starkware.cairo.lang.compiler.fields import CairoTypeAsStr
+from starkware.cairo.lang.compiler.scoped_name import ScopedName, ScopedNameAsStr
 from starkware.starknet.services.api.contract_definition import ContractDefinition
 
 from horus.compiler.var_names import *
-from horus.utils import get_decls, make_declare_funs
 
 
-@dataclass
-class Assertion:
-    """
-    A check with an additional constraint which must be
-    added to solver's goal in a positive way.
-    For now `axiom` is either `True` or a multiplicative inverse
-    condition for some variable.
-    """
+class IntNumRefAsStr(mfields.Field):
+    def _serialize(self, value: z3.IntNumRef, attr, obj, **kwargs):
+        return super()._serialize(value.sexpr(), attr, obj, **kwargs)
 
-    bool_ref: z3.BoolRef
-    axiom: z3.BoolRef
+    def _deserialize(self, value, attr, data, **kwargs):
+        return z3.parse_smt2_string(value)
+
+
+@marshmallow_dataclass.dataclass
+class StateAnnotation:
+    arguments: "list[z3.IntNumRef]" = field(
+        metadata=dict(marshmallow_field=mfields.List(IntNumRefAsStr())),
+        default_factory=list,
+    )
+    value: z3.IntNumRef = field(
+        metadata=dict(marshmallow_field=IntNumRefAsStr()), default=z3.IntVal(0)
+    )
 
 
 class AssertionField(mfields.Field):
-    def _serialize(self, value: Assertion, attr, obj, **kwargs):
-        decls = get_decls(value.bool_ref)
-        for var in HORUS_DECLS.keys():
-            decls.pop(var, None)
-        v = {
-            "axiom": value.axiom.sexpr().split("\n"),
-            "bool_ref": value.bool_ref.sexpr().split("\n"),
-            "decls": decls,
-        }
-        if not decls:
-            del v["decls"]
-        if z3.is_true(value.axiom):
-            del v["axiom"]
-        return super()._serialize(v, attr, obj, **kwargs)
+    def _serialize(self, value: z3.BoolRef, attr, obj, **kwargs):
+        return super()._serialize(value.sexpr().split("\n"), attr, obj, **kwargs)
 
     def _deserialize(self, value, attr, data, **kwargs):
         v = super()._deserialize(value, attr, data, **kwargs)
-        declare_funs = make_declare_funs(v.get("decls", {}))
-        axiom_str = "\n".join(v.get("axiom", ["true"]))
-        bool_ref_str = "\n".join(v["bool_ref"])
-        axiom_full = f"{declare_funs}\n(assert {axiom_str})"
-        bool_ref_full = f"{declare_funs}\n(assert {bool_ref_str})"
-        axioms = z3.parse_smt2_string(axiom_full, decls=HORUS_DECLS)
-        bool_refs = z3.parse_smt2_string(bool_ref_full, decls=HORUS_DECLS)
-        if len(axioms) != 1:
-            raise ValidationError(f"Can't deserialize '{axiom_full}'")
+        bool_ref_str = "\n".join(v)
+        bool_refs = z3.parse_smt2_string(bool_ref_str, decls=HORUS_DECLS)
         if len(bool_refs) != 1:
-            raise ValidationError(f"Can't deserialize '{bool_ref_full}'")
-        return Assertion(bool_ref=bool_refs[0], axiom=axioms[0])  # type: ignore
+            raise ValidationError(f"Can't deserialize '{bool_ref_str}'")
+        return bool_refs[0]  # type: ignore
 
 
-@marshmallow_dataclass.dataclass(frozen=True)
-class HorusChecks:
-    asserts: "dict[int, Assertion]" = field(
+@marshmallow_dataclass.dataclass(frozen=False)
+class FunctionAnnotations:
+    pre: z3.BoolRef = field(
+        metadata=dict(marshmallow_field=AssertionField()), default=z3.BoolVal(True)
+    )
+    post: z3.BoolRef = field(
+        metadata=dict(marshmallow_field=AssertionField()), default=z3.BoolVal(True)
+    )
+    logical_variables: "dict[ScopedName, CairoType]" = field(
         metadata=dict(
-            marshmallow_field=mfields.Dict(keys=mfields.Int(), values=AssertionField())
+            marshmallow_field=mfields.Dict(ScopedNameAsStr(), CairoTypeAsStr())
         ),
         default_factory=dict,
     )
-    requires: "dict[int, Assertion]" = field(
-        metadata=dict(
-            marshmallow_field=mfields.Dict(keys=mfields.Int(), values=AssertionField())
-        ),
+    decls: "dict[str, int]" = field(
+        metadata=dict(marshmallow_field=mfields.Dict(mfields.Str(), mfields.Int())),
         default_factory=dict,
     )
-    pre_conds: "dict[str, Assertion]" = field(
+    state: "dict[ScopedName, list[StateAnnotation]]" = field(
         metadata=dict(
-            marshmallow_field=mfields.Dict(keys=mfields.Str(), values=AssertionField())
-        ),
-        default_factory=dict,
-    )
-    post_conds: "dict[str, Assertion]" = field(
-        metadata=dict(
-            marshmallow_field=mfields.Dict(keys=mfields.Str(), values=AssertionField())
-        ),
-        default_factory=dict,
-    )
-    invariants: "dict[str, Assertion]" = field(
-        metadata=dict(
-            marshmallow_field=mfields.Dict(keys=mfields.Str(), values=AssertionField())
+            marshmallow_field=mfields.Dict(
+                ScopedNameAsStr(),
+                mfields.List(
+                    mfields.Nested(marshmallow_dataclass.class_schema(StateAnnotation))
+                ),
+            )
         ),
         default_factory=dict,
     )
@@ -93,19 +79,18 @@ class HorusChecks:
 
 @marshmallow_dataclass.dataclass(frozen=True)
 class HorusDefinition(ContractDefinition):
-    checks: HorusChecks = field(
-        metadata=dict(
-            marshmallow_field=mfields.Nested(
-                marshmallow_dataclass.class_schema(HorusChecks)
-            )
-        ),
-        default=HorusChecks(),
-    )
-    logical_variables: "dict[str, dict[str, str]]" = field(
+    specifications: "dict[ScopedName, FunctionAnnotations]" = field(
         metadata=dict(
             marshmallow_field=mfields.Dict(
-                mfields.Str(), mfields.Dict(keys=mfields.Str(), values=mfields.Str())
+                ScopedNameAsStr(),
+                mfields.Nested(marshmallow_dataclass.class_schema(FunctionAnnotations)),
             )
+        ),
+        default_factory=dict,
+    )
+    invariants: "dict[ScopedName, z3.BoolRef]" = field(
+        metadata=dict(
+            marshmallow_field=mfields.Dict(ScopedNameAsStr(), AssertionField())
         ),
         default_factory=dict,
     )

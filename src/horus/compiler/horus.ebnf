@@ -12,6 +12,7 @@
 %import starkware.cairo.lang.compiler.cairo.type
 %import starkware.cairo.lang.compiler.cairo.code_element
 %import starkware.cairo.lang.compiler.cairo.typed_identifier
+%import starkware.cairo.lang.compiler.cairo.arg_list
 
 %import common.INT
 %import common.WS_INLINE
@@ -48,7 +49,6 @@ logical_identifier: LOGICAL_IDENTIFIER ("." IDENTIFIER)*
 
 annotation: "@pre" bool_formula  -> precond_annotation
           | "@post" bool_formula -> postcond_annotation
-          | "@assert" bool_formula -> assert_annotation
-          | "@require" bool_formula -> require_annotation
           | "@invariant" bool_formula -> invariant_annotation
           | "@declare" logical_identifier_def ":" type -> declare_annotation
+          | "@state" identifier "(" arg_list ")" "=" expr -> state_annotation

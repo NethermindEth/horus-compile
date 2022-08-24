@@ -14,14 +14,16 @@ from starkware.cairo.lang.compiler.parser_transformer import (
 
 import horus.compiler.parser
 from horus.compiler.code_elements import (
+    AnnotatedCodeElement,
     BoolConst,
     BoolExprAtom,
     BoolExprCompare,
     BoolNegation,
     BoolOperation,
-    CheckedCodeElement,
+    CodeElementAnnotation,
     CodeElementCheck,
     CodeElementLogicalVariableDeclaration,
+    CodeElementStateAnnotation,
     ExprLogicalIdentifier,
 )
 
@@ -48,28 +50,18 @@ class HorusTransformer(ParserTransformer):
         if comment is not None:
             possible_annotation = comment.strip()
 
-            for annotation in [
-                "@pre",
-                "@post",
-                "@assert",
-                "@require",
-                "@invariant",
-                "@declare",
-            ]:
+            for annotation in ["@pre", "@post", "@invariant", "@declare", "@state"]:
                 if possible_annotation.startswith(annotation):
                     check = horus.compiler.parser.parse(
                         filename=self.input_file.filename,
                         code=possible_annotation,
                         code_type="annotation",
-                        expected_type=(
-                            CodeElementCheck,
-                            CodeElementLogicalVariableDeclaration,
-                        ),
+                        expected_type=CodeElementAnnotation,
                         parser_context=self.parser_context,
                     )
                     code_elem = super().commented_code_element(value[:1], meta)
-                    code_elem.code_elm = CheckedCodeElement(
-                        check, code_elm=code_elem.code_elm, location=code_elem.location
+                    code_elem.code_elm = AnnotatedCodeElement(
+                        check, code_elm=code_elem.code_elm
                     )
                     return code_elem
 
@@ -144,29 +136,35 @@ class HorusTransformer(ParserTransformer):
     def bool_expr_parentheses(self, formula):
         return formula
 
-    @lark.v_args(inline=True)
-    def precond_annotation(self, expr):
-        return CodeElementCheck(CodeElementCheck.CheckKind.PRE_COND, expr)
+    @lark.v_args(inline=True, meta=True)
+    def precond_annotation(self, meta, expr):
+        return CodeElementCheck(
+            CodeElementCheck.CheckKind.PRE_COND, expr, location=self.meta2loc(meta)
+        )
 
-    @lark.v_args(inline=True)
-    def postcond_annotation(self, expr):
-        return CodeElementCheck(CodeElementCheck.CheckKind.POST_COND, expr)
+    @lark.v_args(inline=True, meta=True)
+    def postcond_annotation(self, meta, expr):
+        return CodeElementCheck(
+            CodeElementCheck.CheckKind.POST_COND, expr, location=self.meta2loc(meta)
+        )
 
-    @lark.v_args(inline=True)
-    def assert_annotation(self, expr):
-        return CodeElementCheck(CodeElementCheck.CheckKind.ASSERT, expr)
+    @lark.v_args(inline=True, meta=True)
+    def invariant_annotation(self, meta, expr):
+        return CodeElementCheck(
+            CodeElementCheck.CheckKind.INVARIANT, expr, location=self.meta2loc(meta)
+        )
 
-    @lark.v_args(inline=True)
-    def require_annotation(self, expr):
-        return CodeElementCheck(CodeElementCheck.CheckKind.REQUIRE, expr)
+    @lark.v_args(inline=True, meta=True)
+    def declare_annotation(self, meta, identifier, type):
+        return CodeElementLogicalVariableDeclaration(
+            identifier.name, type, location=self.meta2loc(meta)
+        )
 
-    @lark.v_args(inline=True)
-    def invariant_annotation(self, expr):
-        return CodeElementCheck(CodeElementCheck.CheckKind.INVARIANT, expr)
-
-    @lark.v_args(inline=True)
-    def declare_annotation(self, identifier, type):
-        return CodeElementLogicalVariableDeclaration(identifier.name, type)
+    @lark.v_args(inline=True, meta=True)
+    def state_annotation(self, meta, identifier, args, result):
+        return CodeElementStateAnnotation(
+            identifier.name, args, result, location=self.meta2loc(meta)
+        )
 
     def transform(self, tree: lark.Tree):
         # The nodes of the tree imported from cairo.ebnf appear with

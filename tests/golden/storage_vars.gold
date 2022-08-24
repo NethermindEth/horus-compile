@@ -1,0 +1,41 @@
+{
+  "invariants": {},
+  "specifications": {
+    "__main__.test": {
+      "decls": {
+        "__main__.balance": 1,
+        "__main__.double_arg": 2
+      },
+      "logical_variables": {},
+      "post": [
+        "(let ((a!1 (memory (memory (memory (+ fp (- 3)))))))",
+        "(let ((a!2 (__main__.double_arg 60 (+ a!1 (memory (+ fp (- 3)))))))",
+        "  (= 10 (memory a!2))))"
+      ],
+      "pre": [
+        "(let ((a!1 (+ (memory (memory (+ fp (- 3)))) 20))",
+        "      (a!3 (* (memory (memory (+ fp (- 3)))) 100)))",
+        "(let ((a!2 (__main__.double_arg (+ (memory (+ fp (- 3))) 10) a!1)))",
+        "  (and (= 20 (__main__.balance 10))",
+        "       (not (= 11 (__main__.balance 20)))",
+        "       (= a!2 a!3))))"
+      ],
+      "state": {
+        "__main__.balance": [
+          {
+            "arguments": [
+              "10"
+            ],
+            "value": "(__main__.balance 10)"
+          },
+          {
+            "arguments": [
+              "11"
+            ],
+            "value": "12"
+          }
+        ]
+      }
+    }
+  }
+}
