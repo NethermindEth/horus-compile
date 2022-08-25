@@ -14,45 +14,37 @@ from starkware.starknet.services.api.contract_definition import ContractDefiniti
 from horus.compiler.var_names import *
 
 
-class IntNumRefAsStr(mfields.Field):
-    def _serialize(self, value: z3.IntNumRef, attr, obj, **kwargs):
-        return super()._serialize(value.sexpr(), attr, obj, **kwargs)
+class SexpField(mfields.Field):
+    def _serialize(self, value: z3.ExprRef, attr, obj, **kwargs):
+        return super()._serialize(value.sexpr().split("\n"), attr, obj, **kwargs)
 
-    def _deserialize(self, value, attr, data, **kwargs):
-        return z3.parse_smt2_string(value)
+    def _deserialize(self, value, attr, data, **kwargs) -> z3.ExprRef:
+        v = super()._deserialize(value, attr, data, **kwargs)
+        ref_str = "\n".join(v)
+        refs = z3.parse_smt2_string(ref_str, decls=HORUS_DECLS)
+        if len(refs) != 1:
+            raise ValidationError(f"Can't deserialize '{ref_str}'")
+        return refs[0]  # type: ignore
 
 
 @marshmallow_dataclass.dataclass
 class StateAnnotation:
     arguments: "list[z3.IntNumRef]" = field(
-        metadata=dict(marshmallow_field=mfields.List(IntNumRefAsStr())),
+        metadata=dict(marshmallow_field=mfields.List(SexpField())),
         default_factory=list,
     )
     value: z3.IntNumRef = field(
-        metadata=dict(marshmallow_field=IntNumRefAsStr()), default=z3.IntVal(0)
+        metadata=dict(marshmallow_field=SexpField()), default=z3.IntVal(0)
     )
-
-
-class AssertionField(mfields.Field):
-    def _serialize(self, value: z3.BoolRef, attr, obj, **kwargs):
-        return super()._serialize(value.sexpr().split("\n"), attr, obj, **kwargs)
-
-    def _deserialize(self, value, attr, data, **kwargs):
-        v = super()._deserialize(value, attr, data, **kwargs)
-        bool_ref_str = "\n".join(v)
-        bool_refs = z3.parse_smt2_string(bool_ref_str, decls=HORUS_DECLS)
-        if len(bool_refs) != 1:
-            raise ValidationError(f"Can't deserialize '{bool_ref_str}'")
-        return bool_refs[0]  # type: ignore
 
 
 @marshmallow_dataclass.dataclass(frozen=False)
 class FunctionAnnotations:
     pre: z3.BoolRef = field(
-        metadata=dict(marshmallow_field=AssertionField()), default=z3.BoolVal(True)
+        metadata=dict(marshmallow_field=SexpField()), default=z3.BoolVal(True)
     )
     post: z3.BoolRef = field(
-        metadata=dict(marshmallow_field=AssertionField()), default=z3.BoolVal(True)
+        metadata=dict(marshmallow_field=SexpField()), default=z3.BoolVal(True)
     )
     logical_variables: "dict[ScopedName, CairoType]" = field(
         metadata=dict(
@@ -89,8 +81,6 @@ class HorusDefinition(ContractDefinition):
         default_factory=dict,
     )
     invariants: "dict[ScopedName, z3.BoolRef]" = field(
-        metadata=dict(
-            marshmallow_field=mfields.Dict(ScopedNameAsStr(), AssertionField())
-        ),
+        metadata=dict(marshmallow_field=mfields.Dict(ScopedNameAsStr(), SexpField())),
         default_factory=dict,
     )

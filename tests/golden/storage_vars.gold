@@ -24,21 +24,33 @@
         "__main__.balance": [
           {
             "arguments": [
-              "10"
+              [
+                "10"
+              ]
             ],
-            "value": "(__main__.balance 10)"
+            "value": [
+              "(__main__.balance 10)"
+            ]
           },
           {
             "arguments": [
-              "11"
+              [
+                "11"
+              ]
             ],
-            "value": "12"
+            "value": [
+              "12"
+            ]
           },
           {
             "arguments": [
-              "15"
+              [
+                "15"
+              ]
             ],
-            "value": "18"
+            "value": [
+              "18"
+            ]
           }
         ]
       }
