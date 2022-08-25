@@ -14,7 +14,7 @@ end
 
 @storage_var
 func double_arg(a: felt, b: felt) -> (res: felt):
-end 
+end
 
 # @pre balance(10) == 20
 # @pre balance(user=20) != 11
@@ -22,6 +22,7 @@ end
 # @post [double_arg(a=60, b=[[x]] + x)] == 10
 # @state balance(user=10)=balance(user=10)
 # @state balance(user=11)=12
+# @state balance(15)=18
 @external
 func test(x: felt):
     ret
