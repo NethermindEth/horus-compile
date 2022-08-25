@@ -41,6 +41,7 @@ from starkware.cairo.lang.compiler.scoped_name import ScopedName
 from starkware.cairo.lang.compiler.substitute_identifiers import substitute_identifiers
 from starkware.cairo.lang.compiler.type_casts import CairoTypeError
 from starkware.cairo.lang.compiler.type_system_visitor import TypeSystemVisitor
+from starkware.crypto.signature.signature import FIELD_PRIME
 
 from horus.compiler.code_elements import ExprLogicalIdentifier
 
@@ -241,11 +242,15 @@ def simplify_and_get_type(
                 preprocessor.flow_tracking.data,
             )
 
-    return HorusTypeChecker(
+    expr = substitute_identifiers(expr, get_identifier)
+    expr, expr_type = HorusTypeChecker(
         preprocessor.accessible_scopes,
         preprocessor.identifiers,
         logical_identifiers,
-    ).visit(substitute_identifiers(expr, get_identifier))
+    ).visit(expr)
+    expr = ExpressionSimplifier(prime=FIELD_PRIME).visit(expr)
+
+    return (expr, expr_type)
 
 
 def simplify(

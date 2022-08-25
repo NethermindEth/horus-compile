@@ -8,7 +8,7 @@
         "(= (memory (+ ap (- 1))) (memory (+ fp (- 3))))"
       ],
       "pre": [
-        "(< 254 (memory (- fp 3)))"
+        "(< 254 (memory (+ fp (- 3))))"
       ],
       "state": {}
     },
@@ -41,7 +41,7 @@
         "(= (memory (+ ap (- 1))) (+ (memory (+ fp (- 3))) (- 1)))"
       ],
       "pre": [
-        "(or (< 254 (memory (- fp 3))) (= 0 (memory (+ fp (- 3)))))"
+        "(or (< 254 (memory (+ fp (- 3)))) (= 0 (memory (+ fp (- 3)))))"
       ],
       "state": {}
     },

@@ -7,7 +7,9 @@
       "post": [
         "(let ((a!1 (= (memory (+ ap (- 1)))",
         "              (+ (memory (+ fp (- 4))) (memory (+ fp (- 3)))))))",
-        "  (and a!1 (<= 0 (memory (- ap 1))) (> 18446744073709551616 (memory (- ap 1)))))"
+        "  (and a!1",
+        "       (<= 0 (memory (+ ap (- 1))))",
+        "       (> 18446744073709551616 (memory (+ ap (- 1))))))"
       ],
       "pre": [
         "true"

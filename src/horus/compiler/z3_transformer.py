@@ -32,17 +32,11 @@ from starkware.cairo.lang.compiler.ast.expr import (
     ExprSubscript,
     ExprTuple,
 )
-from starkware.cairo.lang.compiler.expression_simplifier import ExpressionSimplifier
-from starkware.cairo.lang.compiler.expression_transformer import ExpressionTransformer
 from starkware.cairo.lang.compiler.identifier_definition import (
-    ConstDefinition,
     NamespaceDefinition,
     StructDefinition,
 )
-from starkware.cairo.lang.compiler.identifier_manager import (
-    IdentifierError,
-    IdentifierManager,
-)
+from starkware.cairo.lang.compiler.identifier_manager import IdentifierManager
 from starkware.cairo.lang.compiler.identifier_utils import get_struct_definition
 from starkware.cairo.lang.compiler.instruction import Register
 from starkware.cairo.lang.compiler.preprocessor.identifier_aware_visitor import (
@@ -55,8 +49,6 @@ from starkware.cairo.lang.compiler.preprocessor.preprocessor_error import (
 from starkware.cairo.lang.compiler.resolve_search_result import resolve_search_result
 from starkware.cairo.lang.compiler.type_system_visitor import *
 from starkware.cairo.lang.compiler.type_system_visitor import simplify_type_system
-from starkware.crypto.signature.math_utils import div_mod
-from starkware.crypto.signature.signature import FIELD_PRIME
 
 from horus.compiler.code_elements import (
     BoolConst,
@@ -370,11 +362,6 @@ class Z3Transformer(IdentifierAwareVisitor):
         b, b_type = simplify_and_get_type(
             bool_expr.b, self.preprocessor, self.logical_identifiers, self.is_post
         )
-
-        simplifier = ExpressionSimplifier(prime=FIELD_PRIME)
-        a = simplifier.visit(a)
-        b = simplifier.visit(b)
-
         assert a_type == b_type, "Types of lhs and rhs must coincide"
 
         if isinstance(a_type, TypeStruct):
