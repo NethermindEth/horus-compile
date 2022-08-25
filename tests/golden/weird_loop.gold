@@ -4,7 +4,7 @@
       "(= 0 (memory (+ ap (- 1))))"
     ],
     "__main__.main.loop": [
-      "(and (< 0 (memory (- ap 1))) (>= 5 (memory (- ap 1))))"
+      "(and (< 0 (memory (+ ap (- 1)))) (>= 5 (memory (+ ap (- 1)))))"
     ]
   },
   "specifications": {

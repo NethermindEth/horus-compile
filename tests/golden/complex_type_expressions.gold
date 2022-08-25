@@ -15,17 +15,12 @@
         "$n": "__main__.NestedStruct"
       },
       "post": [
-        "(let ((a!1 (= $n.point.y (memory (+ (- ap 6) 1))))",
-        "      (a!2 (= $n.z (memory (+ (- ap 6) 2))))",
-        "      (a!3 (memory (+ (+ (- ap 6) 3) 0)))",
-        "      (a!4 (memory (+ (+ (- ap 6) 3) 1)))",
-        "      (a!5 (+ (+ (+ (- ap 6) 3) 1) 1)))",
-        "  (and (= $n.point.x (memory (- ap 6)))",
-        "       a!1",
-        "       a!2",
-        "       (= $m.0 a!3)",
-        "       (= $m.1.x a!4)",
-        "       (= $m.1.y (memory a!5))))"
+        "(and (= $n.point.x (memory (+ ap (- 6))))",
+        "     (= $n.point.y (memory (+ ap (- 5))))",
+        "     (= $n.z (memory (+ ap (- 4))))",
+        "     (= $m.0 (memory (+ ap (- 3))))",
+        "     (= $m.1.x (memory (+ ap (- 2))))",
+        "     (= $m.1.y (memory (+ ap (- 1)))))"
       ],
       "pre": [
         "true"

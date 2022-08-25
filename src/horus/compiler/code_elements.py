@@ -79,7 +79,7 @@ class BoolConst(BoolFormula):
 @dataclasses.dataclass
 class BoolOperation(BoolFormula):
     """
-    Represents A /\ B, A \/ B, A -> B.
+    Represents A and B, A or B, A -> B.
     """
 
     a: BoolFormula
