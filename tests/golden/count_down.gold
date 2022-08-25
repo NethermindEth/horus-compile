@@ -1,7 +1,7 @@
 {
   "invariants": {
     "__main__.main.loop": [
-      "(and (< 0 (memory (- ap 1))) (>= 123456789987654321 (memory (- ap 1))))"
+      "(and (< 0 (memory (+ ap (- 1)))) (>= 123456789987654321 (memory (+ ap (- 1)))))"
     ]
   },
   "specifications": {

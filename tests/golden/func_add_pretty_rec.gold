@@ -1,7 +1,7 @@
 {
   "invariants": {
     "__main__.add.next": [
-      "(< 0 (memory (- fp 4)))"
+      "(< 0 (memory (+ fp (- 4))))"
     ]
   },
   "specifications": {
