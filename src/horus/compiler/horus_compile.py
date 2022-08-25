@@ -84,7 +84,7 @@ class MonkeyPatchStage(Stage):
         ExpressionTransformer.visit_ExprLogicalIdentifier = lambda self, expr: expr
 
 
-def main():
+def main(args):
     parser = argparse.ArgumentParser(
         description="A tool to compile checked StarkNet contracts.",
         conflict_handler="resolve",
@@ -110,32 +110,25 @@ def main():
             disable_hint_validation=args.disable_hint_validation,
         )
 
-    try:
-        cairo_compile_add_common_args(parser)
-        parser.add_argument(
-            "-v",
-            "--version",
-            action="version",
-            version=f"%(prog)s {horus.__version__}; cairo-compile {starkware.cairo.lang.version.__version__}",
-        )
-        args = parser.parse_args()
-        preprocessed = cairo_compile_common(
-            args=args,
-            pass_manager_factory=pass_manager_factory,
-            assemble_func=assemble_horus_contract,
-        )
-        abi = get_abi(preprocessed=preprocessed)
-        verify_account_contract(
-            contract_abi=abi, is_account_contract=args.account_contract
-        )
-        if args.abi is not None:
-            json.dump(abi, args.abi, indent=4, sort_keys=True)
-            args.abi.write("\n")
-    except LocationError as err:
-        print(err, file=sys.stderr)
-        return 1
-    return 0
+    cairo_compile_add_common_args(parser)
+    parser.add_argument(
+        "-v",
+        "--version",
+        action="version",
+        version=f"%(prog)s {horus.__version__}; cairo-compile {starkware.cairo.lang.version.__version__}",
+    )
+    args = parser.parse_args(args)
+    preprocessed = cairo_compile_common(
+        args=args,
+        pass_manager_factory=pass_manager_factory,
+        assemble_func=assemble_horus_contract,
+    )
+    abi = get_abi(preprocessed=preprocessed)
+    verify_account_contract(contract_abi=abi, is_account_contract=args.account_contract)
+    if args.abi is not None:
+        json.dump(abi, args.abi, indent=4, sort_keys=True)
+        args.abi.write("\n")
 
 
-if __name__ == "__main__":
-    sys.exit(main())
+def run():
+    main(sys.argv[1:])
