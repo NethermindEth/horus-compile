@@ -181,7 +181,7 @@ class HorusPreprocessor(StarknetPreprocessor):
         for [storage_arg_name, storage_def], arg in zip(
             storage_var_args.members.items(), decl.arguments.args
         ):
-            if arg.identifier.name != storage_arg_name:
+            if arg.identifier and arg.identifier.name != storage_arg_name:
                 raise PreprocessorError(
                     f"Wrong argument name: {arg.identifier.name}",
                     location=decl.location,
