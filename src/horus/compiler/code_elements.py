@@ -148,7 +148,7 @@ class CodeElementLogicalVariableDeclaration(CodeElementAnnotation):
 
 
 @dataclasses.dataclass
-class CodeElementStateAnnotation(CodeElementAnnotation):
+class CodeElementStorageUpdate(CodeElementAnnotation):
     """
     Represents a storage variable change annotation.
     """
@@ -159,7 +159,7 @@ class CodeElementStateAnnotation(CodeElementAnnotation):
     location: Optional[Location] = LocationField
 
     def format(self, allowed_line_length):
-        return f"@state {self.name}[{self.arguments.format()}] = {self.value.format()}"
+        return f"@storage_update {self.name}[{self.arguments.format()}] = {self.value.format()}"
 
     def get_children(self) -> Sequence[Optional["AstNode"]]:
         return [

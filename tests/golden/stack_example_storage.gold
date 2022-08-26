@@ -10,7 +10,7 @@
       "pre": [
         "true"
       ],
-      "state": {
+      "storage_update": {
         "__main__.stack": [
           {
             "arguments": [
@@ -44,7 +44,7 @@
       "pre": [
         "(<= 2 __main__.stack_ptr)"
       ],
-      "state": {
+      "storage_update": {
         "__main__.stack": [
           {
             "arguments": [
@@ -77,7 +77,7 @@
       "pre": [
         "true"
       ],
-      "state": {
+      "storage_update": {
         "__main__.stack": [
           {
             "arguments": [
@@ -112,7 +112,7 @@
       "pre": [
         "(<= 1 __main__.stack_ptr)"
       ],
-      "state": {}
+      "storage_update": {}
     }
   }
 }

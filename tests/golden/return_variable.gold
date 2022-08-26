@@ -10,7 +10,7 @@
       "pre": [
         "true"
       ],
-      "state": {}
+      "storage_update": {}
     },
     "__main__.implicit_variable": {
       "decls": {},
@@ -21,7 +21,7 @@
       "pre": [
         "(= (memory (+ fp (- 3))) (memory (+ fp (- 3))))"
       ],
-      "state": {}
+      "storage_update": {}
     },
     "__main__.inc": {
       "decls": {},
@@ -32,7 +32,7 @@
       "pre": [
         "true"
       ],
-      "state": {}
+      "storage_update": {}
     },
     "__main__.more_complex_return": {
       "decls": {},
@@ -43,7 +43,7 @@
       "pre": [
         "true"
       ],
-      "state": {}
+      "storage_update": {}
     },
     "__main__.pointer_to_a_struct": {
       "decls": {},
@@ -55,7 +55,7 @@
       "pre": [
         "true"
       ],
-      "state": {}
+      "storage_update": {}
     },
     "__main__.simple_ret": {
       "decls": {},
@@ -66,7 +66,7 @@
       "pre": [
         "true"
       ],
-      "state": {}
+      "storage_update": {}
     }
   }
 }

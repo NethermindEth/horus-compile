@@ -22,7 +22,7 @@
       "pre": [
         "(< 0 (memory (+ fp 2)))"
       ],
-      "state": {}
+      "storage_update": {}
     }
   }
 }

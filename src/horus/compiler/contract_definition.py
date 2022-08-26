@@ -28,7 +28,7 @@ class SexpField(mfields.Field):
 
 
 @marshmallow_dataclass.dataclass
-class StateAnnotation:
+class StorageUpdate:
     arguments: "list[z3.IntNumRef]" = field(
         metadata=dict(marshmallow_field=mfields.List(SexpField())),
         default_factory=list,
@@ -56,12 +56,12 @@ class FunctionAnnotations:
         metadata=dict(marshmallow_field=mfields.Dict(mfields.Str(), mfields.Int())),
         default_factory=dict,
     )
-    state: "dict[ScopedName, list[StateAnnotation]]" = field(
+    storage_update: "dict[ScopedName, list[StorageUpdate]]" = field(
         metadata=dict(
             marshmallow_field=mfields.Dict(
                 ScopedNameAsStr(),
                 mfields.List(
-                    mfields.Nested(marshmallow_dataclass.class_schema(StateAnnotation))
+                    mfields.Nested(marshmallow_dataclass.class_schema(StorageUpdate))
                 ),
             )
         ),

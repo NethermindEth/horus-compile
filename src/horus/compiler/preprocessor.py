@@ -27,9 +27,9 @@ from horus.compiler.code_elements import (
     CodeElementAnnotation,
     CodeElementCheck,
     CodeElementLogicalVariableDeclaration,
-    CodeElementStateAnnotation,
+    CodeElementStorageUpdate,
 )
-from horus.compiler.contract_definition import FunctionAnnotations, StateAnnotation
+from horus.compiler.contract_definition import FunctionAnnotations, StorageUpdate
 from horus.compiler.parser import *
 from horus.compiler.z3_transformer import *
 from horus.utils import get_decls, z3And
@@ -151,7 +151,7 @@ class HorusPreprocessor(StarknetPreprocessor):
 
         self.logical_identifiers[declaration.name] = declaration.type
 
-    def add_state_change(self, decl: CodeElementStateAnnotation):
+    def add_state_change(self, decl: CodeElementStorageUpdate):
         z3_transformer = Z3Transformer(
             self.identifiers, self, self.logical_identifiers, is_post=True
         )
@@ -201,17 +201,19 @@ class HorusPreprocessor(StarknetPreprocessor):
         current_annotations = self.specifications.get(
             self.current_scope, FunctionAnnotations()
         )
-        state_annotations = current_annotations.state.get(
+        storage_updates = current_annotations.storage_update.get(
             search_result.canonical_name, []
         )
-        state_annotation = StateAnnotation(
+        storage_update = StorageUpdate(
             args,
             z3_expr_transformer.visit(
                 simplify(decl.value, self, self.logical_identifiers, is_post=True)
             ),
         )
-        state_annotations.append(state_annotation)
-        current_annotations.state[search_result.canonical_name] = state_annotations
+        storage_updates.append(storage_update)
+        current_annotations.storage_update[
+            search_result.canonical_name
+        ] = storage_updates
         self.specifications[self.current_scope] = current_annotations
 
     def compile_annotations(self, code_elem: CodeElement):
@@ -255,7 +257,7 @@ class HorusPreprocessor(StarknetPreprocessor):
 
             if isinstance(parsed_check, CodeElementLogicalVariableDeclaration):
                 self.add_logical_variable(parsed_check)
-            elif isinstance(parsed_check, CodeElementStateAnnotation):
+            elif isinstance(parsed_check, CodeElementStorageUpdate):
                 self.add_state_change(parsed_check)
             elif isinstance(parsed_check, CodeElementCheck):
                 is_post = (

@@ -19,7 +19,7 @@
       "pre": [
         "(< 0 (memory (+ fp (- 3))))"
       ],
-      "state": {}
+      "storage_update": {}
     },
     "__main__.main": {
       "decls": {},
@@ -30,7 +30,7 @@
       "pre": [
         "true"
       ],
-      "state": {}
+      "storage_update": {}
     }
   }
 }
