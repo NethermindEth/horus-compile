@@ -12,14 +12,14 @@ namespace _Stack:
 
     # @pre (cast(stack, felt) != 0) && (cast(stack.next, felt) != 0)
     # @post [ap - 2] == stack.value + stack.next.value && $Return.stack_ == stack.next.next
-    func add(stack : Stack*) -> (stack_: Stack*):
+    func add(stack : Stack*) -> (stack_ : Stack*):
         let x = stack.value
         let y = stack.next.value
         return (new Stack(value=x + y, next=stack.next.next))
     end
 
     # @post [ap - 2] == i && $Return.stack_.next == stack
-    func lit(stack : Stack*, i : felt) -> (stack_: Stack*):
+    func lit(stack : Stack*, i : felt) -> (stack_ : Stack*):
         return (new Stack(value=i, next=stack))
     end
 
