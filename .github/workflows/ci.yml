@@ -25,6 +25,10 @@ jobs:
           black . --check --verbose --diff --color
           isort . --check --verbose --diff --color
 
+      - name: Cairo formatting
+        run:
+          find tests/golden -name *.cairo -exec poetry run cairo-format -c {} +
+
       - name: Typing
         run: |
           poetry run pip install mypy

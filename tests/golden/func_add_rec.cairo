@@ -1,15 +1,16 @@
 # @post [ap - 1] == [fp - 3] + [fp - 4]
 func add(m, n):
     jmp next if [fp - 4] != 0
-        [ap] = [fp - 3]; ap++
-        ret
+    [ap] = [fp - 3]; ap++
+    ret
+
     # @invariant [fp - 4] > 0
-    next: 
-        [ap] = [fp - 4] - 1; ap++
-        [ap] = [fp - 3]; ap++
-        call add
-        [ap] = [ap - 1] + 1; ap++
-        ret
+    next:
+    [ap] = [fp - 4] - 1; ap++
+    [ap] = [fp - 3]; ap++
+    call add
+    [ap] = [ap - 1] + 1; ap++
+    ret
 end
 
 # @post [ap - 1] == 5
