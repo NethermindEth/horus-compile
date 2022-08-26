@@ -4,16 +4,16 @@ from starkware.cairo.common.cairo_builtins import HashBuiltin
 from starkware.starknet.common.syscalls import get_caller_address
 
 struct Test:
-    member x: felt
-    member y: felt
+    member x : felt
+    member y : felt
 end
 
 @storage_var
-func balance(user : felt) -> (res: felt):
+func balance(user : felt) -> (res : felt):
 end
 
 @storage_var
-func double_arg(a: felt, b: felt) -> (res: felt):
+func double_arg(a : felt, b : felt) -> (res : felt):
 end
 
 # @pre balance(10) == 20
@@ -24,6 +24,6 @@ end
 # @state balance(user=11)=12
 # @state balance(15)=18
 @external
-func test(x: felt):
+func test(x : felt):
     ret
 end
