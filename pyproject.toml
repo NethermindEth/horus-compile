@@ -29,7 +29,7 @@ packages = [ { include = "horus", from = "src" } ]
 include = [ "src/horus/compiler/horus.ebnf" ]
 
 [tool.poetry.scripts]
-horus-compile = "horus.compiler.horus_compile:main"
+horus-compile = "horus.compiler.horus_compile:run"
 
 [tool.poetry.dependencies]
 python = ">=3.7,<3.11"
