@@ -51,4 +51,4 @@ annotation: "@pre" bool_formula  -> precond_annotation
           | "@post" bool_formula -> postcond_annotation
           | "@invariant" bool_formula -> invariant_annotation
           | "@declare" logical_identifier_def ":" type -> declare_annotation
-          | "@state" identifier "(" arg_list ")" "=" expr -> state_annotation
+          | "@storage_update" identifier "(" arg_list ")" ":=" expr -> storage_update_annotation

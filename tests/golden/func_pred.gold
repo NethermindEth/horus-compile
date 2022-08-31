@@ -10,7 +10,7 @@
       "pre": [
         "true"
       ],
-      "state": {}
+      "storage_update": {}
     },
     "__main__.pred": {
       "decls": {},
@@ -21,7 +21,7 @@
       "pre": [
         "true"
       ],
-      "state": {}
+      "storage_update": {}
     }
   }
 }

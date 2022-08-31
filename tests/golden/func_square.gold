@@ -10,7 +10,7 @@
       "pre": [
         "(= fp ap)"
       ],
-      "state": {}
+      "storage_update": {}
     },
     "__main__.square": {
       "decls": {},
@@ -21,7 +21,7 @@
       "pre": [
         "(= fp ap)"
       ],
-      "state": {}
+      "storage_update": {}
     }
   }
 }
