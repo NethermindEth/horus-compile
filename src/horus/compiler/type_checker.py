@@ -24,6 +24,7 @@ from starkware.cairo.lang.compiler.expression_simplifier import ExpressionSimpli
 from starkware.cairo.lang.compiler.identifier_definition import (
     ConstDefinition,
     NamespaceDefinition,
+    ReferenceDefinition,
     StructDefinition,
 )
 from starkware.cairo.lang.compiler.identifier_manager import (
@@ -32,6 +33,7 @@ from starkware.cairo.lang.compiler.identifier_manager import (
 )
 from starkware.cairo.lang.compiler.identifier_utils import get_struct_definition
 from starkware.cairo.lang.compiler.instruction import Register
+from starkware.cairo.lang.compiler.offset_reference import OffsetReferenceDefinition
 from starkware.cairo.lang.compiler.preprocessor.preprocessor import Preprocessor
 from starkware.cairo.lang.compiler.preprocessor.preprocessor_error import (
     PreprocessorError,
@@ -236,10 +238,15 @@ def simplify_and_get_type(
 
         if isinstance(definition, ConstDefinition):
             return ExprConst(definition.value)
-        else:
+        elif isinstance(definition, (ReferenceDefinition, OffsetReferenceDefinition)):
             return definition.eval(
                 preprocessor.flow_tracking.reference_manager,
                 preprocessor.flow_tracking.data,
+            )
+        else:
+            raise CairoTypeError(
+                f'Cannot obtain identifier "{expr.name}". Expected a reference but got "{definition.TYPE}"',
+                location=expr.location,
             )
 
     expr = substitute_identifiers(expr, get_identifier)
