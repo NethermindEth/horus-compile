@@ -20,9 +20,9 @@ end
 # @pre balance(user=20) != 11
 # @pre double_arg(a=x+10, b=[x]+20) == [x] * 100
 # @post [double_arg(a=60, b=[[x]] + x)] == 10
-# @state balance(user=10)=balance(user=10)
-# @state balance(user=11)=12
-# @state balance(15)=18
+# @storage_update balance(user=10):=balance(user=10)
+# @storage_update balance(user=11):=12
+# @storage_update balance(15):=18
 @external
 func test(x : felt):
     ret

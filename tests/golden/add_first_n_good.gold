@@ -20,7 +20,7 @@
       "pre": [
         "(< 0 (memory (+ ap 2)))"
       ],
-      "state": {}
+      "storage_update": {}
     }
   }
 }

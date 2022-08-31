@@ -23,7 +23,7 @@ from horus.compiler.code_elements import (
     CodeElementAnnotation,
     CodeElementCheck,
     CodeElementLogicalVariableDeclaration,
-    CodeElementStateAnnotation,
+    CodeElementStorageUpdate,
     ExprLogicalIdentifier,
 )
 
@@ -50,7 +50,13 @@ class HorusTransformer(ParserTransformer):
         if comment is not None:
             possible_annotation = comment.strip()
 
-            for annotation in ["@pre", "@post", "@invariant", "@declare", "@state"]:
+            for annotation in [
+                "@pre",
+                "@post",
+                "@invariant",
+                "@declare",
+                "@storage_update",
+            ]:
                 if possible_annotation.startswith(annotation):
                     check = horus.compiler.parser.parse(
                         filename=self.input_file.filename,
@@ -161,8 +167,8 @@ class HorusTransformer(ParserTransformer):
         )
 
     @lark.v_args(inline=True, meta=True)
-    def state_annotation(self, meta, identifier, args, result):
-        return CodeElementStateAnnotation(
+    def storage_update_annotation(self, meta, identifier, args, result):
+        return CodeElementStorageUpdate(
             identifier.name, args, result, location=self.meta2loc(meta)
         )
 

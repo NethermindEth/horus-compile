@@ -10,7 +10,7 @@
       "pre": [
         "true"
       ],
-      "state": {}
+      "storage_update": {}
     },
     "__main__.square_succ": {
       "decls": {},
@@ -22,7 +22,7 @@
       "pre": [
         "true"
       ],
-      "state": {}
+      "storage_update": {}
     },
     "__main__.succ": {
       "decls": {},
@@ -33,7 +33,7 @@
       "pre": [
         "true"
       ],
-      "state": {}
+      "storage_update": {}
     }
   }
 }

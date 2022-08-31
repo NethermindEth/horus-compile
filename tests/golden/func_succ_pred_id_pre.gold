@@ -10,7 +10,7 @@
       "pre": [
         "(< 254 (memory (+ fp (- 3))))"
       ],
-      "state": {}
+      "storage_update": {}
     },
     "__main__.id": {
       "decls": {},
@@ -21,7 +21,7 @@
       "pre": [
         "true"
       ],
-      "state": {}
+      "storage_update": {}
     },
     "__main__.main": {
       "decls": {},
@@ -32,7 +32,7 @@
       "pre": [
         "true"
       ],
-      "state": {}
+      "storage_update": {}
     },
     "__main__.pred": {
       "decls": {},
@@ -43,7 +43,7 @@
       "pre": [
         "(or (< 254 (memory (+ fp (- 3)))) (= 0 (memory (+ fp (- 3)))))"
       ],
-      "state": {}
+      "storage_update": {}
     },
     "__main__.succ": {
       "decls": {},
@@ -54,7 +54,7 @@
       "pre": [
         "true"
       ],
-      "state": {}
+      "storage_update": {}
     }
   }
 }

@@ -15,7 +15,7 @@
       "pre": [
         "true"
       ],
-      "state": {}
+      "storage_update": {}
     },
     "__main__.prod": {
       "decls": {},
@@ -26,7 +26,7 @@
       "pre": [
         "true"
       ],
-      "state": {}
+      "storage_update": {}
     }
   }
 }

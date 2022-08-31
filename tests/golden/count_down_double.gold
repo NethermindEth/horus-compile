@@ -15,7 +15,7 @@
       "pre": [
         "(= ap fp)"
       ],
-      "state": {}
+      "storage_update": {}
     }
   }
 }

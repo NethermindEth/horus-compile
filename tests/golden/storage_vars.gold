@@ -20,7 +20,7 @@
         "       (not (= 11 (__main__.balance 20)))",
         "       (= a!2 a!3))))"
       ],
-      "state": {
+      "storage_update": {
         "__main__.balance": [
           {
             "arguments": [
