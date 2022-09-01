@@ -21,6 +21,21 @@
         "       (= a!2 a!3))))"
       ],
       "storage_update": {
+        "__main__.after_definition": [
+          {
+            "arguments": [
+              [
+                "10"
+              ],
+              [
+                "10"
+              ]
+            ],
+            "value": [
+              "(__main__.balance 10)"
+            ]
+          }
+        ],
         "__main__.balance": [
           {
             "arguments": [
@@ -55,5 +70,10 @@
         ]
       }
     }
+  },
+  "storage_vars": {
+    "__main__.after_definition": 2,
+    "__main__.balance": 1,
+    "__main__.double_arg": 2
   }
 }

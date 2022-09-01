@@ -23,7 +23,12 @@ end
 # @storage_update balance(user=10):=balance(user=10)
 # @storage_update balance(user=11):=12
 # @storage_update balance(15):=18
+# @storage_update after_definition(a=10, b=10):=balance(user=10)
 @external
 func test(x : felt):
     ret
+end
+
+@storage_var
+func after_definition(a : felt, b : felt) -> (res : felt):
 end

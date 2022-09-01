@@ -84,3 +84,7 @@ class HorusDefinition(ContractDefinition):
         metadata=dict(marshmallow_field=mfields.Dict(ScopedNameAsStr(), SexpField())),
         default_factory=dict,
     )
+    storage_vars: "dict[ScopedName, int]" = field(
+        metadata=dict(marshmallow_field=mfields.Dict(ScopedNameAsStr(), mfields.Int())),
+        default_factory=dict,
+    )
