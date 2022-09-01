@@ -114,5 +114,9 @@
       ],
       "storage_update": {}
     }
+  },
+  "storage_vars": {
+    "__main__.stack": 1,
+    "__main__.stack_ptr": 0
   }
 }

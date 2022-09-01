@@ -13,5 +13,6 @@
       ],
       "storage_update": {}
     }
-  }
+  },
+  "storage_vars": {}
 }

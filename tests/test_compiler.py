@@ -15,6 +15,7 @@ def test_golden(capsys):
             output = {
                 "specifications": program_json["specifications"],
                 "invariants": program_json["invariants"],
+                "storage_vars": program_json["storage_vars"],
             }
             json.dump(output, checks_out, indent=2, sort_keys=True)
             return checks_out.getvalue()
@@ -32,8 +33,3 @@ def test_golden(capsys):
                 text = gold.read()
             out = run_horus_compile(file)
             assert text == out
-
-
-def test_division():
-    for file in glob.glob("./tests/division/*.cairo"):
-        main([file])
