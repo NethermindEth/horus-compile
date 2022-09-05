@@ -39,10 +39,12 @@ from horus.utils import get_decls, z3And
 class HorusProgram(StarknetPreprocessedProgram):
     specifications: dict[ScopedName, FunctionAnnotations]
     invariants: dict[ScopedName, z3.BoolRef]
+    storage_vars: dict[ScopedName, int]
 
 
 class HorusPreprocessor(StarknetPreprocessor):
     def __init__(self, **kwargs):
+        self.storage_vars = kwargs.pop("storage_vars")
         super().__init__(**kwargs)
         self.specifications: dict[ScopedName, FunctionAnnotations] = {}
         self.invariants: dict[ScopedName, z3.BoolRef] = {}
@@ -65,10 +67,21 @@ class HorusPreprocessor(StarknetPreprocessor):
             for var in HORUS_DECLS.keys():
                 specification.decls.pop(var, None)
 
+        storage_vars: dict[ScopedName, int] = {}
+
+        for storage_var in self.storage_vars:
+            storage_vars[storage_var] = self.get_size(
+                TypeStruct(
+                    self.identifiers.get(storage_var + "read" + "Args").canonical_name,
+                    is_fully_resolved=True,
+                )
+            )
+
         return HorusProgram(
             **starknet_program.__dict__,
             specifications=self.specifications,
             invariants=self.invariants,
+            storage_vars=storage_vars,
         )
 
     def visit_CodeBlock(self, code_block: CodeBlock):
@@ -153,16 +166,27 @@ class HorusPreprocessor(StarknetPreprocessor):
 
     def add_state_change(self, decl: CodeElementStorageUpdate):
         z3_transformer = Z3Transformer(
-            self.identifiers, self, self.logical_identifiers, is_post=True
+            self.identifiers,
+            self,
+            self.logical_identifiers,
+            is_post=True,
+            storage_vars=self.storage_vars,
         )
         z3_expr_transformer = Z3ExpressionTransformer(
             identifiers=self.identifiers, z3_transformer=z3_transformer
         )
-        search_result = self.identifiers.search(
+
+        decl_full_name = self.identifiers.search(
             self.accessible_scopes, ScopedName.from_string(decl.name)
-        )
+        ).canonical_name
+
+        if not decl_full_name in self.storage_vars:
+            raise PreprocessorError(
+                f"{decl_full_name} is not a storage variable", location=decl.location
+            )
+
         storage_var_args = get_struct_definition(
-            search_result.canonical_name + "read" + "Args", self.identifiers
+            decl_full_name + "read" + "Args", self.identifiers
         )
         assert isinstance(storage_var_args, StructDefinition)
 
@@ -201,9 +225,7 @@ class HorusPreprocessor(StarknetPreprocessor):
         current_annotations = self.specifications.get(
             self.current_scope, FunctionAnnotations()
         )
-        storage_updates = current_annotations.storage_update.get(
-            search_result.canonical_name, []
-        )
+        storage_updates = current_annotations.storage_update.get(decl_full_name, [])
         storage_update = StorageUpdate(
             args,
             z3_expr_transformer.visit(
@@ -211,9 +233,7 @@ class HorusPreprocessor(StarknetPreprocessor):
             ),
         )
         storage_updates.append(storage_update)
-        current_annotations.storage_update[
-            search_result.canonical_name
-        ] = storage_updates
+        current_annotations.storage_update[decl_full_name] = storage_updates
         self.specifications[self.current_scope] = current_annotations
 
     def compile_annotations(self, code_elem: CodeElement):
@@ -268,6 +288,7 @@ class HorusPreprocessor(StarknetPreprocessor):
                     self,
                     self.logical_identifiers,
                     is_post,
+                    self.storage_vars,
                 )
                 expr = z3_transformer.visit(parsed_check.formula)
 
