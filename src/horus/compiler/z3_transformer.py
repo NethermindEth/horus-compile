@@ -47,6 +47,7 @@ from starkware.cairo.lang.compiler.preprocessor.preprocessor_error import (
     PreprocessorError,
 )
 from starkware.cairo.lang.compiler.resolve_search_result import resolve_search_result
+from starkware.cairo.lang.compiler.scoped_name import ScopedName
 from starkware.cairo.lang.compiler.type_system_visitor import *
 from starkware.cairo.lang.compiler.type_system_visitor import simplify_type_system
 
@@ -154,14 +155,11 @@ class Z3ExpressionTransformer(IdentifierAwareVisitor):
             definition = resolve_search_result(search_result, self.identifiers)
 
             if isinstance(definition, NamespaceDefinition):
-                self.identifiers.search(
-                    self.z3_transformer.preprocessor.accessible_scopes,
-                    expr.dest_type.scope + "read",
-                )
-                self.identifiers.search(
-                    self.z3_transformer.preprocessor.accessible_scopes,
-                    expr.dest_type.scope + "write",
-                )
+                if not search_result.canonical_name in self.z3_transformer.storage_vars:
+                    raise PreprocessorError(
+                        f"{expr.dest_type.scope} is not a storage var.",
+                        location=expr.location,
+                    )
 
                 arg_struct_def = get_struct_definition(
                     search_result.canonical_name + "read" + "Args", self.identifiers
@@ -225,12 +223,14 @@ class Z3Transformer(IdentifierAwareVisitor):
         preprocessor: Preprocessor,
         logical_identifiers: dict[str, CairoType] = {},
         is_post: bool = False,
+        storage_vars: set[ScopedName] = set(),
     ):
         super().__init__(identifiers)
         self.preprocessor = preprocessor
         self.z3_expression_transformer = Z3ExpressionTransformer(identifiers, self)
         self.logical_identifiers = logical_identifiers
         self.is_post = is_post
+        self.storage_vars = storage_vars
 
     def visit(self, formula: BoolFormula):
         funcname = f"visit_{type(formula).__name__}"
