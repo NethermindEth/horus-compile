@@ -115,14 +115,12 @@ class HorusStorageVarCollectorStage(Stage):
 def horus_pass_manager(
     prime: int,
     read_module: Callable[[str], Tuple[str, str]],
+    opt_unused_functions: bool = True,
     disable_hint_validation: bool = False,
 ) -> PassManager:
 
     manager = starknet_pass_manager(
-        prime,
-        read_module,
-        opt_unused_functions=False,  # don't omit unused functions it breaks storage var stuff.
-        disable_hint_validation=disable_hint_validation,
+        prime, read_module, opt_unused_functions, disable_hint_validation
     )
     manager.stages.insert(0, ("monkeypatch", MonkeyPatchStage()))
     preprocessor_stage = manager.stages[manager.get_stage_index("preprocessor")][1]
