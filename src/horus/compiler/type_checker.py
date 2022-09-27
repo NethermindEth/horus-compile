@@ -4,6 +4,7 @@ from typing import Optional, Tuple
 
 from starkware.cairo.lang.compiler.ast.cairo_types import (
     CairoType,
+    TypeFelt,
     TypePointer,
     TypeStruct,
     TypeTuple,
@@ -23,6 +24,7 @@ from starkware.cairo.lang.compiler.ast.expr import (
 from starkware.cairo.lang.compiler.expression_simplifier import ExpressionSimplifier
 from starkware.cairo.lang.compiler.identifier_definition import (
     ConstDefinition,
+    FunctionDefinition,
     NamespaceDefinition,
     ReferenceDefinition,
     StructDefinition,
@@ -45,6 +47,7 @@ from starkware.cairo.lang.compiler.type_casts import CairoTypeError
 from starkware.cairo.lang.compiler.type_system_visitor import TypeSystemVisitor
 from starkware.crypto.signature.signature import FIELD_PRIME
 
+from horus.compiler.allowed_syscalls import allowed_syscalls
 from horus.compiler.code_elements import ExprLogicalIdentifier
 
 
@@ -169,6 +172,9 @@ class HorusTypeChecker(TypeSystemVisitor):
                         "Function calls are not allowed in assertions",
                         location=expr.location,
                     )
+            elif isinstance(definition, FunctionDefinition):
+                if search_result.canonical_name in allowed_syscalls:
+                    return expr, TypeFelt(expr.location)
 
         return super().visit_ExprCast(expr)  # type: ignore
 
