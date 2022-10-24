@@ -33,6 +33,7 @@ from starkware.cairo.lang.compiler.ast.expr import (
     ExprTuple,
 )
 from starkware.cairo.lang.compiler.identifier_definition import (
+    FunctionDefinition,
     NamespaceDefinition,
     StructDefinition,
 )
@@ -51,6 +52,7 @@ from starkware.cairo.lang.compiler.scoped_name import ScopedName
 from starkware.cairo.lang.compiler.type_system_visitor import *
 from starkware.cairo.lang.compiler.type_system_visitor import simplify_type_system
 
+from horus.compiler.allowed_syscalls import allowed_syscalls
 from horus.compiler.code_elements import (
     BoolConst,
     BoolExprCompare,
@@ -177,6 +179,9 @@ class Z3ExpressionTransformer(IdentifierAwareVisitor):
                 args = [self.visit(arg.expr) for arg in expr.expr.members.args]
 
                 return storage_var(*args)
+            elif isinstance(definition, FunctionDefinition):
+                if search_result.canonical_name in allowed_syscalls:
+                    return z3.Int(expr.dest_type.scope.path[-1].replace("get_", "$"))
 
         inner_expr = self.visit(expr.expr)
         return inner_expr
