@@ -181,7 +181,7 @@ class Z3ExpressionTransformer(IdentifierAwareVisitor):
                 return storage_var(*args)
             elif isinstance(definition, FunctionDefinition):
                 if search_result.canonical_name in allowed_syscalls:
-                    return z3.Int(expr.dest_type.scope.path[-1].replace("get_", "$"))
+                    return z3.Int(expr.dest_type.scope.path[-1].replace("get_", ""))
 
         inner_expr = self.visit(expr.expr)
         return inner_expr
