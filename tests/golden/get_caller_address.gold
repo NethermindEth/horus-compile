@@ -3,11 +3,11 @@
   "specifications": {
     "__main__.test": {
       "decls": {
-        "caller_address": 0
+        "%caller_address": 0
       },
       "logical_variables": {},
       "post": [
-        "(= (memory (+ ap (- 1))) caller_address)"
+        "(= (memory (+ ap (- 1))) %caller_address)"
       ],
       "pre": [
         "true"
