@@ -3,11 +3,11 @@
   "specifications": {
     "__main__.test": {
       "decls": {
-        "contract_address": 0
+        "%contract_address": 0
       },
       "logical_variables": {},
       "post": [
-        "(= (memory (+ ap (- 1))) contract_address)"
+        "(= (memory (+ ap (- 1))) %contract_address)"
       ],
       "pre": [
         "true"
