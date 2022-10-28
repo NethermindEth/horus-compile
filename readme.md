@@ -125,3 +125,15 @@ stack exec horus-check -- ./<path-to-file>/example.json -s z3
 ```bash
 stack exec horus-check -- ./<path-to-file>/example.json -s z3 mathsat cvc5
 ```
+
+<br>
+
+### Horus Checker options
+
+The following flags are able to added with `stack exec horus-check`:
+
+- `-v` (verbose) = If the flag is set all the intermediate steps are printed out.
+- `-output-queries` = Stores the (unoptimized) SMT queries for each module in .smt2 files inside DIR.
+- `output-optimized-queries` = Stores the (optimized) SMT queries for each module in .smt2 files inside DIR.
+- `print-models` = Print models for SAT results.
+- `-t` (timeout) = Time limit (ms) for the smt solver.
