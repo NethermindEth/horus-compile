@@ -35,7 +35,7 @@ In addition to the above, you will need to ensure that you have the following SM
 - z3 (version 4.10.2)
 - mathsat (version 5.6.8)
 
-> Note: If your machine has x86 or x64 architecture you can install these solvers by running the install scripts located in `horus-check/scripts/ci/*` else you will have to figure out the native solution to installing it on your machine (e.g. arm64 architecture).
+> Note: If your machine has x86 or x64 architecture you can install these solvers by running the install scripts located in `horus-check/scripts/ci/*` else you will have to figure out the native solution to installing it on your machine (e.g. arm64 architecture on M1/M2 Macbooks).
 
 <br>
 
@@ -102,4 +102,26 @@ If the above command was executed without error, then you are finished with the 
 
 <br>
 
----
+# Using `horus-check`
+
+In the `horus-checker` directory, you should now be able to use the Horus checker after installing the Haskell dependencies using `stack`.
+
+In order to use the Horus checker you would need to have used `horus-compile` to generate a JSON file including the compiled code and other attributes required by the checker.
+
+<br>
+
+Thereafter you can point to the specific JSON file that you would like to run the Horus checker over, you will also need to use the `-s` flag to specify which SMT solvers you would like to use for the testing:
+
+<br>
+
+```
+stack exec horus-check -- ./<path-to-file>/example.json -s z3
+```
+
+<br>
+
+> You can also call the Horus checker with multiple SMT solvers, below you can see the same example but with all the solver options added after the `-s` flag:
+
+```bash
+stack exec horus-check -- ./<path-to-file>/example.json -s z3 mathsat cvc5
+```
