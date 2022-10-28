@@ -35,7 +35,7 @@ In addition to the above, you will need to ensure that you have the following SM
 - z3 (version 4.10.2)
 - mathsat (version 5.6.8)
 
-> Note: If your machine has x86 or x64 architecture you can install these solvers by running the install scripts located in `horus-check/scripts/ci/*` else you will have to figure out the native solution to installing it on your machine (e.g. arm64 architecture on M1/M2 Macbooks).
+> Note: If your machine has x86 or x64 architecture you can install these solvers by running the install scripts located in `horus-check/scripts/ci/*` else if you are using an M1/M2 Macbook running on arm64, follow [these instructions](#m1-m2).
 
 <br>
 
@@ -137,3 +137,35 @@ The following flags are able to added with `stack exec horus-check`:
 - `output-optimized-queries` = Stores the (optimized) SMT queries for each module in .smt2 files inside DIR.
 - `print-models` = Print models for SAT results.
 - `-t` (timeout) = Time limit (ms) for the smt solver.
+
+<br>
+
+---
+
+<h2 id="m1-m2">M1/M2 Macbook Setup</h2>
+
+These setup instructions assume that you have [Homebrew](https://brew.sh/) installed on your machine.
+
+### 1. Mathsat Setup
+
+Follow this [link](https://mathsat.fbk.eu/download.html) to get to the downloads page of the MathSAT SMT solver. Take the binary file in the bin folder (should be named `mathsat`) and copy it to `/usr/local/bin` directory.
+The MathSAT solver should now be ready for use.
+
+### 2. z3 Setup
+
+This setup is going to require that you have [Homebrew](https://brew.sh/) installed.
+
+What we need to do is install a specific version of z3 compatible with the Horus checker (specifically version `4.10.2`). Homebrew unfortunately makes this process a bit more difficult but if you follow the commands below, the setup of the z3 solver will be successful.
+
+```bash
+# created random tap
+brew tap-new horus/z3-horus
+
+# extracted version 4.10.2 of z3 and applied to my tap
+brew extract --version 4.10.2 z3 horus/z3-horus
+
+# install this z3 version from my tap
+brew install horus/z3-horus/z3@4.10.2
+```
+
+> You could technically make the name of your tap anything you wish, an example was just added for demonstration purposes and will work if you wish to just copy the instructions into the command line.
