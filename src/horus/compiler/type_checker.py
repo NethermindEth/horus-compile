@@ -63,7 +63,7 @@ def get_expr_addr(expr: Expression):
 class HorusTypeChecker(TypeSystemVisitor):
     def __init__(
         self,
-        accessible_scopes: list[ScopedName] = None,
+        accessible_scopes: Optional[list[ScopedName]] = None,
         identifiers: Optional[IdentifierManager] = None,
         logical_identifiers: dict[str, CairoType] = {},
     ):
