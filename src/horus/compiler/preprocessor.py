@@ -322,7 +322,5 @@ class HorusPreprocessor(StarknetPreprocessor):
             self.current_function = None
             self.current_checks = []
 
-        result = super().visit_function_body_with_retries(code_block, location)
+        super().visit_function_body_with_retries(code_block, location)
         self.logical_identifiers = {}
-
-        return result
