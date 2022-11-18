@@ -2,11 +2,12 @@ from __future__ import annotations
 
 import argparse
 import dataclasses
+import functools
 import json
 import os
 import sys
 import time
-from typing import Callable, Optional, Sequence, Tuple, Type
+from typing import Callable, Optional, Sequence, Tuple
 
 import starkware.cairo.lang.compiler.ast.visitor
 import starkware.cairo.lang.compiler.parser
@@ -18,18 +19,15 @@ from starkware.cairo.lang.compiler.cairo_compile import (
     MAIN_SCOPE,
     START_FILE_NAME,
     cairo_compile_add_common_args,
-    cairo_compile_common,
     generate_cairo_dependencies_file,
     get_codes,
     get_module_reader,
     get_start_code,
 )
+from starkware.cairo.lang.compiler.error_handling import LocationError
 from starkware.cairo.lang.compiler.expression_transformer import ExpressionTransformer
 from starkware.cairo.lang.compiler.identifier_manager import IdentifierManager
 from starkware.cairo.lang.compiler.module_reader import ModuleReader
-from starkware.cairo.lang.compiler.preprocessor.auxiliary_info_collector import (
-    AuxiliaryInfoCollector,
-)
 from starkware.cairo.lang.compiler.preprocessor.default_pass_manager import (
     PreprocessorStage,
 )
@@ -40,22 +38,13 @@ from starkware.cairo.lang.compiler.preprocessor.pass_manager import (
     PassManager,
     PassManagerContext,
     Stage,
-    VisitorStage,
 )
 from starkware.cairo.lang.compiler.preprocessor.preprocessor import PreprocessedProgram
 from starkware.cairo.lang.compiler.scoped_name import ScopedName
 from starkware.starknet.compiler.compile import assemble_starknet_contract, get_abi
 from starkware.starknet.compiler.starknet_pass_manager import starknet_pass_manager
-from starkware.starknet.compiler.storage_var import (
-    STORAGE_VAR_ATTR,
-    STORAGE_VAR_DECORATOR,
-    StorageVarDeclVisitor,
-    StorageVarImplementationVisitor,
-)
-from starkware.starknet.compiler.validation_utils import (
-    has_decorator,
-    verify_account_contract,
-)
+from starkware.starknet.compiler.storage_var import STORAGE_VAR_DECORATOR
+from starkware.starknet.compiler.validation_utils import has_decorator
 
 import horus.compiler.parser
 from horus.compiler.code_elements import AnnotatedCodeElement
@@ -290,6 +279,16 @@ def main(args):
     parser.add_argument(
         "--account_contract", action="store_true", help="Compile as account contract."
     )
+    parser.add_argument(
+        "--dont_filter_identifiers",
+        dest="filter_identifiers",
+        action="store_false",
+        help=(
+            "Disable the filter-identifiers-optimization."
+            "If True, all the identifiers will be kept, instead of just the ones mentioned in "
+            "hints or 'with_attr' statements."
+        ),
+    )
 
     def pass_manager_factory(
         args: argparse.Namespace, module_reader: ModuleReader
@@ -297,27 +296,37 @@ def main(args):
         return horus_pass_manager(
             prime=args.prime,
             read_module=module_reader.read,
+            opt_unused_functions=args.opt_unused_functions,
             disable_hint_validation=args.disable_hint_validation,
         )
 
-    cairo_compile_add_common_args(parser)
-    parser.add_argument(
-        "-v",
-        "--version",
-        action="version",
-        version=f"%(prog)s {horus.__version__}; cairo-compile {starkware.cairo.lang.version.__version__}",
-    )
-    args = parser.parse_args(args)
-    preprocessed = horus_compile_common(
-        args=args,
-        pass_manager_factory=pass_manager_factory,
-        assemble_func=assemble_horus_contract,
-    )
-    abi = get_abi(preprocessed=preprocessed)
-    verify_account_contract(contract_abi=abi, is_account_contract=args.account_contract)
-    if args.abi is not None:
-        json.dump(abi, args.abi, indent=4, sort_keys=True)
-        args.abi.write("\n")
+    try:
+        cairo_compile_add_common_args(parser)
+        parser.add_argument(
+            "-v",
+            "--version",
+            action="version",
+            version=f"%(prog)s {horus.__version__}; cairo-compile {starkware.cairo.lang.version.__version__}",
+        )
+        args = parser.parse_args(args=args)
+        assemble_func = functools.partial(
+            assemble_horus_contract,
+            filter_identifiers=False,
+            is_account_contract=args.account_contract,
+        )
+        preprocessed = horus_compile_common(
+            args=args,
+            pass_manager_factory=pass_manager_factory,
+            assemble_func=assemble_func,
+        )
+        abi = get_abi(preprocessed=preprocessed)
+        if args.abi is not None:
+            json.dump(abi, args.abi, indent=4, sort_keys=True)
+            args.abi.write("\n")
+    except LocationError as err:
+        print(err, file=sys.stderr)
+        return 1
+    return 0
 
 
 def run():

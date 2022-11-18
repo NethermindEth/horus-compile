@@ -19,7 +19,6 @@ from starkware.cairo.lang.compiler.ast.expr import (
     ExprOperator,
     ExprReg,
     ExprSubscript,
-    ExprTuple,
 )
 from starkware.cairo.lang.compiler.expression_simplifier import ExpressionSimplifier
 from starkware.cairo.lang.compiler.identifier_definition import (
@@ -28,18 +27,19 @@ from starkware.cairo.lang.compiler.identifier_definition import (
     NamespaceDefinition,
     ReferenceDefinition,
     StructDefinition,
+    TypeDefinition,
 )
 from starkware.cairo.lang.compiler.identifier_manager import (
     IdentifierManager,
     MissingIdentifierError,
 )
-from starkware.cairo.lang.compiler.identifier_utils import get_struct_definition
+from starkware.cairo.lang.compiler.identifier_utils import (
+    get_struct_definition,
+    get_type_definition,
+)
 from starkware.cairo.lang.compiler.instruction import Register
 from starkware.cairo.lang.compiler.offset_reference import OffsetReferenceDefinition
 from starkware.cairo.lang.compiler.preprocessor.preprocessor import Preprocessor
-from starkware.cairo.lang.compiler.preprocessor.preprocessor_error import (
-    PreprocessorError,
-)
 from starkware.cairo.lang.compiler.resolve_search_result import resolve_search_result
 from starkware.cairo.lang.compiler.scoped_name import ScopedName
 from starkware.cairo.lang.compiler.substitute_identifiers import substitute_identifiers
@@ -153,19 +153,20 @@ class HorusTypeChecker(TypeSystemVisitor):
                         self.accessible_scopes, expr.dest_type.scope + "write"
                     )
 
-                    ret_struct_def = get_struct_definition(
+                    ret_type_def = get_type_definition(
                         search_result.canonical_name + "read" + "Return",
                         self.identifiers,
                     )
-                    assert isinstance(ret_struct_def, StructDefinition)
+                    assert isinstance(ret_type_def, TypeDefinition)
+                    assert isinstance(ret_type_def.cairo_type, TypeTuple)
 
-                    if len(ret_struct_def.members) != 1:
+                    if len(ret_type_def.cairo_type.members) != 1:
                         raise CairoTypeError(
                             "Storage maps with return tuple of length higher than 1 are not supported yet",
                             location=expr.location,
                         )
 
-                    return expr, next(iter(ret_struct_def.members.values())).cairo_type
+                    return expr, ret_type_def.cairo_type.members[0].typ
                 except MissingIdentifierError:
                     # Failed to find the storage variable stuff.
                     raise CairoTypeError(
@@ -180,18 +181,21 @@ class HorusTypeChecker(TypeSystemVisitor):
 
 
 def get_return_variable(name: str, preprocessor: Preprocessor):
-    definition = get_struct_definition(
+    definition = get_type_definition(
         preprocessor.current_scope + "Return", preprocessor.identifiers
     )
-    assert isinstance(definition, StructDefinition)
-    return_type = TypeStruct(definition.full_name, is_fully_resolved=True)
+    assert isinstance(definition, TypeDefinition)
 
-    return_struct = ExprCast(
-        expr=ExprOperator(ExprReg(Register.AP), "-", ExprConst(definition.size)),
-        dest_type=TypePointer(return_type),
+    return_tuple = ExprCast(
+        expr=ExprOperator(
+            ExprReg(Register.AP),
+            "-",
+            ExprConst(preprocessor.get_size(definition.cairo_type)),
+        ),
+        dest_type=TypePointer(definition.cairo_type),
     )
 
-    result = return_struct
+    result = return_tuple
     for member_name in name.split("."):
         result = ExprDot(result, ExprIdentifier(member_name))
 
@@ -214,7 +218,7 @@ def simplify_and_get_type(
                 implicit_args_type = TypeStruct(
                     definition.full_name, is_fully_resolved=True
                 )
-                return_def = get_struct_definition(
+                return_def = get_type_definition(
                     preprocessor.current_scope + "Return", preprocessor.identifiers
                 )
 
@@ -222,7 +226,10 @@ def simplify_and_get_type(
                     expr=ExprOperator(
                         ExprReg(Register.AP),
                         "-",
-                        ExprConst(definition.size + return_def.size),
+                        ExprConst(
+                            definition.size
+                            + preprocessor.get_size(return_def.cairo_type)
+                        ),
                     ),
                     dest_type=TypePointer(implicit_args_type),
                 )

@@ -1,6 +1,8 @@
 %import starkware.cairo.lang.compiler.cairo.IDENTIFIER
 %import starkware.cairo.lang.compiler.cairo.COMMENT
 %import starkware.cairo.lang.compiler.cairo.HEXINT
+%import starkware.cairo.lang.compiler.cairo.INT
+%import starkware.cairo.lang.compiler.cairo.COMMA
 %import starkware.cairo.lang.compiler.cairo.cairo_file 
 %import starkware.cairo.lang.compiler.cairo.code_block
 %import starkware.cairo.lang.compiler.cairo.instruction
@@ -14,7 +16,6 @@
 %import starkware.cairo.lang.compiler.cairo.typed_identifier
 %import starkware.cairo.lang.compiler.cairo.arg_list
 
-%import common.INT
 %import common.WS_INLINE
 
 %ignore WS_INLINE
