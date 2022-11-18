@@ -32,7 +32,7 @@ include = [ "src/horus/compiler/horus.ebnf" ]
 horus-compile = "horus.compiler.horus_compile:run"
 
 [tool.poetry.dependencies]
-python = ">=3.7,<3.11"
+python = ">=3.7,<3.10"
 cairo-lang = "0.8.0"
 marshmallow-dataclass = ">=7.1.0,<8.5.4"
 eth-utils = "^1.2.0"
