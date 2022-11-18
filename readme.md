@@ -199,3 +199,11 @@ The following annotations are supported:
 		e.g. `# @invariant i <= 10`
 		The invariant annotation is only required in the case of low level loops implemented with jump instructions, however it can also be used to make claims that must hold at any specific point in a function by adding an appropriately named label and attaching the annotation to it.  Note that this effectively splits the function in two, and that anything from before the invariant that is not mentioned within it cannot be used after.
 
+# Spec syntax
+
+The following are allowed within logical formula:
+	-`a`, `$a` cairo references and logical variables can be ued by name
+	-`$Return.a` the special logical variable `$Return` is defined to contain the values returned from the function
+	-`a+b`, `a==b`, erc arithmetic operations and comparisons are supported for felts as in cairo
+	-`a==b or c==d`, `a==b and c==d`, `! a==b`, `a==b -> c==d` propositional logic operators are written as such
+	-`True`, `False` are defined as keywords
