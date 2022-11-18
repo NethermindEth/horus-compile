@@ -2,7 +2,7 @@ import dataclasses
 from enum import Enum
 from typing import Optional, Sequence
 
-from starkware.cairo.lang.compiler.ast.bool_expr import BoolExpr
+from starkware.cairo.lang.compiler.ast.bool_expr import BoolEqExpr
 from starkware.cairo.lang.compiler.ast.cairo_types import CairoType
 from starkware.cairo.lang.compiler.ast.code_elements import CodeElement
 from starkware.cairo.lang.compiler.ast.expr import ArgList, Expression
@@ -40,10 +40,10 @@ class BoolFormula(AstNode):
 @dataclasses.dataclass
 class BoolExprAtom(BoolFormula):
     """
-    Wrapper around Cairo's `BoolExpr`.
+    Wrapper around Cairo's `BoolEqExpr`.
     """
 
-    bool_expr: BoolExpr
+    bool_expr: BoolEqExpr
 
     def get_children(self) -> Sequence[Optional["AstNode"]]:
         return [self.bool_expr]

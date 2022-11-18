@@ -9,7 +9,7 @@ from marshmallow.exceptions import ValidationError
 from starkware.cairo.lang.compiler.ast.cairo_types import CairoType
 from starkware.cairo.lang.compiler.fields import CairoTypeAsStr
 from starkware.cairo.lang.compiler.scoped_name import ScopedName, ScopedNameAsStr
-from starkware.starknet.services.api.contract_definition import ContractDefinition
+from starkware.starknet.services.api.contract_class import ContractClass
 
 from horus.compiler.var_names import *
 
@@ -70,7 +70,7 @@ class FunctionAnnotations:
 
 
 @marshmallow_dataclass.dataclass(frozen=True)
-class HorusDefinition(ContractDefinition):
+class HorusDefinition(ContractClass):
     specifications: "dict[ScopedName, FunctionAnnotations]" = field(
         metadata=dict(
             marshmallow_field=mfields.Dict(
