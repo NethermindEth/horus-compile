@@ -1,15 +1,15 @@
-# @pre ap == fp
-# @post [ap - 1] == 0
-func main():
-    [ap] = 5; ap++  # n
+// @pre ap == fp
+// @post [ap - 1] == 0
+func main() {
+    [ap] = 5, ap++;  // n
 
-    # @invariant 0 < [ap - 1] and [ap - 1] <= 5
+    // @invariant 0 < [ap - 1] and [ap - 1] <= 5
     loop:
-    [ap] = [ap - 1] - 1; ap++
-    jmp end_loop if [ap - 1] != 0
-    jmp loop
+    [ap] = [ap - 1] - 1, ap++;
+    jmp end_loop if [ap - 1] != 0;
+    jmp loop;
 
-    # @invariant [ap - 1] == 0
+    // @invariant [ap - 1] == 0
     end_loop:
-    ret
-end
+    ret;
+}

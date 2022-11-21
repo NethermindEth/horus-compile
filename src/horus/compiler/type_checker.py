@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+import dataclasses
 from typing import Optional, Tuple
 
 from starkware.cairo.lang.compiler.ast.cairo_types import (
     CairoType,
     TypeFelt,
+    TypeIdentifier,
     TypePointer,
     TypeStruct,
     TypeTuple,
@@ -20,13 +22,16 @@ from starkware.cairo.lang.compiler.ast.expr import (
     ExprReg,
     ExprSubscript,
 )
+from starkware.cairo.lang.compiler.ast.expr_func_call import (
+    ExprFuncCall,
+    RvalueFuncCall,
+)
 from starkware.cairo.lang.compiler.expression_simplifier import ExpressionSimplifier
 from starkware.cairo.lang.compiler.identifier_definition import (
     ConstDefinition,
     FunctionDefinition,
     NamespaceDefinition,
     ReferenceDefinition,
-    StructDefinition,
     TypeDefinition,
 )
 from starkware.cairo.lang.compiler.identifier_manager import (
@@ -42,7 +47,12 @@ from starkware.cairo.lang.compiler.offset_reference import OffsetReferenceDefini
 from starkware.cairo.lang.compiler.preprocessor.preprocessor import Preprocessor
 from starkware.cairo.lang.compiler.resolve_search_result import resolve_search_result
 from starkware.cairo.lang.compiler.scoped_name import ScopedName
-from starkware.cairo.lang.compiler.substitute_identifiers import substitute_identifiers
+from starkware.cairo.lang.compiler.substitute_identifiers import (
+    GetIdentifierCallback,
+    GetStructMembersCallback,
+    ResolveTypeCallback,
+    SubstituteIdentifiers,
+)
 from starkware.cairo.lang.compiler.type_casts import CairoTypeError
 from starkware.cairo.lang.compiler.type_system_visitor import TypeSystemVisitor
 from starkware.crypto.signature.signature import FIELD_PRIME
@@ -82,12 +92,13 @@ class HorusTypeChecker(TypeSystemVisitor):
 
     def visit_ExprDot(self, expr: ExprDot):
         inner_expr, inner_type = self.visit(expr.expr)
+        inner_type = self.resolve_type(inner_type)
         if isinstance(inner_expr, ExprLogicalIdentifier):
             if not isinstance(inner_type, (TypeStruct, TypeTuple)):
                 raise CairoTypeError("wrong type", location=expr.location)
 
             struct_def = get_struct_definition(
-                struct_name=inner_type.resolved_scope,
+                struct_name=inner_type.scope,
                 identifier_manager=self.identifiers,
             )
             if expr.member.name not in struct_def.members:
@@ -179,6 +190,53 @@ class HorusTypeChecker(TypeSystemVisitor):
 
         return super().visit_ExprCast(expr)  # type: ignore
 
+    def visit_ExprFuncCall(self, expr: ExprFuncCall) -> Tuple[ExprFuncCall, CairoType]:
+        assert self.identifiers is not None
+        search_result = self.identifiers.search(
+            self.accessible_scopes, ScopedName.from_string(expr.rvalue.func_ident.name)
+        )
+        definition = resolve_search_result(search_result, self.identifiers)
+
+        if search_result.canonical_name in allowed_syscalls:
+            return expr, TypeFelt(expr.location)
+
+        if isinstance(definition, NamespaceDefinition):
+            try:
+                self.identifiers.search(
+                    self.accessible_scopes,
+                    ScopedName.from_string(expr.rvalue.func_ident.name) + "read",
+                )
+                self.identifiers.search(
+                    self.accessible_scopes,
+                    ScopedName.from_string(expr.rvalue.func_ident.name) + "write",
+                )
+
+                ret_type_def = get_type_definition(
+                    search_result.canonical_name + "read" + "Return",
+                    self.identifiers,
+                )
+                assert isinstance(ret_type_def, TypeDefinition)
+                assert isinstance(ret_type_def.cairo_type, TypeTuple)
+
+                if len(ret_type_def.cairo_type.members) != 1:
+                    raise CairoTypeError(
+                        "Storage maps with return tuple of length higher than 1 are not supported yet",
+                        location=expr.location,
+                    )
+
+                return expr, ret_type_def.cairo_type.members[0].typ
+            except MissingIdentifierError as e:
+                # Failed to find the storage variable stuff.
+                raise CairoTypeError(
+                    "Function calls are not allowed in assertions",
+                    location=expr.location,
+                ) from e
+
+        raise CairoTypeError(
+            "Function calls are not allowed in assertions",
+            location=expr.location,
+        )
+
 
 def get_return_variable(name: str, preprocessor: Preprocessor):
     definition = get_type_definition(
@@ -202,6 +260,66 @@ def get_return_variable(name: str, preprocessor: Preprocessor):
     return result
 
 
+class HorusSubstituteIdentifiers(SubstituteIdentifiers):
+    """
+    Since storage vars are handled slightly different on the side of Horus
+    we need to redefine the behaviour of substitution, which is done by
+    this class.
+    """
+
+    def __init__(
+        self,
+        get_identifier_callback: GetIdentifierCallback,
+        resolve_type_callback: ResolveTypeCallback = None,
+        get_struct_members_callback: GetStructMembersCallback = None,
+        identifiers: Optional[IdentifierManager] = None,
+    ):
+        super().__init__(
+            get_identifier_callback, resolve_type_callback, get_struct_members_callback
+        )
+        self.identifiers = identifiers
+
+    def visit_ExprFuncCall(self, expr: ExprFuncCall):
+        try:
+            rvalue = expr.rvalue
+            _ = self.get_identifier_callback(rvalue.func_ident)
+            replaced = super().visit_ExprFuncCall(
+                dataclasses.replace(
+                    expr,
+                    rvalue=dataclasses.replace(
+                        expr.rvalue,
+                        func_ident=ExprIdentifier(f"{rvalue.func_ident.name}.read"),
+                    ),
+                )
+            )
+            return dataclasses.replace(
+                replaced,
+                rvalue=dataclasses.replace(
+                    replaced.rvalue, func_ident=ExprIdentifier(rvalue.func_ident.name)
+                ),
+            )
+        except CairoTypeError:
+            return super().visit_ExprFuncCall(expr)
+
+
+def substitute_identifiers(
+    expr: Expression,
+    get_identifier_callback: GetIdentifierCallback,
+    resolve_type_callback: ResolveTypeCallback = None,
+    get_struct_members_callback: GetStructMembersCallback = None,
+    identifiers: Optional[IdentifierManager] = None,
+) -> Expression:
+    """
+    Replaces identifiers by other expressions according to the given callback.
+    """
+    return HorusSubstituteIdentifiers(
+        get_identifier_callback=get_identifier_callback,
+        resolve_type_callback=resolve_type_callback,
+        get_struct_members_callback=get_struct_members_callback,
+        identifiers=identifiers,
+    ).visit(expr)
+
+
 def simplify_and_get_type(
     expr: Expression,
     preprocessor: Preprocessor,
@@ -216,7 +334,7 @@ def simplify_and_get_type(
 
             if definition.members.get(expr.name.split(".")[0]) is not None:
                 implicit_args_type = TypeStruct(
-                    definition.full_name, is_fully_resolved=True
+                    definition.full_name,
                 )
                 return_def = get_type_definition(
                     preprocessor.current_scope + "Return", preprocessor.identifiers
@@ -251,23 +369,60 @@ def simplify_and_get_type(
 
         if isinstance(definition, ConstDefinition):
             return ExprConst(definition.value)
-        elif isinstance(definition, (ReferenceDefinition, OffsetReferenceDefinition)):
+
+        if isinstance(definition, (ReferenceDefinition, OffsetReferenceDefinition)):
             return definition.eval(
                 preprocessor.flow_tracking.reference_manager,
                 preprocessor.flow_tracking.data,
             )
-        else:
-            raise CairoTypeError(
-                f'Cannot obtain identifier "{expr.name}". Expected a reference but got "{definition.TYPE}"',
-                location=expr.location,
-            )
 
-    expr = substitute_identifiers(expr, get_identifier)
+        if isinstance(definition, NamespaceDefinition):
+            try:
+                preprocessor.identifiers.get_by_full_name(
+                    search_result.canonical_name + "read"
+                )
+                preprocessor.identifiers.get_by_full_name(
+                    search_result.canonical_name + "write"
+                )
+
+                ret_type_def = get_type_definition(
+                    search_result.canonical_name + "read" + "Return",
+                    preprocessor.identifiers,
+                )
+                assert isinstance(ret_type_def, TypeDefinition)
+                assert isinstance(ret_type_def.cairo_type, TypeTuple)
+
+                if len(ret_type_def.cairo_type.members) != 1:
+                    raise CairoTypeError(
+                        "Storage maps with return tuple of length higher than 1 are not supported yet",
+                        location=expr.location,
+                    )
+
+                return expr
+            except MissingIdentifierError as e:
+                # Failed to find the storage variable stuff.
+                raise CairoTypeError(
+                    "Function calls are not allowed in assertions",
+                    location=expr.location,
+                ) from e
+
+        raise CairoTypeError(
+            f'Cannot obtain identifier "{expr.name}". Expected a reference but got "{definition.TYPE}"',
+            location=expr.location,
+        )
+
+    expr = substitute_identifiers(
+        expr,
+        get_identifier,
+        preprocessor.resolve_type,
+        identifiers=preprocessor.identifiers,
+    )
     expr, expr_type = HorusTypeChecker(
         preprocessor.accessible_scopes,
         preprocessor.identifiers,
         logical_identifiers,
     ).visit(expr)
+    expr_type = preprocessor.resolve_type(expr_type)
     expr = ExpressionSimplifier(prime=FIELD_PRIME).visit(expr)
 
     return (expr, expr_type)

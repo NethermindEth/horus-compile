@@ -45,7 +45,7 @@ gram_parser = lark.Lark(
         "typed_identifier",
         "annotation",
     ],
-    lexer="standard",
+    lexer="basic",
     parser="lalr",
     propagate_positions=True,
     import_paths=[starkware_grammar_loader],

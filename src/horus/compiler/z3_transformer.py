@@ -31,6 +31,7 @@ from starkware.cairo.lang.compiler.ast.expr import (
     ExprSubscript,
     ExprTuple,
 )
+from starkware.cairo.lang.compiler.ast.expr_func_call import ExprFuncCall
 from starkware.cairo.lang.compiler.expression_simplifier import ExpressionSimplifier
 from starkware.cairo.lang.compiler.identifier_definition import (
     FunctionDefinition,
@@ -184,6 +185,47 @@ class Z3ExpressionTransformer(IdentifierAwareVisitor):
         inner_expr = self.visit(expr.expr)
         return inner_expr
 
+    def visit_ExprFuncCall(self, expr: ExprFuncCall):
+        """
+        If a function call appears in an assertion it is expected to be a storage variable
+        reference. Otherwise an exception is thrown.
+        """
+        assert self.z3_transformer is not None
+        search_result = self.identifiers.search(
+            self.z3_transformer.preprocessor.accessible_scopes,
+            ScopedName.from_string(expr.rvalue.func_ident.name),
+        )
+        definition = resolve_search_result(search_result, self.identifiers)
+        if search_result.canonical_name in allowed_syscalls:
+            return z3.Int(search_result.canonical_name.path[-1].replace("get_", "%"))
+
+        if isinstance(definition, NamespaceDefinition):
+            if not search_result.canonical_name in self.z3_transformer.storage_vars:
+                raise PreprocessorError(
+                    f"{expr.rvalue.func_ident.name} is not a storage var.",
+                    location=expr.location,
+                )
+
+            arg_struct_def = get_struct_definition(
+                search_result.canonical_name + "read" + "Args", self.identifiers
+            )
+            assert isinstance(arg_struct_def, StructDefinition)
+
+            storage_var = z3.Function(
+                str(search_result.canonical_name),
+                *[z3.IntSort() for _ in arg_struct_def.members.values()],
+                z3.IntSort(),
+            )
+
+            args = [self.visit(arg.expr) for arg in expr.rvalue.arguments.args]
+
+            return storage_var(*args)
+
+        raise PreprocessorError(
+            f"Function {search_result.canonical_name} cannot be used in assertions.",
+            location=expr.location,
+        )
+
     def visit_ArgList(self, arg_list: ArgList):
         raise PreprocessorError(
             "This was supposed to be unreachable.",
@@ -193,18 +235,6 @@ class Z3ExpressionTransformer(IdentifierAwareVisitor):
     def visit_ExprTuple(self, expr: ExprTuple):
         raise PreprocessorError(
             "This was supposed to be unreachable.",
-            location=expr.location,
-        )
-
-    def visit_RvalueFuncCall(self, rvalue):
-        raise PreprocessorError(
-            "Usage of function calls in assertions is not allowed",
-            location=rvalue.location,
-        )
-
-    def visit_ExprFuncCall(self, expr):
-        raise PreprocessorError(
-            "Usage of function calls in assertions is not allowed",
             location=expr.location,
         )
 
@@ -308,7 +338,7 @@ class Z3Transformer(IdentifierAwareVisitor):
         self, a: Expression, b: Expression, type: TypeStruct
     ) -> z3.BoolRef:
         definition = get_struct_definition(
-            struct_name=type.resolved_scope, identifier_manager=self.identifiers
+            struct_name=type.scope, identifier_manager=self.identifiers
         )
         assert isinstance(
             definition, StructDefinition

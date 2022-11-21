@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import dataclasses
 from enum import Enum
 from typing import Optional, Sequence
@@ -6,7 +8,7 @@ from starkware.cairo.lang.compiler.ast.bool_expr import BoolEqExpr
 from starkware.cairo.lang.compiler.ast.cairo_types import CairoType
 from starkware.cairo.lang.compiler.ast.code_elements import CodeElement
 from starkware.cairo.lang.compiler.ast.expr import ArgList, Expression
-from starkware.cairo.lang.compiler.ast.formatting_utils import LocationField
+from starkware.cairo.lang.compiler.ast.formatting_utils import LocationField, Particle
 from starkware.cairo.lang.compiler.ast.node import AstNode
 from starkware.cairo.lang.compiler.error_handling import Location
 from starkware.python.expression_string import ExpressionString
@@ -25,6 +27,9 @@ class ExprLogicalIdentifier(Expression):
         return ExpressionString.highest(self.name)
 
     def get_children(self) -> Sequence[Optional["AstNode"]]:
+        return []
+
+    def get_particles(self) -> list[Particle]:
         return []
 
 
