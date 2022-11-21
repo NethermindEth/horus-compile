@@ -1,7 +1,7 @@
-# @pre [ap - 2] + [ap - 1] == [fp + 2] + 1 && [ap - 3] == ([ap - 2] * ([ap - 2] - 1)) / 2
+# @pre [ap - 2] + [ap - 1] == [fp + 2] + 1 and [ap - 3] == ([ap - 2] * ([ap - 2] - 1)) / 2
 # @post [ap - 3] == (([fp + 2] + 1) * [fp + 2]) / 2
 func main():
-    # @invariant [ap - 2] + [ap - 1] == [fp + 2] + 1 && [ap - 3] == ([ap - 2] * ([ap - 2] - 1)) / 2
+    # @invariant [ap - 2] + [ap - 1] == [fp + 2] + 1 and [ap - 3] == ([ap - 2] * ([ap - 2] - 1)) / 2
     loop:
     [ap] = [ap - 3] + [ap - 2]; ap++  # sum += i
     [ap] = [ap - 3] + 1; ap++  # ++i
