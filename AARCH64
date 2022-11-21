@@ -1,0 +1,30 @@
+How to install `horus-compile` on AArch64 macs
+==============================================
+In theory, this can also be done via poetry/venv. I apologize for the tool
+fragmentation caused by introducing yet another way to do things via miniconda
+here.
+
+# Ensure you have `wget`.
+brew install wget
+
+# Install Miniconda: https://docs.conda.io/en/latest/miniconda.html
+# Follow command-line prompts (may need to open a new shell).
+wget https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-arm64.sh
+bash Miniconda3-latest-MacOSX-arm64.sh
+
+# Create a virtual environment running python==3.9 and activate it.
+conda create -n horus python=3.9
+conda activate horus
+
+# You should see `(horus)` next to your terminal prompt.
+
+# Install poetry.
+pip install poetry
+
+# Clone this repository and install.
+git clone git@github.com:NethermindEth/horus-compile.git
+cd horus-compile
+CFLAGS=-I`brew --prefix gmp`/include LDFLAGS=-L`brew --prefix gmp`/lib pip install .
+
+# Check that the executable was installed.
+horus-compile --help
