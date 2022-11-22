@@ -3,7 +3,7 @@
 
 from starkware.cairo.common.math_cmp import is_le
 
-# @post (a > b -> $Return.c == a) && (b > a -> $Return.c == b)
+# @post (a > b -> $Return.c == a) and (b > a -> $Return.c == b)
 @external
 @l1_handler
 func max{range_check_ptr}(a, b) -> (c):

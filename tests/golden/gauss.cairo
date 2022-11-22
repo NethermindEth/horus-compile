@@ -5,7 +5,7 @@ func main():
     [ap] = 1; ap++  # i
     [ap] = 5; ap++  # n
 
-    # @invariant [ap - 2] + [ap - 1] == [fp + 2] + 1 && 2 * [ap - 3] == ([ap - 2] * ([ap - 2] - 1))
+    # @invariant [ap - 2] + [ap - 1] == [fp + 2] + 1 and 2 * [ap - 3] == ([ap - 2] * ([ap - 2] - 1))
     loop:
     [ap] = [ap - 3] + [ap - 2]; ap++  # sum += i
     [ap] = [ap - 3] + 1; ap++  # ++i
