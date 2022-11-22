@@ -1,6 +1,8 @@
 %import starkware.cairo.lang.compiler.cairo.IDENTIFIER
 %import starkware.cairo.lang.compiler.cairo.COMMENT
 %import starkware.cairo.lang.compiler.cairo.HEXINT
+%import starkware.cairo.lang.compiler.cairo.INT
+%import starkware.cairo.lang.compiler.cairo.COMMA
 %import starkware.cairo.lang.compiler.cairo.cairo_file 
 %import starkware.cairo.lang.compiler.cairo.code_block
 %import starkware.cairo.lang.compiler.cairo.instruction
@@ -13,8 +15,8 @@
 %import starkware.cairo.lang.compiler.cairo.code_element
 %import starkware.cairo.lang.compiler.cairo.typed_identifier
 %import starkware.cairo.lang.compiler.cairo.arg_list
+%import starkware.cairo.lang.compiler.cairo.bool_atom
 
-%import common.INT
 %import common.WS_INLINE
 
 %ignore WS_INLINE
@@ -25,30 +27,30 @@ logical_identifier_def: LOGICAL_IDENTIFIER
 logical_identifier: LOGICAL_IDENTIFIER ("." IDENTIFIER)*
 %extend ?atom: logical_identifier -> atom_logical_identifier
 
-?bool_formula: bool_or
-             | bool_or "->" bool_formula -> bool_formula_impl
+?horus_bool_formula: horus_bool_or
+             | horus_bool_or "->" horus_bool_formula -> bool_formula_impl
 
-?bool_or: bool_and
-        | bool_or "||" bool_and -> bool_formula_or
+?horus_bool_or: horus_bool_and
+        | horus_bool_or "or" horus_bool_and -> bool_formula_or
 
-?bool_and: bool_unary
-         | bool_and "&&" bool_unary -> bool_formula_and
+?horus_bool_and: horus_bool_unary
+         | horus_bool_and "and" horus_bool_unary -> bool_formula_and
 
-?bool_unary: bool_atom
-           | "!" bool_atom -> bool_unary_neg
+?horus_bool_unary: horus_bool_atom
+           | "not" horus_bool_atom -> bool_unary_neg
 
-?bool_atom: bool_expr
+?horus_bool_atom: bool_atom
          | expr "<=" expr   -> bool_expr_le
          | expr "<" expr    -> bool_expr_lt
          | expr ">=" expr   -> bool_expr_ge
          | expr ">" expr    -> bool_expr_gt
          | "True"           -> bool_expr_true
          | "False"          -> bool_expr_false
-         | "(" bool_formula ")" -> bool_expr_parentheses
+         | "(" horus_bool_formula ")" -> bool_expr_parentheses
 
 
-annotation: "@pre" bool_formula  -> precond_annotation
-          | "@post" bool_formula -> postcond_annotation
-          | "@invariant" bool_formula -> invariant_annotation
+annotation: "@pre" horus_bool_formula  -> precond_annotation
+          | "@post" horus_bool_formula -> postcond_annotation
+          | "@invariant" horus_bool_formula -> invariant_annotation
           | "@declare" logical_identifier_def ":" type -> declare_annotation
           | "@storage_update" identifier "(" arg_list ")" ":=" expr -> storage_update_annotation

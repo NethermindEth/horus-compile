@@ -21,12 +21,12 @@ func complex_return() -> (test : Test):
     return (test=Test(x=10, y=10))
 end
 
-# @post $Return.test.y == 20 && $Return.b == 30
+# @post $Return.test.y == 20 and $Return.b == 30
 func more_complex_return() -> (a : felt, test : Test, b : felt):
     return (a=10, test=Test(x=10, y=20), b=30)
 end
 
-# @post $Return.test.y == 20 && $Return.b == 30
+# @post $Return.test.y == 20 and $Return.b == 30
 func pointer_to_a_struct() -> (a : felt, test : Test*, b : felt):
     return (a=10, test=new Test(x=10, y=20), b=30)
 end
