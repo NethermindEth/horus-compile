@@ -3,7 +3,7 @@
 func main():
     [ap] = 5; ap++  # n
 
-    # @invariant 0 < [ap - 1] && [ap - 1] <= 5
+    # @invariant 0 < [ap - 1] and [ap - 1] <= 5
     loop:
     [ap] = [ap - 1] - 1; ap++
     jmp end_loop if [ap - 1] != 0

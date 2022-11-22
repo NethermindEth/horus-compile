@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Optional
 
 import z3
-from starkware.cairo.lang.compiler.ast.bool_expr import BoolExpr
+from starkware.cairo.lang.compiler.ast.bool_expr import BoolEqExpr
 from starkware.cairo.lang.compiler.ast.cairo_types import (
     CairoType,
     TypeFelt,
@@ -14,7 +14,6 @@ from starkware.cairo.lang.compiler.ast.cairo_types import (
 from starkware.cairo.lang.compiler.ast.expr import (
     ArgList,
     ExprAddressOf,
-    ExprAssignment,
     ExprCast,
     ExprConst,
     ExprDeref,
@@ -32,6 +31,7 @@ from starkware.cairo.lang.compiler.ast.expr import (
     ExprSubscript,
     ExprTuple,
 )
+from starkware.cairo.lang.compiler.expression_simplifier import ExpressionSimplifier
 from starkware.cairo.lang.compiler.identifier_definition import (
     FunctionDefinition,
     NamespaceDefinition,
@@ -360,7 +360,7 @@ class Z3Transformer(IdentifierAwareVisitor):
 
         return result
 
-    def visit_BoolExpr(self, bool_expr: BoolExpr):
+    def visit_BoolEqExpr(self, bool_expr: BoolEqExpr):
         a, a_type = simplify_and_get_type(
             bool_expr.a, self.preprocessor, self.logical_identifiers, self.is_post
         )
