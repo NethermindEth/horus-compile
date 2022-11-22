@@ -16,6 +16,7 @@ jobs:
         with:
           python-version: '3.7'
           cache: 'poetry'
+      - run: poetry env use 3.7
       - run: poetry install
 
       - name: Check formatting
@@ -45,6 +46,7 @@ jobs:
         with:
           python-version: '3.7'
           cache: 'poetry'
+      - run: poetry env use 3.7
       - run: poetry install
       - run: poetry run pip install pytest
       - name: Tests
