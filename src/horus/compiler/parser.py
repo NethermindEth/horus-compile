@@ -73,6 +73,8 @@ def parse(
 
     parser = gram_parser.parse_interactive(code, start=code_type)
     parser_state = parser.parser_state
+    old_state_stack = list(parser_state.state_stack)
+    old_value_stack = list(parser_state.value_stack)
     try:
         token = None
         for token in parser.lexer_state.lex(parser_state):

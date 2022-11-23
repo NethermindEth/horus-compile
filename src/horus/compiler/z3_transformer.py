@@ -89,9 +89,7 @@ class Z3ExpressionTransformer(IdentifierAwareVisitor):
         return z3.Int(expr.name)
 
     def visit_ExprIdentifier(self, expr: ExprIdentifier):
-        return ExprIdentifier(
-            name=expr.name, location=self.location_modifier(expr.location)
-        )
+        return ExprIdentifier(name=expr.name, location=expr.location)
 
     def visit_ExprFutureLabel(self, expr: ExprFutureLabel):
         raise PreprocessorError(
