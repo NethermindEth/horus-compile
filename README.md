@@ -245,8 +245,8 @@ The invariant annotation is only required in the case of low level loops impleme
 # Spec syntax
 
 The following are allowed within logical formula:
-	-`a`, `$a` cairo references and logical variables can be ued by name
-	-`$Return.a` the special logical variable `$Return` is defined to contain the values returned from the function
-	-`a+b`, `a==b`, erc arithmetic operations and comparisons are supported for felts as in cairo
-	-`a==b or c==d`, `a==b and c==d`, `! a==b`, `a==b -> c==d` propositional logic operators are written as such
-	-`True`, `False` are defined as keywords
+* `a`, `$a` cairo references and logical variables can be used by name
+* `$Return.a` the special logical variable `$Return` is defined to contain the values returned from the function
+* `a+b`, `a==b`, erc arithmetic operations and comparisons are supported for felts as in cairo
+* `a==b or c==d`, `a==b and c==d`, `! a==b`, `a==b -> c==d` propositional logic operators are written as such
+* `True`, `False` are defined as keywords
