@@ -172,6 +172,8 @@ brew install horus/z3-horus/z3@4.10.2
 
 ### Writing specs
 
+<br/>
+
 # Annotations
 
 Horus works using an annotation system similar to Cairo itself, however Horus annotations are written in comments. For example:
@@ -182,22 +184,63 @@ func example() -> (res):
 	return (3)
 end
 ```
-The following annotations are supported:
-	-`@post` Specifies conditions that must be true if the function returns
-		e.g. `# @post $Return.res < 100 && $Return.res >= 50`
-		No claim is made about whether the function completes or reverts, but that if it completes then the postcondition holds.
-	-`@pre` Restricts the initial state, value of logical variables, or set of possible inputs for which the postcondition must hold
-		e.g. `# @pre flag * (flag - 1) == 0`
-	-`@declare` Allows the introduction of logical variables
-		e.g. `# @declare $x : felt`
-		Logical variable names must begin with a `$`. Note that if a logical variable is not mentioned in the precondition, then the spec must hold for all possible values of that variable.
-	-`@storage_update` Allows claims to be made about the state of a storage variable before and after the function
-		e.g. `# @storage_update x() := x() + 1`
-		A storage update must be included for all storage variables modified by a function otherwise it will not meet the spec.
-		Only the top-level storage variable reference on the left hand side refers to the state after the function. As such, if `x` took one input and we specified the update as such `x(y()) := x(y()) + 1`, both instances of `y()` refer to the state before the function was called. If you would like to make claims about the relationship between multiple storage variables after the function is complete, this can be achieved via the use of logical variables. To do so, equate your 'before' logical variable to the storage variable in the precondition. Then, also in the precondition, relate the 'after' and 'before' logical variables.  Finally assign the 'after' logical variable to the storage variable in a storage update annotation.
-	-`@invariant` Introduces a constraint attached to a label, typically used for loop invariants
-		e.g. `# @invariant i <= 10`
-		The invariant annotation is only required in the case of low level loops implemented with jump instructions, however it can also be used to make claims that must hold at any specific point in a function by adding an appropriately named label and attaching the annotation to it.  Note that this effectively splits the function in two, and that anything from before the invariant that is not mentioned within it cannot be used after.
+The following annotations are supported.
+
+<br/>
+
+### `@post`
+Specifies conditions that must be true if the function returns.
+
+Example:
+```cairo
+# @post $Return.res < 100 && $Return.res >= 50
+```
+No claim is made about whether the function completes or reverts, but that if it completes then the postcondition holds.
+
+<br/>
+
+### `@pre`
+Restricts the initial state, value of logical variables, or set of possible inputs for which the postcondition must hold.
+
+Example:
+```cairo
+# @pre flag * (flag - 1) == 0
+```
+
+<br/>
+
+### `@declare`
+Allows the introduction of logical variables.
+
+Example:
+```cairo
+# @declare $x : felt
+```
+Logical variable names must begin with a `$`. Note that if a logical variable is not mentioned in the precondition, then the spec must hold for all possible values of that variable.
+
+<br/>
+
+### `@storage_update`
+Allows claims to be made about the state of a storage variable before and after the function.
+
+Example:
+```cairo
+# @storage_update x() := x() + 1
+```
+A storage update must be included for all storage variables modified by a function otherwise it will not meet the spec.
+
+Only the top-level storage variable reference on the left hand side refers to the state after the function. As such, if `x` took one input and we specified the update as such `x(y()) := x(y()) + 1`, both instances of `y()` refer to the state before the function was called. If you would like to make claims about the relationship between multiple storage variables after the function is complete, this can be achieved via the use of logical variables. To do so, equate your 'before' logical variable to the storage variable in the precondition. Then, also in the precondition, relate the 'after' and 'before' logical variables.  Finally assign the 'after' logical variable to the storage variable in a storage update annotation.
+
+<br/>
+
+### `@invariant`
+Introduces a constraint attached to a label, typically used for loop invariants.
+
+Example:
+```cairo
+# @invariant i <= 10
+```
+The invariant annotation is only required in the case of low level loops implemented with jump instructions, however it can also be used to make claims that must hold at any specific point in a function by adding an appropriately named label and attaching the annotation to it.  Note that this effectively splits the function in two, and that anything from before the invariant that is not mentioned within it cannot be used after.
 
 # Spec syntax
 
