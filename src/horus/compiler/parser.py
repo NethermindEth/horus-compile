@@ -5,6 +5,7 @@ from typing import Optional, Tuple, Union
 
 import lark
 from lark.exceptions import LarkError, UnexpectedToken, VisitError
+from lark.load_grammar import PackageResource
 from starkware.cairo.lang.compiler.error_handling import InputFile, LocationError
 from starkware.cairo.lang.compiler.parser import wrap_lark_error
 from starkware.cairo.lang.compiler.parser_transformer import ParserContext
@@ -13,7 +14,7 @@ from horus.compiler.parser_transformer import HorusTransformer
 
 
 def starkware_grammar_loader(
-    base_path: Union[None, str, lark.PackageResource], grammar_path: str
+    base_path: Union[None, str, PackageResource], grammar_path: str
 ) -> tuple[str, str]:
     """
     A hack to load cairo.ebnf instead of cairo.lark.
