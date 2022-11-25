@@ -162,8 +162,8 @@ class HorusPreprocessor(StarknetPreprocessor):
             self.identifiers,
             self,
             self.logical_identifiers,
+            self.storage_vars,
             is_post=True,
-            storage_vars=self.storage_vars,
         )
         z3_expr_transformer = Z3ExpressionTransformer(
             identifiers=self.identifiers, z3_transformer=z3_transformer
@@ -280,8 +280,8 @@ class HorusPreprocessor(StarknetPreprocessor):
                     self.identifiers,
                     self,
                     self.logical_identifiers,
-                    is_post,
                     self.storage_vars,
+                    is_post,
                 )
                 expr = z3_transformer.visit(parsed_check.formula)
 

@@ -254,9 +254,9 @@ class Z3Transformer(IdentifierAwareVisitor):
         self,
         identifiers: IdentifierManager,
         preprocessor: Preprocessor,
-        logical_identifiers: dict[str, CairoType] = {},
+        logical_identifiers: dict[str, CairoType],
+        storage_vars: set[ScopedName],
         is_post: bool = False,
-        storage_vars: set[ScopedName] = set(),
     ):
         super().__init__(identifiers)
         self.preprocessor = preprocessor
