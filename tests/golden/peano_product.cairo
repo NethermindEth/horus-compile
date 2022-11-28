@@ -1,13 +1,13 @@
-# @post [ap - 1] == [fp - 3] * [fp - 4]
-func main():
-    [ap] = [fp - 3]; ap++  # n
-    [ap] = [fp - 4]; ap++  # m
-    [ap] = 0; ap++
+// @post [ap - 1] == [fp - 3] * [fp - 4]
+func main() {
+    [ap] = [fp - 3], ap++;  // n
+    [ap] = [fp - 4], ap++;  // m
+    [ap] = 0, ap++;
 
-    # @invariant [ap - 1] + [fp - 3] * [ap - 2] == [fp - 3] * [fp - 4]
+    // @invariant [ap - 1] + [fp - 3] * [ap - 2] == [fp - 3] * [fp - 4]
     loop:
-    [ap] = [ap - 2] - 1; ap++
-    [ap] = [ap - 2] + [fp - 3]; ap++
-    jmp loop if [ap - 2] != 0
-    ret
-end
+    [ap] = [ap - 2] - 1, ap++;
+    [ap] = [ap - 2] + [fp - 3], ap++;
+    jmp loop if [ap - 2] != 0;
+    ret;
+}

@@ -73,7 +73,6 @@ class HorusPreprocessor(StarknetPreprocessor):
             storage_vars[storage_var] = self.get_size(
                 TypeStruct(
                     self.identifiers.get(storage_var + "read" + "Args").canonical_name,
-                    is_fully_resolved=True,
                 )
             )
 
@@ -117,17 +116,9 @@ class HorusPreprocessor(StarknetPreprocessor):
         declaration: CodeElementLogicalVariableDeclaration,
         is_member: bool = False,
     ):
+        declaration.type = self.resolve_type(declaration.type)
         if isinstance(declaration.type, TypeStruct):
-            if declaration.type.is_fully_resolved:
-                search_result = self.identifiers.get(declaration.type.scope)
-            else:
-                search_result = self.identifiers.search(
-                    self.accessible_scopes, declaration.type.scope
-                )
-            definition = resolve_search_result(search_result, self.identifiers)
-
-            declaration.type.scope = definition.full_name
-            declaration.type.is_fully_resolved = True
+            definition = self.identifiers.get_by_full_name(declaration.type.scope)
 
             assert isinstance(
                 definition, StructDefinition
@@ -148,7 +139,9 @@ class HorusPreprocessor(StarknetPreprocessor):
                 else:
                     member_name = f"{declaration.name}.{i}"
                 self.add_logical_variable(
-                    CodeElementLogicalVariableDeclaration(member_name, member.typ),
+                    CodeElementLogicalVariableDeclaration(
+                        member_name, self.resolve_type(member.typ)
+                    ),
                     is_member=True,
                 )
 
@@ -159,7 +152,7 @@ class HorusPreprocessor(StarknetPreprocessor):
             variables_of_the_function = current_annotations.logical_variables
             variables_of_the_function[
                 ScopedName.from_string(declaration.name)
-            ] = declaration.type
+            ] = self.resolve_type(declaration.type)
             self.specifications[self.current_scope] = current_annotations
 
         self.logical_identifiers[declaration.name] = declaration.type
@@ -169,8 +162,8 @@ class HorusPreprocessor(StarknetPreprocessor):
             self.identifiers,
             self,
             self.logical_identifiers,
+            self.storage_vars,
             is_post=True,
-            storage_vars=self.storage_vars,
         )
         z3_expr_transformer = Z3ExpressionTransformer(
             identifiers=self.identifiers, z3_transformer=z3_transformer
@@ -287,8 +280,8 @@ class HorusPreprocessor(StarknetPreprocessor):
                     self.identifiers,
                     self,
                     self.logical_identifiers,
-                    is_post,
                     self.storage_vars,
+                    is_post,
                 )
                 expr = z3_transformer.visit(parsed_check.formula)
 

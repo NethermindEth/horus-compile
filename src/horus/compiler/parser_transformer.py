@@ -44,8 +44,10 @@ class HorusTransformer(ParserTransformer):
         super().__init__(input_file, parser_context)
 
     @lark.v_args(meta=True)
-    def commented_code_element(self, value, meta):
-        comment: Optional[str] = value[1][1:] if len(value) == 2 else None
+    def commented_code_element(self, meta, value):
+        comment: Optional[str] = (
+            value[1][2:] if len(value) == 2 and value[1] is not None else None
+        )
 
         if comment is not None:
             possible_annotation = comment.strip()
@@ -65,16 +67,16 @@ class HorusTransformer(ParserTransformer):
                         expected_type=CodeElementAnnotation,
                         parser_context=self.parser_context,
                     )
-                    code_elem = super().commented_code_element(value[:1], meta)
+                    code_elem = super().commented_code_element(meta, [value[0], None])
                     code_elem.code_elm = AnnotatedCodeElement(
                         check, code_elm=code_elem.code_elm
                     )
                     return code_elem
 
-        return super().commented_code_element(value, meta)
+        return super().commented_code_element(meta, value)
 
     @lark.v_args(meta=True)
-    def logical_identifier(self, value, meta):
+    def logical_identifier(self, meta, value):
         identifier_name = ".".join(x.value for x in value)
         if value[0].value == "$Return":
             return ExprIdentifier(name=identifier_name, location=self.meta2loc(meta))
@@ -84,7 +86,7 @@ class HorusTransformer(ParserTransformer):
             )
 
     @lark.v_args(meta=True)
-    def logical_identifier_def(self, value, meta):
+    def logical_identifier_def(self, meta, value):
         if value[0].value == "$Return":
             raise ParserError(
                 f"'$Return' is a reserved name.", location=self.meta2loc(meta)
