@@ -12,6 +12,7 @@ from starkware.cairo.lang.compiler.ast.cairo_types import (
     TypeTuple,
 )
 from starkware.cairo.lang.compiler.ast.expr import (
+    ExprAssignment,
     ExprCast,
     ExprConst,
     ExprDeref,
@@ -292,6 +293,17 @@ class HorusSubstituteIdentifiers(SubstituteIdentifiers):
                     ),
                 )
             )
+
+            new_args = []
+            for arg in rvalue.arguments.args:
+                assert isinstance(arg, ExprAssignment)
+                new_expr = self.visit(arg.expr)
+                new_args.append(dataclasses.replace(arg, expr=new_expr))
+
+            replaced.rvalue.arguments = dataclasses.replace(
+                replaced.rvalue.arguments, args=new_args
+            )
+
             return dataclasses.replace(
                 replaced,
                 rvalue=dataclasses.replace(
