@@ -8,7 +8,7 @@ from horus.compiler.horus_compile import main
 
 def test_golden(capsys):
     def run_horus_compile(file):
-        main([file])
+        main([file, "--cairo_path", "./tests/golden"])
         out = capsys.readouterr().out
         program_json = json.loads(out)
         with StringIO() as checks_out:
