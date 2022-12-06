@@ -1,0 +1,65 @@
+{
+  "invariants": {},
+  "specifications": {
+    "__main__.assert_le": {
+      "decls": {},
+      "logical_variables": {},
+      "post": [
+        "(let ((a!1 (<= 0 (- (memory (+ fp (- 3))) (memory (+ fp (- 4))))))",
+        "      (a!2 (> 340282366920938463463374607431768211456",
+        "              (- (memory (+ fp (- 3))) (memory (+ fp (- 4)))))))",
+        "  (and a!1 a!2))"
+      ],
+      "pre": [
+        "true"
+      ],
+      "storage_update": {}
+    },
+    "__main__.assert_nn": {
+      "decls": {},
+      "logical_variables": {},
+      "post": [
+        "(and (<= 0 (memory (+ fp (- 3))))",
+        "     (> 340282366920938463463374607431768211456 (memory (+ fp (- 3)))))"
+      ],
+      "pre": [
+        "true"
+      ],
+      "storage_update": {}
+    },
+    "__main__.assert_nn_le": {
+      "decls": {},
+      "logical_variables": {},
+      "post": [
+        "(and (<= 0 (memory (+ fp (- 4))))",
+        "     (<= (memory (+ fp (- 4))) (memory (+ fp (- 3)))))"
+      ],
+      "pre": [
+        "(> 340282366920938463463374607431768211456 (memory (+ fp (- 3))))"
+      ],
+      "storage_update": {}
+    },
+    "__main__.unsigned_div_rem": {
+      "decls": {},
+      "logical_variables": {},
+      "post": [
+        "(let ((a!1 (+ (* (memory (+ ap (- 2))) (memory (+ fp (- 3))))",
+        "              (memory (+ ap (- 1))))))",
+        "  (and (<= 0 (memory (+ ap (- 2))))",
+        "       (> 340282366920938463463374607431768211456 (memory (+ ap (- 2))))",
+        "       (<= 0 (memory (+ ap (- 1))))",
+        "       (< (memory (+ ap (- 1))) (memory (+ fp (- 3))))",
+        "       (= (memory (+ fp (- 4))) a!1)))"
+      ],
+      "pre": [
+        "(let ((a!1 (< (memory (+ fp (- 4)))",
+        "              (* 340282366920938463463374607431768211456 (memory (+ fp (- 3)))))))",
+        "  (and (< 0 (memory (+ fp (- 3))))",
+        "       (>= 10633823966279326983230456482242756608 (memory (+ fp (- 3))))",
+        "       a!1))"
+      ],
+      "storage_update": {}
+    }
+  },
+  "storage_vars": {}
+}
