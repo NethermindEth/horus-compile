@@ -1,0 +1,421 @@
+{
+  "invariants": {},
+  "specifications": {
+    "__main__.add_demo_token": {
+      "decls": {},
+      "logical_variables": {},
+      "post": [
+        "true"
+      ],
+      "pre": [
+        "true"
+      ],
+      "storage_update": {
+        "__main__.account_balance": [
+          {
+            "arguments": [
+              [
+                "(memory (+ fp (- 5)))"
+              ],
+              [
+                "1"
+              ]
+            ],
+            "value": [
+              "(+ (__main__.account_balance (memory (+ fp (- 5))) 1) (memory (+ fp (- 4))))"
+            ]
+          },
+          {
+            "arguments": [
+              [
+                "(memory (+ fp (- 5)))"
+              ],
+              [
+                "2"
+              ]
+            ],
+            "value": [
+              "(+ (__main__.account_balance (memory (+ fp (- 5))) 2) (memory (+ fp (- 3))))"
+            ]
+          }
+        ]
+      }
+    },
+    "__main__.do_swap": {
+      "decls": {
+        "$old_pool_balance_from": 0,
+        "$old_pool_balance_to": 0,
+        "__main__.account_balance": 2,
+        "__main__.pool_balance": 1
+      },
+      "logical_variables": {
+        "$old_pool_balance_from": "felt",
+        "$old_pool_balance_to": "felt"
+      },
+      "post": [
+        "(let ((a!1 (* (memory (+ ap (- 2)))",
+        "              (+ $old_pool_balance_from (memory (+ fp (- 3)))))))",
+        "  (= (* $old_pool_balance_to (memory (+ fp (- 3))))",
+        "     (+ a!1 (memory (+ ap (- 1))))))"
+      ],
+      "pre": [
+        "(let ((a!1 (= (__main__.pool_balance (memory (+ fp (- 5))))",
+        "              $old_pool_balance_from))",
+        "      (a!2 (= (__main__.pool_balance (memory (+ fp (- 4))))",
+        "              $old_pool_balance_to))",
+        "      (a!3 (and (= 1 (memory (+ fp (- 5)))) (= 2 (memory (+ fp (- 4))))))",
+        "      (a!4 (and (= 2 (memory (+ fp (- 5)))) (= 1 (memory (+ fp (- 4))))))",
+        "      (a!5 (< (memory (+ fp (- 3)))",
+        "              (__main__.account_balance",
+        "                (memory (+ fp (- 6)))",
+        "                (memory (+ fp (- 5))))))",
+        "      (a!6 (<= 0 (__main__.pool_balance (memory (+ fp (- 4))))))",
+        "      (a!7 (<= 0 (__main__.pool_balance (memory (+ fp (- 5))))))",
+        "      (a!8 (+ (__main__.pool_balance (memory (+ fp (- 5))))",
+        "              (memory (+ fp (- 3)))))",
+        "      (a!9 (* (__main__.pool_balance (memory (+ fp (- 4))))",
+        "              (memory (+ fp (- 3))))))",
+        "  (and a!1",
+        "       a!2",
+        "       (or a!3 a!4)",
+        "       (< 0 (memory (+ fp (- 3))))",
+        "       a!5",
+        "       a!6",
+        "       a!7",
+        "       (>= 10633823966279326983230456482242756608 a!8)",
+        "       (< a!9 (* 340282366920938463463374607431768211456 a!8))))"
+      ],
+      "storage_update": {
+        "__main__.account_balance": [
+          {
+            "arguments": [
+              [
+                "(memory (+ fp (- 6)))"
+              ],
+              [
+                "(memory (+ fp (- 5)))"
+              ]
+            ],
+            "value": [
+              "(- (__main__.account_balance (memory (+ fp (- 6))) (memory (+ fp (- 5))))",
+              "   (memory (+ fp (- 3))))"
+            ]
+          },
+          {
+            "arguments": [
+              [
+                "(memory (+ fp (- 6)))"
+              ],
+              [
+                "(memory (+ fp (- 4)))"
+              ]
+            ],
+            "value": [
+              "(+ (__main__.account_balance (memory (+ fp (- 6))) (memory (+ fp (- 4))))",
+              "   (memory (+ ap (- 2))))"
+            ]
+          }
+        ],
+        "__main__.pool_balance": [
+          {
+            "arguments": [
+              [
+                "(memory (+ fp (- 5)))"
+              ]
+            ],
+            "value": [
+              "(+ (__main__.pool_balance (memory (+ fp (- 5)))) (memory (+ fp (- 3))))"
+            ]
+          },
+          {
+            "arguments": [
+              [
+                "(memory (+ fp (- 4)))"
+              ]
+            ],
+            "value": [
+              "(- (__main__.pool_balance (memory (+ fp (- 4)))) (memory (+ ap (- 2))))"
+            ]
+          }
+        ]
+      }
+    },
+    "__main__.get_account_token_balance": {
+      "decls": {
+        "__main__.account_balance": 2
+      },
+      "logical_variables": {},
+      "post": [
+        "(= (memory (+ ap (- 1)))",
+        "   (__main__.account_balance (memory (+ fp (- 4))) (memory (+ fp (- 3)))))"
+      ],
+      "pre": [
+        "(or (= 1 (memory (+ fp (- 3)))) (= 2 (memory (+ fp (- 3)))))"
+      ],
+      "storage_update": {}
+    },
+    "__main__.get_opposite_token": {
+      "decls": {},
+      "logical_variables": {},
+      "post": [
+        "(let ((a!1 (=> (= 1 (memory (+ fp (- 3)))) (= 2 (memory (+ ap (- 1))))))",
+        "      (a!2 (not (= 1 (memory (+ fp (- 3)))))))",
+        "(let ((a!3 (=> a!2 (= 1 (memory (+ ap (- 1)))))))",
+        "  (and a!1 a!3)))"
+      ],
+      "pre": [
+        "true"
+      ],
+      "storage_update": {}
+    },
+    "__main__.get_pool_token_balance": {
+      "decls": {
+        "__main__.pool_balance": 1
+      },
+      "logical_variables": {},
+      "post": [
+        "(= (memory (+ ap (- 1))) (__main__.pool_balance (memory (+ fp (- 3)))))"
+      ],
+      "pre": [
+        "(or (= 1 (memory (+ fp (- 3)))) (= 2 (memory (+ fp (- 3)))))"
+      ],
+      "storage_update": {}
+    },
+    "__main__.init_pool": {
+      "decls": {},
+      "logical_variables": {},
+      "post": [
+        "true"
+      ],
+      "pre": [
+        "true"
+      ],
+      "storage_update": {
+        "__main__.pool_balance": [
+          {
+            "arguments": [
+              [
+                "1"
+              ]
+            ],
+            "value": [
+              "(memory (+ fp (- 4)))"
+            ]
+          },
+          {
+            "arguments": [
+              [
+                "2"
+              ]
+            ],
+            "value": [
+              "(memory (+ fp (- 3)))"
+            ]
+          }
+        ]
+      }
+    },
+    "__main__.modify_account_balance": {
+      "decls": {},
+      "logical_variables": {},
+      "post": [
+        "true"
+      ],
+      "pre": [
+        "(or (= 1 (memory (+ fp (- 4)))) (= 2 (memory (+ fp (- 4)))))"
+      ],
+      "storage_update": {
+        "__main__.account_balance": [
+          {
+            "arguments": [
+              [
+                "(memory (+ fp (- 5)))"
+              ],
+              [
+                "(memory (+ fp (- 4)))"
+              ]
+            ],
+            "value": [
+              "(+ (__main__.account_balance (memory (+ fp (- 5))) (memory (+ fp (- 4))))",
+              "   (memory (+ fp (- 3))))"
+            ]
+          }
+        ]
+      }
+    },
+    "__main__.set_pool_token_balance": {
+      "decls": {},
+      "logical_variables": {},
+      "post": [
+        "true"
+      ],
+      "pre": [
+        "(or (= 1 (memory (+ fp (- 4)))) (= 2 (memory (+ fp (- 4)))))"
+      ],
+      "storage_update": {
+        "__main__.pool_balance": [
+          {
+            "arguments": [
+              [
+                "(memory (+ fp (- 4)))"
+              ]
+            ],
+            "value": [
+              "(memory (+ fp (- 3)))"
+            ]
+          }
+        ]
+      }
+    },
+    "__main__.swap": {
+      "decls": {
+        "$token_to": 0,
+        "__main__.account_balance": 2,
+        "__main__.pool_balance": 1
+      },
+      "logical_variables": {
+        "$token_to": "felt"
+      },
+      "post": [
+        "true"
+      ],
+      "pre": [
+        "(let ((a!1 (< (memory (+ fp (- 3)))",
+        "              (__main__.account_balance",
+        "                (memory (+ fp (- 5)))",
+        "                (memory (+ fp (- 4))))))",
+        "      (a!2 (<= 0 (__main__.pool_balance (memory (+ fp (- 4))))))",
+        "      (a!3 (+ (__main__.pool_balance (memory (+ fp (- 4))))",
+        "              (memory (+ fp (- 3))))))",
+        "(let ((a!4 (< (* (__main__.pool_balance $token_to) (memory (+ fp (- 3))))",
+        "              (* 340282366920938463463374607431768211456 a!3))))",
+        "  (and (= 1 (memory (+ fp (- 4))))",
+        "       (= 2 $token_to)",
+        "       (< 0 (memory (+ fp (- 3))))",
+        "       a!1",
+        "       (< 0 (__main__.pool_balance $token_to))",
+        "       a!2",
+        "       (<= 0 (__main__.pool_balance $token_to))",
+        "       (>= 10633823966279326983230456482242756608 a!3)",
+        "       a!4)))"
+      ],
+      "storage_update": {
+        "__main__.account_balance": [
+          {
+            "arguments": [
+              [
+                "(memory (+ fp (- 5)))"
+              ],
+              [
+                "(memory (+ fp (- 4)))"
+              ]
+            ],
+            "value": [
+              "(- (__main__.account_balance (memory (+ fp (- 5))) (memory (+ fp (- 4))))",
+              "   (memory (+ fp (- 3))))"
+            ]
+          },
+          {
+            "arguments": [
+              [
+                "(memory (+ fp (- 5)))"
+              ],
+              [
+                "$token_to"
+              ]
+            ],
+            "value": [
+              "(+ (__main__.account_balance (memory (+ fp (- 5))) $token_to)",
+              "   (memory (+ ap (- 1))))"
+            ]
+          }
+        ],
+        "__main__.pool_balance": [
+          {
+            "arguments": [
+              [
+                "(memory (+ fp (- 4)))"
+              ]
+            ],
+            "value": [
+              "(+ (__main__.pool_balance (memory (+ fp (- 4)))) (memory (+ fp (- 3))))"
+            ]
+          },
+          {
+            "arguments": [
+              [
+                "$token_to"
+              ]
+            ],
+            "value": [
+              "(- (__main__.pool_balance $token_to) (memory (+ ap (- 1))))"
+            ]
+          }
+        ]
+      }
+    },
+    "math.assert_le": {
+      "decls": {},
+      "logical_variables": {},
+      "post": [
+        "(let ((a!1 (<= 0 (- (memory (+ fp (- 3))) (memory (+ fp (- 4))))))",
+        "      (a!2 (> 340282366920938463463374607431768211456",
+        "              (- (memory (+ fp (- 3))) (memory (+ fp (- 4)))))))",
+        "  (and a!1 a!2))"
+      ],
+      "pre": [
+        "true"
+      ],
+      "storage_update": {}
+    },
+    "math.assert_nn": {
+      "decls": {},
+      "logical_variables": {},
+      "post": [
+        "(and (<= 0 (memory (+ fp (- 3))))",
+        "     (> 340282366920938463463374607431768211456 (memory (+ fp (- 3)))))"
+      ],
+      "pre": [
+        "true"
+      ],
+      "storage_update": {}
+    },
+    "math.assert_nn_le": {
+      "decls": {},
+      "logical_variables": {},
+      "post": [
+        "(and (<= 0 (memory (+ fp (- 4))))",
+        "     (<= (memory (+ fp (- 4))) (memory (+ fp (- 3)))))"
+      ],
+      "pre": [
+        "(> 340282366920938463463374607431768211456 (memory (+ fp (- 3))))"
+      ],
+      "storage_update": {}
+    },
+    "math.unsigned_div_rem": {
+      "decls": {},
+      "logical_variables": {},
+      "post": [
+        "(let ((a!1 (+ (* (memory (+ ap (- 2))) (memory (+ fp (- 3))))",
+        "              (memory (+ ap (- 1))))))",
+        "  (and (<= 0 (memory (+ ap (- 2))))",
+        "       (> 340282366920938463463374607431768211456 (memory (+ ap (- 2))))",
+        "       (<= 0 (memory (+ ap (- 1))))",
+        "       (< (memory (+ ap (- 1))) (memory (+ fp (- 3))))",
+        "       (= (memory (+ fp (- 4))) a!1)))"
+      ],
+      "pre": [
+        "(let ((a!1 (< (memory (+ fp (- 4)))",
+        "              (* 340282366920938463463374607431768211456 (memory (+ fp (- 3)))))))",
+        "  (and (< 0 (memory (+ fp (- 3))))",
+        "       (>= 10633823966279326983230456482242756608 (memory (+ fp (- 3))))",
+        "       a!1))"
+      ],
+      "storage_update": {}
+    }
+  },
+  "storage_vars": {
+    "__main__.account_balance": 2,
+    "__main__.pool_balance": 1
+  }
+}
