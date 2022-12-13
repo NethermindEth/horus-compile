@@ -13,7 +13,12 @@ from starkware.cairo.lang.compiler.ast.code_elements import (
     CodeElementScoped,
 )
 from starkware.cairo.lang.compiler.error_handling import Location
-from starkware.cairo.lang.compiler.identifier_definition import StructDefinition
+from starkware.cairo.lang.compiler.identifier_definition import (
+    FunctionDefinition,
+    FutureIdentifierDefinition,
+    LabelDefinition,
+    StructDefinition,
+)
 from starkware.cairo.lang.compiler.identifier_utils import get_struct_definition
 from starkware.cairo.lang.compiler.resolve_search_result import resolve_search_result
 from starkware.cairo.lang.compiler.scoped_name import ScopedName
@@ -56,6 +61,9 @@ class HorusPreprocessor(StarknetPreprocessor):
         self.current_checks: list[CodeElementAnnotation] = []
         self.current_function = None
 
+        # Used for dummy labels
+        self.current_fresh_index: int = 0
+
     def get_program(self) -> HorusProgram:
         starknet_program = super().get_program()
 
@@ -87,6 +95,44 @@ class HorusPreprocessor(StarknetPreprocessor):
         return super().visit_CodeBlock(code_block)
 
     def visit_AnnotatedCodeElement(self, annotated_code_element: AnnotatedCodeElement):
+        if isinstance(annotated_code_element.annotation, CodeElementCheck):
+            if (
+                annotated_code_element.annotation.check_kind
+                == CodeElementCheck.CheckKind.ASSERT
+            ):
+
+                if not isinstance(
+                    self.identifiers.get_by_full_name(self.current_scope),
+                    FunctionDefinition,
+                ):
+                    raise (
+                        PreprocessorError(
+                            f"Cannot use @assert annotation outside of a function.",
+                            location=annotated_code_element.annotation.location,
+                        )
+                    )
+
+                name = f"!dummy_label_{self.current_fresh_index}"
+                self.current_fresh_index += 1
+                self.identifiers.add_identifier(
+                    name=self.current_scope + name,
+                    definition=FutureIdentifierDefinition(
+                        identifier_type=LabelDefinition
+                    ),
+                )
+                self.add_label(ExprIdentifier(name))
+                z3_transformer = Z3Transformer(
+                    self.identifiers,
+                    self,
+                    self.logical_identifiers,
+                    self.storage_vars,
+                    is_post=False,
+                )
+                expr = z3_transformer.visit(annotated_code_element.annotation.formula)
+                self.invariants[self.current_scope + name] = expr
+
+                return self.visit(annotated_code_element.code_elm)
+
         result = self.visit(annotated_code_element.code_elm)
         self.current_checks.append(annotated_code_element.annotation)
         return result
