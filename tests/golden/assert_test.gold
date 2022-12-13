@@ -1,0 +1,9 @@
+{
+  "invariants": {
+    "__main__.main.!dummy_label_0": [
+      "(= 1 (memory ap))"
+    ]
+  },
+  "specifications": {},
+  "storage_vars": {}
+}
