@@ -269,22 +269,30 @@ def main(args):
         conflict_handler="resolve",
     )
     parser.add_argument(
-        "--abi", type=argparse.FileType("w"), help="Output the contract's ABI."
+        "--abi",
+        type=argparse.FileType("w"),
+        help=(
+            "Dump the contract's ABI (application binary interface) to a file. "
+            "This is a JSON list containing metadata (like type signatures and members) "
+            "on functions, structs, and other things within the program."
+        ),
     )
     parser.add_argument(
         "--disable_hint_validation",
         action="store_true",
-        help="Disable the hint validation.",
+        help="Disable the hint validation, which ordinarily checks program hints against a whitelist.",
     )
     parser.add_argument(
-        "--account_contract", action="store_true", help="Compile as account contract."
+        "--account_contract",
+        action="store_true",
+        help="Compile as account contract, which means the ABI will be checked for expected builtin entry points.",
     )
     parser.add_argument(
         "--dont_filter_identifiers",
         dest="filter_identifiers",
         action="store_false",
         help=(
-            "Disable the filter-identifiers-optimization."
+            "Disable the filter-identifiers-optimization. "
             "If True, all the identifiers will be kept, instead of just the ones mentioned in "
             "hints or 'with_attr' statements."
         ),
