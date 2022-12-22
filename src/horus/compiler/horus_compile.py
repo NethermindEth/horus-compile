@@ -13,12 +13,12 @@ import starkware.cairo.lang.compiler.ast.visitor
 import starkware.cairo.lang.compiler.parser
 import starkware.cairo.lang.compiler.preprocessor.preprocess_codes
 import starkware.cairo.lang.version
+from starkware.cairo.lang.cairo_constants import DEFAULT_PRIME
 from starkware.cairo.lang.compiler.ast.code_elements import CodeElementFunction
 from starkware.cairo.lang.compiler.cairo_compile import (
     LIBS_DIR_ENVVAR,
     MAIN_SCOPE,
     START_FILE_NAME,
-    cairo_compile_add_common_args,
     generate_cairo_dependencies_file,
     get_codes,
     get_module_reader,
@@ -263,31 +263,89 @@ def horus_compile_common(
             )
 
 
+def cairo_compile_add_common_args(parser: argparse.ArgumentParser):
+    parser.add_argument(
+        "files",
+        metavar="file",
+        type=str,
+        nargs="+",
+        help="One or more Cairo programs to compile.",
+    )
+    parser.add_argument(
+        "--prime",
+        type=int,
+        default=DEFAULT_PRIME,
+        help="The positive integer size of the finite field. This is a (usually large) prime power over which basic arithmetic within the program is carried out.",
+    )
+    parser.add_argument(
+        "--cairo_path",
+        type=str,
+        default="",
+        help=(
+            'A list of directories, separated by ":" to resolve import paths. '
+            "The full list will consist of directories defined by this argument, followed by "
+            f"the environment variable {LIBS_DIR_ENVVAR}, the working directory and the standard "
+            "library path."
+        ),
+    )
+    parser.add_argument(
+        "--preprocess",
+        action="store_true",
+        help="Stop after the preprocessor step and output the preprocessed program, which consists only of low-level Cairo (e.g. frame pointer and allocation pointer manipulations) along with annotations indicating relevant source code locations.",
+    )
+    parser.add_argument(
+        "--output",
+        type=argparse.FileType("w"),
+        help="The output file name (default: stdout).",
+    )
+    parser.add_argument(
+        "--no_debug_info",
+        dest="debug_info",
+        action="store_false",
+        help="Don't include debug information in the compiled file. Removes the 'debug_info' field from the JSON output, which by default contains an 'instruction_locations' map with information on flow tracking data, hints, accessible scopes, and source code location.",
+    )
+    parser.add_argument(
+        "--debug_info_with_source",
+        action="store_true",
+        help="Dump the source code of all relevant .cairo files into a 'file_contents' field in the 'debug_info' of the JSON output.",
+    )
+    parser.add_argument(
+        "--cairo_dependencies",
+        type=str,
+        help="Path to dump a list of the Cairo source files used during the compilation as a CMake file.",
+    )
+    parser.add_argument(
+        "--no_opt_unused_functions",
+        dest="opt_unused_functions",
+        action="store_false",
+        default=True,
+        help="Disable unused function optimization, which ordinarily only compiles functions reachable from the main scope in the dependency graph, i.e. functions that are actually called.",
+    )
+
+
 def main(args):
     parser = argparse.ArgumentParser(
         description="A tool to compile checked StarkNet contracts.",
         conflict_handler="resolve",
     )
     parser.add_argument(
-        "--abi", type=argparse.FileType("w"), help="Output the contract's ABI."
+        "--abi",
+        type=argparse.FileType("w"),
+        help=(
+            "Dump the contract's ABI (application binary interface) to a file. "
+            "This is a JSON list containing metadata (like type signatures and members) "
+            "on functions, structs, and other things within the program."
+        ),
     )
     parser.add_argument(
         "--disable_hint_validation",
         action="store_true",
-        help="Disable the hint validation.",
+        help="Disable the hint validation, which ordinarily checks program hints against a whitelist.",
     )
     parser.add_argument(
-        "--account_contract", action="store_true", help="Compile as account contract."
-    )
-    parser.add_argument(
-        "--dont_filter_identifiers",
-        dest="filter_identifiers",
-        action="store_false",
-        help=(
-            "Disable the filter-identifiers-optimization."
-            "If True, all the identifiers will be kept, instead of just the ones mentioned in "
-            "hints or 'with_attr' statements."
-        ),
+        "--account_contract",
+        action="store_true",
+        help="Compile as account contract, which means the ABI will be checked for expected builtin entry points.",
     )
 
     def pass_manager_factory(
