@@ -1,0 +1,32 @@
+{
+  "invariants": {},
+  "specifications": {
+    "__main__.main": {
+      "decls": {},
+      "logical_variables": {},
+      "post": [
+        "(= 1337 (memory (+ ap (- 1))))"
+      ],
+      "pre": [
+        "true"
+      ],
+      "storage_update": {
+        "__main__.balance": [
+          {
+            "arguments": [
+              [
+                "10"
+              ]
+            ],
+            "value": [
+              "(+ (__main__.balance 10) 1)"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "storage_vars": {
+    "__main__.balance": 1
+  }
+}

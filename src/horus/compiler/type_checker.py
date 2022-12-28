@@ -3,6 +3,7 @@ from __future__ import annotations
 import dataclasses
 from typing import Optional, Tuple
 
+from starkware.cairo.lang.compiler.ast.arguments import IdentifierList
 from starkware.cairo.lang.compiler.ast.cairo_types import (
     CairoType,
     TypeFelt,
@@ -77,11 +78,13 @@ class HorusTypeChecker(TypeSystemVisitor):
         accessible_scopes: Optional[list[ScopedName]] = None,
         identifiers: Optional[IdentifierManager] = None,
         logical_identifiers: dict[str, CairoType] = {},
+        storage_vars: dict[ScopedName, IdentifierList] = {},
     ):
         super().__init__(identifiers)
         self.accessible_scopes = accessible_scopes
         self.identifiers = identifiers
         self.logical_identifiers = logical_identifiers
+        self.storage_vars = storage_vars
 
     def visit(self, expr: Expression) -> tuple[Expression, CairoType]:
         return super().visit(expr)  # type: ignore
@@ -225,6 +228,55 @@ class HorusTypeChecker(TypeSystemVisitor):
                         location=expr.location,
                     )
 
+                if len(expr.rvalue.arguments.args) != len(
+                    self.storage_vars[search_result.canonical_name].identifiers
+                ):
+                    raise CairoTypeError(
+                        f"Storage var {search_result.canonical_name} has {len(self.storage_vars[search_result.canonical_name].identifiers)} arguments. Provided {len(expr.rvalue.arguments.args)}",
+                        location=expr.location,
+                    )
+
+                args_signature = self.storage_vars[
+                    search_result.canonical_name
+                ].identifiers.copy()
+                is_named = False
+                for arg in expr.rvalue.arguments.args:
+                    assert isinstance(arg, ExprAssignment)
+
+                    if arg.identifier is None:
+                        if is_named:
+                            raise CairoTypeError(
+                                "Unnamed argument cannot follow named ones",
+                                location=arg.location,
+                            )
+
+                        found_arg = args_signature.pop(0)
+                    else:
+                        is_named = True
+                        found_arg = next(
+                            (
+                                x
+                                for x in args_signature
+                                if arg.identifier.name == x.identifier.name
+                            ),
+                            None,
+                        )
+                        if found_arg is None:
+                            raise CairoTypeError(
+                                f"Unknown argument {arg.identifier.name}",
+                                location=arg.identifier.location,
+                            )
+
+                        args_signature.remove(found_arg)
+
+                    _, arg_type = self.visit(arg.expr)
+
+                    if arg_type != found_arg.expr_type:
+                        raise CairoTypeError(
+                            f"The argument is expected to have type {found_arg.expr_type}",
+                            location=arg.expr.location,
+                        )
+
                 return expr, ret_type_def.cairo_type.members[0].typ
             except MissingIdentifierError as e:
                 # Failed to find the storage variable stuff.
@@ -284,15 +336,6 @@ class HorusSubstituteIdentifiers(SubstituteIdentifiers):
         try:
             rvalue = expr.rvalue
             _ = self.get_identifier_callback(rvalue.func_ident)
-            replaced = super().visit_ExprFuncCall(
-                dataclasses.replace(
-                    expr,
-                    rvalue=dataclasses.replace(
-                        expr.rvalue,
-                        func_ident=ExprIdentifier(f"{rvalue.func_ident.name}.read"),
-                    ),
-                )
-            )
 
             new_args = []
             for arg in rvalue.arguments.args:
@@ -300,16 +343,11 @@ class HorusSubstituteIdentifiers(SubstituteIdentifiers):
                 new_expr = self.visit(arg.expr)
                 new_args.append(dataclasses.replace(arg, expr=new_expr))
 
-            replaced.rvalue.arguments = dataclasses.replace(
-                replaced.rvalue.arguments, args=new_args
+            expr.rvalue.arguments = dataclasses.replace(
+                expr.rvalue.arguments, args=new_args
             )
 
-            return dataclasses.replace(
-                replaced,
-                rvalue=dataclasses.replace(
-                    replaced.rvalue, func_ident=ExprIdentifier(rvalue.func_ident.name)
-                ),
-            )
+            return expr
         except CairoTypeError:
             return super().visit_ExprFuncCall(expr)
 
@@ -336,6 +374,7 @@ def simplify_and_get_type(
     expr: Expression,
     preprocessor: Preprocessor,
     logical_identifiers: dict[str, CairoType],
+    storage_vars: dict[ScopedName, IdentifierList],
     is_post: bool,
 ) -> tuple[Expression, CairoType]:
     def get_identifier(expr: ExprIdentifier):
@@ -433,6 +472,7 @@ def simplify_and_get_type(
         preprocessor.accessible_scopes,
         preprocessor.identifiers,
         logical_identifiers,
+        storage_vars,
     ).visit(expr)
     expr_type = preprocessor.resolve_type(expr_type)
     expr = ExpressionSimplifier(prime=FIELD_PRIME).visit(expr)
@@ -444,6 +484,9 @@ def simplify(
     expr: Expression,
     preprocessor: Preprocessor,
     logical_identifiers: dict[str, CairoType],
+    storage_vars: dict[ScopedName, IdentifierList],
     is_post: bool,
 ) -> Expression:
-    return simplify_and_get_type(expr, preprocessor, logical_identifiers, is_post)[0]
+    return simplify_and_get_type(
+        expr, preprocessor, logical_identifiers, storage_vars, is_post
+    )[0]

@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from typing import Optional
 
 import z3
+from starkware.cairo.lang.compiler.ast.arguments import IdentifierList
 from starkware.cairo.lang.compiler.ast.code_elements import (
     CodeBlock,
     CodeElement,
@@ -49,7 +50,7 @@ class HorusProgram(StarknetPreprocessedProgram):
 
 class HorusPreprocessor(StarknetPreprocessor):
     def __init__(self, **kwargs):
-        self.storage_vars = kwargs.pop("storage_vars")
+        self.storage_vars: dict[ScopedName, IdentifierList] = kwargs.pop("storage_vars")
         super().__init__(**kwargs)
         self.specifications: dict[ScopedName, FunctionAnnotations] = {}
         self.invariants: dict[ScopedName, z3.BoolRef] = {}
@@ -77,12 +78,12 @@ class HorusPreprocessor(StarknetPreprocessor):
 
         storage_vars: dict[ScopedName, int] = {}
 
-        for storage_var in self.storage_vars:
-            storage_vars[storage_var] = self.get_size(
-                TypeStruct(
-                    self.identifiers.get(storage_var + "read" + "Args").canonical_name,
-                )
-            )
+        for storage_var, args in self.storage_vars.items():
+            size = 0
+            for arg in args.identifiers:
+                size += self.get_size(arg.expr_type)
+
+            storage_vars[storage_var] = size
 
         return HorusProgram(
             **starknet_program.__dict__,
@@ -251,7 +252,11 @@ class HorusPreprocessor(StarknetPreprocessor):
                 )
 
             arg_expr, arg_type = simplify_and_get_type(
-                arg.expr, self, self.logical_identifiers, is_post=True
+                arg.expr,
+                self,
+                self.logical_identifiers,
+                self.storage_vars,
+                is_post=True,
             )
 
             if not isinstance(arg_type, TypeFelt):
@@ -268,7 +273,13 @@ class HorusPreprocessor(StarknetPreprocessor):
         storage_update = StorageUpdate(
             args,
             z3_expr_transformer.visit(
-                simplify(decl.value, self, self.logical_identifiers, is_post=True)
+                simplify(
+                    decl.value,
+                    self,
+                    self.logical_identifiers,
+                    self.storage_vars,
+                    is_post=True,
+                )
             ),
         )
         storage_updates.append(storage_update)
