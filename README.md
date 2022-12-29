@@ -1,12 +1,19 @@
-# Installation
+## Introduction
+
+This is the compiler for the Horus formal verification tool. See the [main
+repository](https://github.com/NethermindEth/horus-checker) for full
+documentation.
+
+## Installation
+
+Make sure you have Python 3 installed, and run:
 
 ```console
 pip install git+https://github.com/NethermindEth/horus-compile.git@master
 ```
 
-# Usage
+## Usage
 
-### `horus-compile`
 ```console
 horus-compile [-h] [--abi ABI] [--disable_hint_validation]
               [--account_contract] [--prime PRIME]
