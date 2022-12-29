@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Optional
 
 import z3
+from starkware.cairo.lang.compiler.ast.arguments import IdentifierList
 from starkware.cairo.lang.compiler.ast.bool_expr import BoolEqExpr
 from starkware.cairo.lang.compiler.ast.cairo_types import (
     CairoType,
@@ -76,6 +77,8 @@ class Z3ExpressionTransformer(IdentifierAwareVisitor):
         self.prime = z3.Int(PRIME_CONST_NAME)
         self.memory = z3.Function(MEMORY_MAP_NAME, z3.IntSort(), z3.IntSort())
         self.z3_transformer = z3_transformer
+        if z3_transformer is not None:
+            self.storage_vars = z3_transformer.storage_vars
         super().__init__(identifiers)
 
     def visit_ExprConst(self, expr: ExprConst):
@@ -255,15 +258,15 @@ class Z3Transformer(IdentifierAwareVisitor):
         identifiers: IdentifierManager,
         preprocessor: Preprocessor,
         logical_identifiers: dict[str, CairoType],
-        storage_vars: set[ScopedName],
+        storage_vars: dict[ScopedName, IdentifierList],
         is_post: bool = False,
     ):
         super().__init__(identifiers)
         self.preprocessor = preprocessor
-        self.z3_expression_transformer = Z3ExpressionTransformer(identifiers, self)
         self.logical_identifiers = logical_identifiers
         self.is_post = is_post
         self.storage_vars = storage_vars
+        self.z3_expression_transformer = Z3ExpressionTransformer(identifiers, self)
 
     def visit(self, formula: BoolFormula):
         funcname = f"visit_{type(formula).__name__}"
@@ -284,6 +287,7 @@ class Z3Transformer(IdentifierAwareVisitor):
                         member.expr,
                         self.preprocessor,
                         self.logical_identifiers,
+                        self.storage_vars,
                         self.is_post,
                     )
 
@@ -309,6 +313,7 @@ class Z3Transformer(IdentifierAwareVisitor):
                             member_a,
                             self.preprocessor,
                             self.logical_identifiers,
+                            self.storage_vars,
                             self.is_post,
                         ),
                         self.identifiers,
@@ -318,6 +323,7 @@ class Z3Transformer(IdentifierAwareVisitor):
                             member_b,
                             self.preprocessor,
                             self.logical_identifiers,
+                            self.storage_vars,
                             self.is_post,
                         ),
                         self.identifiers,
@@ -355,6 +361,7 @@ class Z3Transformer(IdentifierAwareVisitor):
                             member_a,
                             self.preprocessor,
                             self.logical_identifiers,
+                            self.storage_vars,
                             self.is_post,
                         ),
                         self.identifiers,
@@ -364,6 +371,7 @@ class Z3Transformer(IdentifierAwareVisitor):
                             member_b,
                             self.preprocessor,
                             self.logical_identifiers,
+                            self.storage_vars,
                             self.is_post,
                         ),
                         self.identifiers,
@@ -390,10 +398,18 @@ class Z3Transformer(IdentifierAwareVisitor):
 
     def visit_BoolEqExpr(self, bool_expr: BoolEqExpr):
         a, a_type = simplify_and_get_type(
-            bool_expr.a, self.preprocessor, self.logical_identifiers, self.is_post
+            bool_expr.a,
+            self.preprocessor,
+            self.logical_identifiers,
+            self.storage_vars,
+            self.is_post,
         )
         b, b_type = simplify_and_get_type(
-            bool_expr.b, self.preprocessor, self.logical_identifiers, self.is_post
+            bool_expr.b,
+            self.preprocessor,
+            self.logical_identifiers,
+            self.storage_vars,
+            self.is_post,
         )
         assert a_type == b_type, "Types of lhs and rhs must coincide"
 
@@ -413,10 +429,18 @@ class Z3Transformer(IdentifierAwareVisitor):
 
     def visit_BoolExprCompare(self, formula: BoolExprCompare):
         a, a_type = simplify_and_get_type(
-            formula.a, self.preprocessor, self.logical_identifiers, self.is_post
+            formula.a,
+            self.preprocessor,
+            self.logical_identifiers,
+            self.storage_vars,
+            self.is_post,
         )
         b, b_type = simplify_and_get_type(
-            formula.b, self.preprocessor, self.logical_identifiers, self.is_post
+            formula.b,
+            self.preprocessor,
+            self.logical_identifiers,
+            self.storage_vars,
+            self.is_post,
         )
 
         assert a_type == b_type, "Types of lhs and rhs must coincide"

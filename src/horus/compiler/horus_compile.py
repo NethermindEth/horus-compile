@@ -14,6 +14,7 @@ import starkware.cairo.lang.compiler.parser
 import starkware.cairo.lang.compiler.preprocessor.preprocess_codes
 import starkware.cairo.lang.version
 from starkware.cairo.lang.cairo_constants import DEFAULT_PRIME
+from starkware.cairo.lang.compiler.ast.arguments import IdentifierList
 from starkware.cairo.lang.compiler.ast.code_elements import CodeElementFunction
 from starkware.cairo.lang.compiler.cairo_compile import (
     LIBS_DIR_ENVVAR,
@@ -70,7 +71,7 @@ def assemble_horus_contract(
 class HorusStorageVarDeclVisitor(IdentifierAwareVisitor):
     def __init__(
         self,
-        storage_vars: set[ScopedName],
+        storage_vars: dict[ScopedName, IdentifierList],
         identifiers: Optional[IdentifierManager] = None,
     ):
         self.storage_vars = storage_vars
@@ -84,7 +85,7 @@ class HorusStorageVarDeclVisitor(IdentifierAwareVisitor):
             elm=elm, decorator_name=STORAGE_VAR_DECORATOR
         )
         if is_storage_var:
-            self.storage_vars.add(self.current_scope + elm.name)
+            self.storage_vars[self.current_scope + elm.name] = elm.arguments
         return elm
 
 
@@ -130,7 +131,9 @@ def horus_pass_manager(
 
 @dataclasses.dataclass
 class HorusPassManagerContext(PassManagerContext):
-    storage_vars: set[ScopedName] = dataclasses.field(default_factory=set)
+    storage_vars: dict[ScopedName, IdentifierList] = dataclasses.field(
+        default_factory=dict
+    )
 
 
 class HorusPreprocessorStage(PreprocessorStage):
