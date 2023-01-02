@@ -461,10 +461,10 @@ def simplify_and_get_type(
             f'Cannot obtain identifier "{expr.name}". Expected a reference but got "{definition.TYPE}"',
             location=expr.location,
             notes=[
-                "hint: Did you try to reference a local variable in a '@pre' condition?",
+                "\033[33mhint: Did you try to reference a local variable in a '@pre' condition?",
                 "hint: Local variables cannot be referenced in '@pre' or '@post'.",
                 "hint:",
-                "hint: Try using an '@assert' within the function body.",
+                "hint: Try using an '@assert' within the function body.\033[0m",
             ],
         )
 
