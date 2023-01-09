@@ -1,8 +1,13 @@
 {
   "invariants": {
-    "__main__.main.!dummy_label_0": [
-      "(= 1 (memory ap))"
-    ]
+    "__main__.main.!dummy_label_0": {
+      "sexpr": [
+        "(= 1 (memory ap))"
+      ],
+      "source": [
+        "[ap] == 1"
+      ]
+    }
   },
   "specifications": {},
   "storage_vars": {}

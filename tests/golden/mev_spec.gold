@@ -1,20 +1,33 @@
 {
   "invariants": {
-    "__main__.main.loop": [
-      "(let ((a!1 (* 2 (- 123456789987654321 (memory (+ ap (- 2)))))))",
-      "  (= (memory (+ ap (- 1))) a!1))"
-    ]
+    "__main__.main.loop": {
+      "sexpr": [
+        "(let ((a!1 (* 2 (- 123456789987654321 (memory (+ ap (- 2)))))))",
+        "  (= (memory (+ ap (- 1))) a!1))"
+      ],
+      "source": [
+        "[ap - 1] == 2 * (123456789987654321 - [ap - 2])"
+      ]
+    }
   },
   "specifications": {
     "__main__.main": {
       "decls": {},
       "logical_variables": {},
-      "post": [
-        "(= 246913579975308642 (memory (+ ap (- 1))))"
-      ],
-      "pre": [
-        "true"
-      ],
+      "post": {
+        "sexpr": [
+          "(= 246913579975308642 (memory (+ ap (- 1))))"
+        ],
+        "source": [
+          "[ap - 1] == 2 * 123456789987654321"
+        ]
+      },
+      "pre": {
+        "sexpr": [
+          "true"
+        ],
+        "source": []
+      },
       "storage_update": {}
     }
   },

@@ -4,12 +4,18 @@
     "__main__.add_demo_token": {
       "decls": {},
       "logical_variables": {},
-      "post": [
-        "true"
-      ],
-      "pre": [
-        "true"
-      ],
+      "post": {
+        "sexpr": [
+          "true"
+        ],
+        "source": []
+      },
+      "pre": {
+        "sexpr": [
+          "true"
+        ],
+        "source": []
+      },
       "storage_update": {
         "__main__.account_balance": [
           {
@@ -21,6 +27,7 @@
                 "1"
               ]
             ],
+            "source": "account_balance(account_id, TOKEN_TYPE_A) := account_balance(account_id, TOKEN_TYPE_A) + token_a_amount",
             "value": [
               "(+ (__main__.account_balance (memory (+ fp (- 5))) 1) (memory (+ fp (- 4))))"
             ]
@@ -34,6 +41,7 @@
                 "2"
               ]
             ],
+            "source": "account_balance(account_id, TOKEN_TYPE_B) := account_balance(account_id, TOKEN_TYPE_B) + token_b_amount",
             "value": [
               "(+ (__main__.account_balance (memory (+ fp (- 5))) 2) (memory (+ fp (- 3))))"
             ]
@@ -52,39 +60,56 @@
         "$old_pool_balance_from": "felt",
         "$old_pool_balance_to": "felt"
       },
-      "post": [
-        "(let ((a!1 (* (memory (+ ap (- 2)))",
-        "              (+ $old_pool_balance_from (memory (+ fp (- 3)))))))",
-        "  (= (* $old_pool_balance_to (memory (+ fp (- 3))))",
-        "     (+ a!1 (memory (+ ap (- 1))))))"
-      ],
-      "pre": [
-        "(let ((a!1 (= (__main__.pool_balance (memory (+ fp (- 5))))",
-        "              $old_pool_balance_from))",
-        "      (a!2 (= (__main__.pool_balance (memory (+ fp (- 4))))",
-        "              $old_pool_balance_to))",
-        "      (a!3 (and (= 1 (memory (+ fp (- 5)))) (= 2 (memory (+ fp (- 4))))))",
-        "      (a!4 (and (= 2 (memory (+ fp (- 5)))) (= 1 (memory (+ fp (- 4))))))",
-        "      (a!5 (< (memory (+ fp (- 3)))",
-        "              (__main__.account_balance",
-        "                (memory (+ fp (- 6)))",
-        "                (memory (+ fp (- 5))))))",
-        "      (a!6 (<= 0 (__main__.pool_balance (memory (+ fp (- 4))))))",
-        "      (a!7 (<= 0 (__main__.pool_balance (memory (+ fp (- 5))))))",
-        "      (a!8 (+ (__main__.pool_balance (memory (+ fp (- 5))))",
-        "              (memory (+ fp (- 3)))))",
-        "      (a!9 (* (__main__.pool_balance (memory (+ fp (- 4))))",
-        "              (memory (+ fp (- 3))))))",
-        "  (and a!1",
-        "       a!2",
-        "       (or a!3 a!4)",
-        "       (< 0 (memory (+ fp (- 3))))",
-        "       a!5",
-        "       a!6",
-        "       a!7",
-        "       (>= 10633823966279326983230456482242756608 a!8)",
-        "       (< a!9 (* 340282366920938463463374607431768211456 a!8))))"
-      ],
+      "post": {
+        "sexpr": [
+          "(let ((a!1 (* (memory (+ ap (- 2)))",
+          "              (+ $old_pool_balance_from (memory (+ fp (- 3)))))))",
+          "  (= (* $old_pool_balance_to (memory (+ fp (- 3))))",
+          "     (+ a!1 (memory (+ ap (- 1))))))"
+        ],
+        "source": [
+          "$old_pool_balance_to * amount_from == $Return.amount_to * ($old_pool_balance_from + amount_from) + $Return.r"
+        ]
+      },
+      "pre": {
+        "sexpr": [
+          "(let ((a!1 (= (__main__.pool_balance (memory (+ fp (- 5))))",
+          "              $old_pool_balance_from))",
+          "      (a!2 (= (__main__.pool_balance (memory (+ fp (- 4))))",
+          "              $old_pool_balance_to))",
+          "      (a!3 (and (= 1 (memory (+ fp (- 5)))) (= 2 (memory (+ fp (- 4))))))",
+          "      (a!4 (and (= 2 (memory (+ fp (- 5)))) (= 1 (memory (+ fp (- 4))))))",
+          "      (a!5 (< (memory (+ fp (- 3)))",
+          "              (__main__.account_balance",
+          "                (memory (+ fp (- 6)))",
+          "                (memory (+ fp (- 5))))))",
+          "      (a!6 (<= 0 (__main__.pool_balance (memory (+ fp (- 4))))))",
+          "      (a!7 (<= 0 (__main__.pool_balance (memory (+ fp (- 5))))))",
+          "      (a!8 (+ (__main__.pool_balance (memory (+ fp (- 5))))",
+          "              (memory (+ fp (- 3)))))",
+          "      (a!9 (* (__main__.pool_balance (memory (+ fp (- 4))))",
+          "              (memory (+ fp (- 3))))))",
+          "  (and a!1",
+          "       a!2",
+          "       (or a!3 a!4)",
+          "       (< 0 (memory (+ fp (- 3))))",
+          "       a!5",
+          "       a!6",
+          "       a!7",
+          "       (>= 10633823966279326983230456482242756608 a!8)",
+          "       (< a!9 (* 340282366920938463463374607431768211456 a!8))))"
+        ],
+        "source": [
+          "pool_balance(token_from) == $old_pool_balance_from",
+          "pool_balance(token_to) == $old_pool_balance_to",
+          "(token_from == TOKEN_TYPE_A and token_to == TOKEN_TYPE_B) or (token_from == TOKEN_TYPE_B and token_to == TOKEN_TYPE_A)",
+          "0 < amount_from and amount_from < account_balance(account_id, token_from)",
+          "pool_balance(token_to) >= 0",
+          "pool_balance(token_from) >= 0",
+          "pool_balance(token_from) + amount_from <= 10633823966279326983230456482242756608",
+          "pool_balance(token_to) * amount_from < 2**128 * (pool_balance(token_from) + amount_from)"
+        ]
+      },
       "storage_update": {
         "__main__.account_balance": [
           {
@@ -96,6 +121,7 @@
                 "(memory (+ fp (- 5)))"
               ]
             ],
+            "source": "account_balance(account_id, token_from) := account_balance(account_id, token_from) - amount_from",
             "value": [
               "(- (__main__.account_balance (memory (+ fp (- 6))) (memory (+ fp (- 5))))",
               "   (memory (+ fp (- 3))))"
@@ -110,6 +136,7 @@
                 "(memory (+ fp (- 4)))"
               ]
             ],
+            "source": "account_balance(account_id, token_to) := account_balance(account_id, token_to) + $Return.amount_to",
             "value": [
               "(+ (__main__.account_balance (memory (+ fp (- 6))) (memory (+ fp (- 4))))",
               "   (memory (+ ap (- 2))))"
@@ -123,6 +150,7 @@
                 "(memory (+ fp (- 5)))"
               ]
             ],
+            "source": "pool_balance(token_from) := pool_balance(token_from) + amount_from",
             "value": [
               "(+ (__main__.pool_balance (memory (+ fp (- 5)))) (memory (+ fp (- 3))))"
             ]
@@ -133,6 +161,7 @@
                 "(memory (+ fp (- 4)))"
               ]
             ],
+            "source": "pool_balance(token_to) := pool_balance(token_to) - $Return.amount_to",
             "value": [
               "(- (__main__.pool_balance (memory (+ fp (- 4)))) (memory (+ ap (- 2))))"
             ]
@@ -145,27 +174,45 @@
         "__main__.account_balance": 2
       },
       "logical_variables": {},
-      "post": [
-        "(= (memory (+ ap (- 1)))",
-        "   (__main__.account_balance (memory (+ fp (- 4))) (memory (+ fp (- 3)))))"
-      ],
-      "pre": [
-        "(or (= 1 (memory (+ fp (- 3)))) (= 2 (memory (+ fp (- 3)))))"
-      ],
+      "post": {
+        "sexpr": [
+          "(= (memory (+ ap (- 1)))",
+          "   (__main__.account_balance (memory (+ fp (- 4))) (memory (+ fp (- 3)))))"
+        ],
+        "source": [
+          "$Return.balance == account_balance(account_id, token_type)"
+        ]
+      },
+      "pre": {
+        "sexpr": [
+          "(or (= 1 (memory (+ fp (- 3)))) (= 2 (memory (+ fp (- 3)))))"
+        ],
+        "source": [
+          "token_type == TOKEN_TYPE_A or token_type == TOKEN_TYPE_B"
+        ]
+      },
       "storage_update": {}
     },
     "__main__.get_opposite_token": {
       "decls": {},
       "logical_variables": {},
-      "post": [
-        "(let ((a!1 (=> (= 1 (memory (+ fp (- 3)))) (= 2 (memory (+ ap (- 1))))))",
-        "      (a!2 (not (= 1 (memory (+ fp (- 3)))))))",
-        "(let ((a!3 (=> a!2 (= 1 (memory (+ ap (- 1)))))))",
-        "  (and a!1 a!3)))"
-      ],
-      "pre": [
-        "true"
-      ],
+      "post": {
+        "sexpr": [
+          "(let ((a!1 (=> (= 1 (memory (+ fp (- 3)))) (= 2 (memory (+ ap (- 1))))))",
+          "      (a!2 (not (= 1 (memory (+ fp (- 3)))))))",
+          "(let ((a!3 (=> a!2 (= 1 (memory (+ ap (- 1)))))))",
+          "  (and a!1 a!3)))"
+        ],
+        "source": [
+          "(token_type == TOKEN_TYPE_A -> $Return.t == TOKEN_TYPE_B) and (token_type != TOKEN_TYPE_A -> $Return.t == TOKEN_TYPE_A)"
+        ]
+      },
+      "pre": {
+        "sexpr": [
+          "true"
+        ],
+        "source": []
+      },
       "storage_update": {}
     },
     "__main__.get_pool_token_balance": {
@@ -173,23 +220,39 @@
         "__main__.pool_balance": 1
       },
       "logical_variables": {},
-      "post": [
-        "(= (memory (+ ap (- 1))) (__main__.pool_balance (memory (+ fp (- 3)))))"
-      ],
-      "pre": [
-        "(or (= 1 (memory (+ fp (- 3)))) (= 2 (memory (+ fp (- 3)))))"
-      ],
+      "post": {
+        "sexpr": [
+          "(= (memory (+ ap (- 1))) (__main__.pool_balance (memory (+ fp (- 3)))))"
+        ],
+        "source": [
+          "$Return.balance == pool_balance(token_type)"
+        ]
+      },
+      "pre": {
+        "sexpr": [
+          "(or (= 1 (memory (+ fp (- 3)))) (= 2 (memory (+ fp (- 3)))))"
+        ],
+        "source": [
+          "token_type == TOKEN_TYPE_A or token_type == TOKEN_TYPE_B"
+        ]
+      },
       "storage_update": {}
     },
     "__main__.init_pool": {
       "decls": {},
       "logical_variables": {},
-      "post": [
-        "true"
-      ],
-      "pre": [
-        "true"
-      ],
+      "post": {
+        "sexpr": [
+          "true"
+        ],
+        "source": []
+      },
+      "pre": {
+        "sexpr": [
+          "true"
+        ],
+        "source": []
+      },
       "storage_update": {
         "__main__.pool_balance": [
           {
@@ -198,6 +261,7 @@
                 "1"
               ]
             ],
+            "source": "pool_balance(TOKEN_TYPE_A) := token_a",
             "value": [
               "(memory (+ fp (- 4)))"
             ]
@@ -208,6 +272,7 @@
                 "2"
               ]
             ],
+            "source": "pool_balance(TOKEN_TYPE_B) := token_b",
             "value": [
               "(memory (+ fp (- 3)))"
             ]
@@ -218,12 +283,20 @@
     "__main__.modify_account_balance": {
       "decls": {},
       "logical_variables": {},
-      "post": [
-        "true"
-      ],
-      "pre": [
-        "(or (= 1 (memory (+ fp (- 4)))) (= 2 (memory (+ fp (- 4)))))"
-      ],
+      "post": {
+        "sexpr": [
+          "true"
+        ],
+        "source": []
+      },
+      "pre": {
+        "sexpr": [
+          "(or (= 1 (memory (+ fp (- 4)))) (= 2 (memory (+ fp (- 4)))))"
+        ],
+        "source": [
+          "token_type == TOKEN_TYPE_A or token_type == TOKEN_TYPE_B"
+        ]
+      },
       "storage_update": {
         "__main__.account_balance": [
           {
@@ -235,6 +308,7 @@
                 "(memory (+ fp (- 4)))"
               ]
             ],
+            "source": "account_balance(account_id, token_type) := account_balance(account_id, token_type) + amount",
             "value": [
               "(+ (__main__.account_balance (memory (+ fp (- 5))) (memory (+ fp (- 4))))",
               "   (memory (+ fp (- 3))))"
@@ -246,12 +320,20 @@
     "__main__.set_pool_token_balance": {
       "decls": {},
       "logical_variables": {},
-      "post": [
-        "true"
-      ],
-      "pre": [
-        "(or (= 1 (memory (+ fp (- 4)))) (= 2 (memory (+ fp (- 4)))))"
-      ],
+      "post": {
+        "sexpr": [
+          "true"
+        ],
+        "source": []
+      },
+      "pre": {
+        "sexpr": [
+          "(or (= 1 (memory (+ fp (- 4)))) (= 2 (memory (+ fp (- 4)))))"
+        ],
+        "source": [
+          "token_type == TOKEN_TYPE_A or token_type == TOKEN_TYPE_B"
+        ]
+      },
       "storage_update": {
         "__main__.pool_balance": [
           {
@@ -260,6 +342,7 @@
                 "(memory (+ fp (- 4)))"
               ]
             ],
+            "source": "pool_balance(token_type) := balance",
             "value": [
               "(memory (+ fp (- 3)))"
             ]
@@ -276,29 +359,44 @@
       "logical_variables": {
         "$token_to": "felt"
       },
-      "post": [
-        "true"
-      ],
-      "pre": [
-        "(let ((a!1 (< (memory (+ fp (- 3)))",
-        "              (__main__.account_balance",
-        "                (memory (+ fp (- 5)))",
-        "                (memory (+ fp (- 4))))))",
-        "      (a!2 (<= 0 (__main__.pool_balance (memory (+ fp (- 4))))))",
-        "      (a!3 (+ (__main__.pool_balance (memory (+ fp (- 4))))",
-        "              (memory (+ fp (- 3))))))",
-        "(let ((a!4 (< (* (__main__.pool_balance $token_to) (memory (+ fp (- 3))))",
-        "              (* 340282366920938463463374607431768211456 a!3))))",
-        "  (and (= 1 (memory (+ fp (- 4))))",
-        "       (= 2 $token_to)",
-        "       (< 0 (memory (+ fp (- 3))))",
-        "       a!1",
-        "       (< 0 (__main__.pool_balance $token_to))",
-        "       a!2",
-        "       (<= 0 (__main__.pool_balance $token_to))",
-        "       (>= 10633823966279326983230456482242756608 a!3)",
-        "       a!4)))"
-      ],
+      "post": {
+        "sexpr": [
+          "true"
+        ],
+        "source": []
+      },
+      "pre": {
+        "sexpr": [
+          "(let ((a!1 (< (memory (+ fp (- 3)))",
+          "              (__main__.account_balance",
+          "                (memory (+ fp (- 5)))",
+          "                (memory (+ fp (- 4))))))",
+          "      (a!2 (<= 0 (__main__.pool_balance (memory (+ fp (- 4))))))",
+          "      (a!3 (+ (__main__.pool_balance (memory (+ fp (- 4))))",
+          "              (memory (+ fp (- 3))))))",
+          "(let ((a!4 (< (* (__main__.pool_balance $token_to) (memory (+ fp (- 3))))",
+          "              (* 340282366920938463463374607431768211456 a!3))))",
+          "  (and (= 1 (memory (+ fp (- 4))))",
+          "       (= 2 $token_to)",
+          "       (< 0 (memory (+ fp (- 3))))",
+          "       a!1",
+          "       (< 0 (__main__.pool_balance $token_to))",
+          "       a!2",
+          "       (<= 0 (__main__.pool_balance $token_to))",
+          "       (>= 10633823966279326983230456482242756608 a!3)",
+          "       a!4)))"
+        ],
+        "source": [
+          "token_from == TOKEN_TYPE_A",
+          "$token_to == TOKEN_TYPE_B",
+          "0 < amount_from and amount_from < account_balance(account_id, token_from)",
+          "pool_balance($token_to) > 0",
+          "pool_balance(token_from) >= 0",
+          "pool_balance($token_to) >= 0",
+          "pool_balance(token_from) + amount_from <= 10633823966279326983230456482242756608",
+          "pool_balance($token_to) * amount_from < 2**128 * (pool_balance(token_from) + amount_from)"
+        ]
+      },
       "storage_update": {
         "__main__.account_balance": [
           {
@@ -310,6 +408,7 @@
                 "(memory (+ fp (- 4)))"
               ]
             ],
+            "source": "account_balance(account_id, token_from) := account_balance(account_id, token_from) - amount_from",
             "value": [
               "(- (__main__.account_balance (memory (+ fp (- 5))) (memory (+ fp (- 4))))",
               "   (memory (+ fp (- 3))))"
@@ -324,6 +423,7 @@
                 "$token_to"
               ]
             ],
+            "source": "account_balance(account_id, $token_to) := account_balance(account_id, $token_to) + $Return.amount_to",
             "value": [
               "(+ (__main__.account_balance (memory (+ fp (- 5))) $token_to)",
               "   (memory (+ ap (- 1))))"
@@ -337,6 +437,7 @@
                 "(memory (+ fp (- 4)))"
               ]
             ],
+            "source": "pool_balance(token_from) := pool_balance(token_from) + amount_from",
             "value": [
               "(+ (__main__.pool_balance (memory (+ fp (- 4)))) (memory (+ fp (- 3))))"
             ]
@@ -347,6 +448,7 @@
                 "$token_to"
               ]
             ],
+            "source": "pool_balance($token_to) := pool_balance($token_to) - $Return.amount_to",
             "value": [
               "(- (__main__.pool_balance $token_to) (memory (+ ap (- 1))))"
             ]
@@ -357,60 +459,100 @@
     "math.assert_le": {
       "decls": {},
       "logical_variables": {},
-      "post": [
-        "(let ((a!1 (<= 0 (- (memory (+ fp (- 3))) (memory (+ fp (- 4))))))",
-        "      (a!2 (> 340282366920938463463374607431768211456",
-        "              (- (memory (+ fp (- 3))) (memory (+ fp (- 4)))))))",
-        "  (and a!1 a!2))"
-      ],
-      "pre": [
-        "true"
-      ],
+      "post": {
+        "sexpr": [
+          "(let ((a!1 (<= 0 (- (memory (+ fp (- 3))) (memory (+ fp (- 4))))))",
+          "      (a!2 (> 340282366920938463463374607431768211456",
+          "              (- (memory (+ fp (- 3))) (memory (+ fp (- 4)))))))",
+          "  (and a!1 a!2))"
+        ],
+        "source": [
+          "0 <= b - a and b - a < 2**128"
+        ]
+      },
+      "pre": {
+        "sexpr": [
+          "true"
+        ],
+        "source": []
+      },
       "storage_update": {}
     },
     "math.assert_nn": {
       "decls": {},
       "logical_variables": {},
-      "post": [
-        "(and (<= 0 (memory (+ fp (- 3))))",
-        "     (> 340282366920938463463374607431768211456 (memory (+ fp (- 3)))))"
-      ],
-      "pre": [
-        "true"
-      ],
+      "post": {
+        "sexpr": [
+          "(and (<= 0 (memory (+ fp (- 3))))",
+          "     (> 340282366920938463463374607431768211456 (memory (+ fp (- 3)))))"
+        ],
+        "source": [
+          "0 <= a and a < 2**128"
+        ]
+      },
+      "pre": {
+        "sexpr": [
+          "true"
+        ],
+        "source": []
+      },
       "storage_update": {}
     },
     "math.assert_nn_le": {
       "decls": {},
       "logical_variables": {},
-      "post": [
-        "(and (<= 0 (memory (+ fp (- 4))))",
-        "     (<= (memory (+ fp (- 4))) (memory (+ fp (- 3)))))"
-      ],
-      "pre": [
-        "(> 340282366920938463463374607431768211456 (memory (+ fp (- 3))))"
-      ],
+      "post": {
+        "sexpr": [
+          "(and (<= 0 (memory (+ fp (- 4))))",
+          "     (<= (memory (+ fp (- 4))) (memory (+ fp (- 3)))))"
+        ],
+        "source": [
+          "0 <= a and a <= b"
+        ]
+      },
+      "pre": {
+        "sexpr": [
+          "(> 340282366920938463463374607431768211456 (memory (+ fp (- 3))))"
+        ],
+        "source": [
+          "b < 2**128"
+        ]
+      },
       "storage_update": {}
     },
     "math.unsigned_div_rem": {
       "decls": {},
       "logical_variables": {},
-      "post": [
-        "(let ((a!1 (+ (* (memory (+ ap (- 2))) (memory (+ fp (- 3))))",
-        "              (memory (+ ap (- 1))))))",
-        "  (and (<= 0 (memory (+ ap (- 2))))",
-        "       (> 340282366920938463463374607431768211456 (memory (+ ap (- 2))))",
-        "       (<= 0 (memory (+ ap (- 1))))",
-        "       (< (memory (+ ap (- 1))) (memory (+ fp (- 3))))",
-        "       (= (memory (+ fp (- 4))) a!1)))"
-      ],
-      "pre": [
-        "(let ((a!1 (< (memory (+ fp (- 4)))",
-        "              (* 340282366920938463463374607431768211456 (memory (+ fp (- 3)))))))",
-        "  (and (< 0 (memory (+ fp (- 3))))",
-        "       (>= 10633823966279326983230456482242756608 (memory (+ fp (- 3))))",
-        "       a!1))"
-      ],
+      "post": {
+        "sexpr": [
+          "(let ((a!1 (+ (* (memory (+ ap (- 2))) (memory (+ fp (- 3))))",
+          "              (memory (+ ap (- 1))))))",
+          "  (and (<= 0 (memory (+ ap (- 2))))",
+          "       (> 340282366920938463463374607431768211456 (memory (+ ap (- 2))))",
+          "       (<= 0 (memory (+ ap (- 1))))",
+          "       (< (memory (+ ap (- 1))) (memory (+ fp (- 3))))",
+          "       (= (memory (+ fp (- 4))) a!1)))"
+        ],
+        "source": [
+          "0 <= $Return.q and $Return.q <  2**128",
+          "0 <= $Return.r and $Return.r < div",
+          "value == $Return.q * div + $Return.r"
+        ]
+      },
+      "pre": {
+        "sexpr": [
+          "(let ((a!1 (< (memory (+ fp (- 4)))",
+          "              (* 340282366920938463463374607431768211456 (memory (+ fp (- 3)))))))",
+          "  (and (< 0 (memory (+ fp (- 3))))",
+          "       (>= 10633823966279326983230456482242756608 (memory (+ fp (- 3))))",
+          "       a!1))"
+        ],
+        "source": [
+          "0 < div",
+          "div <= 10633823966279326983230456482242756608",
+          "value < 2**128 * div"
+        ]
+      },
       "storage_update": {}
     }
   },

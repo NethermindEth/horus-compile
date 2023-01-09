@@ -4,56 +4,106 @@
     "__main__.comp_id": {
       "decls": {},
       "logical_variables": {},
-      "post": [
-        "(= (memory (+ ap (- 1))) (memory (+ fp (- 3))))"
-      ],
-      "pre": [
-        "(< 254 (memory (+ fp (- 3))))"
-      ],
+      "post": {
+        "sexpr": [
+          "(= (memory (+ ap (- 1))) (memory (+ fp (- 3))))"
+        ],
+        "source": [
+          "[ap - 1] == [fp - 3]"
+        ]
+      },
+      "pre": {
+        "sexpr": [
+          "(< 254 (memory (+ fp (- 3))))"
+        ],
+        "source": [
+          "[fp - 3] > 254"
+        ]
+      },
       "storage_update": {}
     },
     "__main__.id": {
       "decls": {},
       "logical_variables": {},
-      "post": [
-        "(= (memory (+ ap (- 1))) (memory (+ fp (- 3))))"
-      ],
-      "pre": [
-        "true"
-      ],
+      "post": {
+        "sexpr": [
+          "(= (memory (+ ap (- 1))) (memory (+ fp (- 3))))"
+        ],
+        "source": [
+          "[ap - 1] == [fp - 3]"
+        ]
+      },
+      "pre": {
+        "sexpr": [
+          "true"
+        ],
+        "source": [
+          "True"
+        ]
+      },
       "storage_update": {}
     },
     "__main__.main": {
       "decls": {},
       "logical_variables": {},
-      "post": [
-        "(= 9001 (memory (+ ap (- 1))))"
-      ],
-      "pre": [
-        "true"
-      ],
+      "post": {
+        "sexpr": [
+          "(= 9001 (memory (+ ap (- 1))))"
+        ],
+        "source": [
+          "[ap - 1] == 9001"
+        ]
+      },
+      "pre": {
+        "sexpr": [
+          "true"
+        ],
+        "source": [
+          "True"
+        ]
+      },
       "storage_update": {}
     },
     "__main__.pred": {
       "decls": {},
       "logical_variables": {},
-      "post": [
-        "(= (memory (+ ap (- 1))) (+ (memory (+ fp (- 3))) (- 1)))"
-      ],
-      "pre": [
-        "(or (< 254 (memory (+ fp (- 3)))) (= 0 (memory (+ fp (- 3)))))"
-      ],
+      "post": {
+        "sexpr": [
+          "(= (memory (+ ap (- 1))) (+ (memory (+ fp (- 3))) (- 1)))"
+        ],
+        "source": [
+          "[ap - 1] == [fp - 3] - 1"
+        ]
+      },
+      "pre": {
+        "sexpr": [
+          "(or (< 254 (memory (+ fp (- 3)))) (= 0 (memory (+ fp (- 3)))))"
+        ],
+        "source": [
+          "[fp - 3] > 254 or [fp - 3] == 0"
+        ]
+      },
       "storage_update": {}
     },
     "__main__.succ": {
       "decls": {},
       "logical_variables": {},
-      "post": [
-        "(= (memory (+ ap (- 1))) (+ (memory (+ fp (- 3))) 1))"
-      ],
-      "pre": [
-        "true"
-      ],
+      "post": {
+        "sexpr": [
+          "(= (memory (+ ap (- 1))) (+ (memory (+ fp (- 3))) 1))"
+        ],
+        "source": [
+          "[ap - 1] == [fp - 3] + 1"
+        ]
+      },
+      "pre": {
+        "sexpr": [
+          "true"
+        ],
+        "source": [
+          "True"
+        ]
+      },
       "storage_update": {}
     }
   },

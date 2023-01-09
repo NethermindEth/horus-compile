@@ -1,19 +1,32 @@
 {
   "invariants": {
-    "__main__.main.loop": [
-      "(and (< 0 (memory (+ ap (- 1)))) (>= 123456789987654321 (memory (+ ap (- 1)))))"
-    ]
+    "__main__.main.loop": {
+      "sexpr": [
+        "(and (< 0 (memory (+ ap (- 1)))) (>= 123456789987654321 (memory (+ ap (- 1)))))"
+      ],
+      "source": [
+        "0 < [ap - 1] and [ap - 1] <= 123456789987654321"
+      ]
+    }
   },
   "specifications": {
     "__main__.main": {
       "decls": {},
       "logical_variables": {},
-      "post": [
-        "(= 0 (memory (+ ap (- 1))))"
-      ],
-      "pre": [
-        "true"
-      ],
+      "post": {
+        "sexpr": [
+          "(= 0 (memory (+ ap (- 1))))"
+        ],
+        "source": [
+          "[ap - 1] == 0"
+        ]
+      },
+      "pre": {
+        "sexpr": [
+          "true"
+        ],
+        "source": []
+      },
       "storage_update": {}
     }
   },
