@@ -12,6 +12,7 @@ from starkware.cairo.lang.compiler.scoped_name import ScopedName, ScopedNameAsSt
 from starkware.starknet.services.api.contract_class import ContractClass
 
 from horus.compiler.var_names import *
+from horus.utils import z3And
 
 
 class SexpField(mfields.Field):
@@ -36,15 +37,42 @@ class StorageUpdate:
     value: z3.IntNumRef = field(
         metadata=dict(marshmallow_field=SexpField()), default=z3.IntVal(0)
     )
+    source: str = field(metadata=dict(marshmallow_field=mfields.String()), default="")
+
+
+@marshmallow_dataclass.dataclass(frozen=False)
+class Annotation:
+    sexpr: z3.BoolRef = field(
+        metadata=dict(marshmallow_field=SexpField()), default=z3.BoolVal(True)
+    )
+    source: "list[str]" = field(
+        metadata=dict(marshmallow_field=mfields.List(mfields.String())),
+        default_factory=list,
+    )
+
+    def __and__(self, other):
+        return Annotation(
+            sexpr=z3And(self.sexpr, other.sexpr), source=self.source + other.source
+        )
 
 
 @marshmallow_dataclass.dataclass(frozen=False)
 class FunctionAnnotations:
-    pre: z3.BoolRef = field(
-        metadata=dict(marshmallow_field=SexpField()), default=z3.BoolVal(True)
+    pre: Annotation = field(
+        metadata=dict(
+            marshmallow_field=mfields.Nested(
+                marshmallow_dataclass.class_schema(Annotation)
+            )
+        ),
+        default=Annotation(),
     )
-    post: z3.BoolRef = field(
-        metadata=dict(marshmallow_field=SexpField()), default=z3.BoolVal(True)
+    post: Annotation = field(
+        metadata=dict(
+            marshmallow_field=mfields.Nested(
+                marshmallow_dataclass.class_schema(Annotation)
+            )
+        ),
+        default=Annotation(),
     )
     logical_variables: "dict[ScopedName, CairoType]" = field(
         metadata=dict(
@@ -80,8 +108,13 @@ class HorusDefinition(ContractClass):
         ),
         default_factory=dict,
     )
-    invariants: "dict[ScopedName, z3.BoolRef]" = field(
-        metadata=dict(marshmallow_field=mfields.Dict(ScopedNameAsStr(), SexpField())),
+    invariants: "dict[ScopedName, Annotation]" = field(
+        metadata=dict(
+            marshmallow_field=mfields.Dict(
+                ScopedNameAsStr(),
+                mfields.Nested(marshmallow_dataclass.class_schema(Annotation)),
+            )
+        ),
         default_factory=dict,
     )
     storage_vars: "dict[ScopedName, int]" = field(

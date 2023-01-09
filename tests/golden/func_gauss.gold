@@ -1,35 +1,58 @@
 {
   "invariants": {
-    "__main__.gauss.loop": [
-      "(let ((a!1 (= (+ (memory (+ ap (- 2))) (memory (+ ap (- 1))))",
-      "              (+ (memory (+ fp (- 3))) 1)))",
-      "      (a!2 (* (memory (+ ap (- 2))) (+ (memory (+ ap (- 2))) (- 1)))))",
-      "(let ((a!3 (= (* 2 (memory (+ ap (- 3)))) a!2)))",
-      "  (and a!1 a!3)))"
-    ]
+    "__main__.gauss.loop": {
+      "sexpr": [
+        "(let ((a!1 (= (+ (memory (+ ap (- 2))) (memory (+ ap (- 1))))",
+        "              (+ (memory (+ fp (- 3))) 1)))",
+        "      (a!2 (* (memory (+ ap (- 2))) (+ (memory (+ ap (- 2))) (- 1)))))",
+        "(let ((a!3 (= (* 2 (memory (+ ap (- 3)))) a!2)))",
+        "  (and a!1 a!3)))"
+      ],
+      "source": [
+        "[ap - 2] + [ap - 1] == [fp - 3] + 1 and 2 * [ap - 3] == ([ap - 2] * ([ap - 2] - 1))"
+      ]
+    }
   },
   "specifications": {
     "__main__.gauss": {
       "decls": {},
       "logical_variables": {},
-      "post": [
-        "(let ((a!1 (* (+ (memory (+ fp (- 3))) 1) (memory (+ fp (- 3))))))",
-        "  (= (* 2 (memory (+ ap (- 1)))) a!1))"
-      ],
-      "pre": [
-        "(< 0 (memory (+ fp (- 3))))"
-      ],
+      "post": {
+        "sexpr": [
+          "(let ((a!1 (* (+ (memory (+ fp (- 3))) 1) (memory (+ fp (- 3))))))",
+          "  (= (* 2 (memory (+ ap (- 1)))) a!1))"
+        ],
+        "source": [
+          "2 * [ap - 1] == (([fp - 3] + 1) * [fp - 3])"
+        ]
+      },
+      "pre": {
+        "sexpr": [
+          "(< 0 (memory (+ fp (- 3))))"
+        ],
+        "source": [
+          "[fp - 3] > 0"
+        ]
+      },
       "storage_update": {}
     },
     "__main__.main": {
       "decls": {},
       "logical_variables": {},
-      "post": [
-        "(= 15 (memory (+ ap (- 1))))"
-      ],
-      "pre": [
-        "true"
-      ],
+      "post": {
+        "sexpr": [
+          "(= 15 (memory (+ ap (- 1))))"
+        ],
+        "source": [
+          "[ap - 1] == 15"
+        ]
+      },
+      "pre": {
+        "sexpr": [
+          "true"
+        ],
+        "source": []
+      },
       "storage_update": {}
     }
   },
