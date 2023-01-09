@@ -6,12 +6,20 @@
         "%block_timestamp": 0
       },
       "logical_variables": {},
-      "post": [
-        "(= (memory (+ ap (- 1))) %block_timestamp)"
-      ],
-      "pre": [
-        "true"
-      ],
+      "post": {
+        "sexpr": [
+          "(= (memory (+ ap (- 1))) %block_timestamp)"
+        ],
+        "source": [
+          "$Return.user == get_block_timestamp()"
+        ]
+      },
+      "pre": {
+        "sexpr": [
+          "true"
+        ],
+        "source": []
+      },
       "storage_update": {}
     }
   },

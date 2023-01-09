@@ -6,12 +6,20 @@
         "%contract_address": 0
       },
       "logical_variables": {},
-      "post": [
-        "(= (memory (+ ap (- 1))) %contract_address)"
-      ],
-      "pre": [
-        "true"
-      ],
+      "post": {
+        "sexpr": [
+          "(= (memory (+ ap (- 1))) %contract_address)"
+        ],
+        "source": [
+          "$Return.user == get_contract_address()"
+        ]
+      },
+      "pre": {
+        "sexpr": [
+          "true"
+        ],
+        "source": []
+      },
       "storage_update": {}
     }
   },

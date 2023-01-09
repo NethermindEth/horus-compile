@@ -4,16 +4,24 @@
     "__main__.max": {
       "decls": {},
       "logical_variables": {},
-      "post": [
-        "(let ((a!1 (=> (> (memory (+ fp (- 4))) (memory (+ fp (- 3))))",
-        "               (= (memory (+ ap (- 1))) (memory (+ fp (- 4))))))",
-        "      (a!2 (=> (> (memory (+ fp (- 3))) (memory (+ fp (- 4))))",
-        "               (= (memory (+ ap (- 1))) (memory (+ fp (- 3)))))))",
-        "  (and a!1 a!2))"
-      ],
-      "pre": [
-        "true"
-      ],
+      "post": {
+        "sexpr": [
+          "(let ((a!1 (=> (> (memory (+ fp (- 4))) (memory (+ fp (- 3))))",
+          "               (= (memory (+ ap (- 1))) (memory (+ fp (- 4))))))",
+          "      (a!2 (=> (> (memory (+ fp (- 3))) (memory (+ fp (- 4))))",
+          "               (= (memory (+ ap (- 1))) (memory (+ fp (- 3)))))))",
+          "  (and a!1 a!2))"
+        ],
+        "source": [
+          "(a > b -> $Return.c == a) and (b > a -> $Return.c == b)"
+        ]
+      },
+      "pre": {
+        "sexpr": [
+          "true"
+        ],
+        "source": []
+      },
       "storage_update": {}
     }
   },

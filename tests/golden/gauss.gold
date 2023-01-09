@@ -1,24 +1,39 @@
 {
   "invariants": {
-    "__main__.main.loop": [
-      "(let ((a!1 (= (+ (memory (+ ap (- 2))) (memory (+ ap (- 1))))",
-      "              (+ (memory (+ fp 2)) 1)))",
-      "      (a!2 (* (memory (+ ap (- 2))) (+ (memory (+ ap (- 2))) (- 1)))))",
-      "(let ((a!3 (= (* 2 (memory (+ ap (- 3)))) a!2)))",
-      "  (and a!1 a!3)))"
-    ]
+    "__main__.main.loop": {
+      "sexpr": [
+        "(let ((a!1 (= (+ (memory (+ ap (- 2))) (memory (+ ap (- 1))))",
+        "              (+ (memory (+ fp 2)) 1)))",
+        "      (a!2 (* (memory (+ ap (- 2))) (+ (memory (+ ap (- 2))) (- 1)))))",
+        "(let ((a!3 (= (* 2 (memory (+ ap (- 3)))) a!2)))",
+        "  (and a!1 a!3)))"
+      ],
+      "source": [
+        "[ap - 2] + [ap - 1] == [fp + 2] + 1 and 2 * [ap - 3] == ([ap - 2] * ([ap - 2] - 1))"
+      ]
+    }
   },
   "specifications": {
     "__main__.main": {
       "decls": {},
       "logical_variables": {},
-      "post": [
-        "(let ((a!1 (* (+ (memory (+ fp 2)) 1) (memory (+ fp 2)))))",
-        "  (= (* 2 (memory (+ ap (- 3)))) a!1))"
-      ],
-      "pre": [
-        "(< 0 (memory (+ fp 2)))"
-      ],
+      "post": {
+        "sexpr": [
+          "(let ((a!1 (* (+ (memory (+ fp 2)) 1) (memory (+ fp 2)))))",
+          "  (= (* 2 (memory (+ ap (- 3)))) a!1))"
+        ],
+        "source": [
+          "2 * [ap - 3] == (([fp + 2] + 1) * [fp + 2])"
+        ]
+      },
+      "pre": {
+        "sexpr": [
+          "(< 0 (memory (+ fp 2)))"
+        ],
+        "source": [
+          "[fp + 2] > 0"
+        ]
+      },
       "storage_update": {}
     }
   },

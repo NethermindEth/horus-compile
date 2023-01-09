@@ -1,34 +1,55 @@
 {
   "invariants": {
-    "__main__.succpred.add": [
-      "(< 0 (memory (+ fp (- 3))))"
-    ]
+    "__main__.succpred.add": {
+      "sexpr": [
+        "(< 0 (memory (+ fp (- 3))))"
+      ],
+      "source": [
+        "[fp - 3] > 0"
+      ]
+    }
   },
   "specifications": {
     "__main__.main": {
       "decls": {},
       "logical_variables": {},
-      "post": [
-        "(= 41 (memory (+ ap (- 1))))"
-      ],
-      "pre": [
-        "true"
-      ],
+      "post": {
+        "sexpr": [
+          "(= 41 (memory (+ ap (- 1))))"
+        ],
+        "source": [
+          "[ap - 1] == 41"
+        ]
+      },
+      "pre": {
+        "sexpr": [
+          "true"
+        ],
+        "source": []
+      },
       "storage_update": {}
     },
     "__main__.succpred": {
       "decls": {},
       "logical_variables": {},
-      "post": [
-        "(let ((a!1 (= (memory (+ ap (- 1))) (+ (memory (+ fp (- 3))) 1)))",
-        "      (a!3 (= (memory (+ ap (- 1))) (+ (memory (+ fp (- 3))) (- 1)))))",
-        "(let ((a!2 (and a!1 (= 0 (memory (+ fp (- 3))))))",
-        "      (a!4 (and a!3 (< 0 (memory (+ fp (- 3)))))))",
-        "  (or a!2 a!4)))"
-      ],
-      "pre": [
-        "true"
-      ],
+      "post": {
+        "sexpr": [
+          "(let ((a!1 (= (memory (+ ap (- 1))) (+ (memory (+ fp (- 3))) 1)))",
+          "      (a!3 (= (memory (+ ap (- 1))) (+ (memory (+ fp (- 3))) (- 1)))))",
+          "(let ((a!2 (and a!1 (= 0 (memory (+ fp (- 3))))))",
+          "      (a!4 (and a!3 (< 0 (memory (+ fp (- 3)))))))",
+          "  (or a!2 a!4)))"
+        ],
+        "source": [
+          "(([ap - 1] == [fp - 3] + 1) and ([fp - 3] == 0)) or (([ap - 1] == [fp - 3] - 1) and ([fp - 3] > 0))"
+        ]
+      },
+      "pre": {
+        "sexpr": [
+          "true"
+        ],
+        "source": []
+      },
       "storage_update": {}
     }
   },

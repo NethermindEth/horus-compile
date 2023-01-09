@@ -4,12 +4,20 @@
     "__main__.main": {
       "decls": {},
       "logical_variables": {},
-      "post": [
-        "(= 1337 (memory (+ ap (- 1))))"
-      ],
-      "pre": [
-        "true"
-      ],
+      "post": {
+        "sexpr": [
+          "(= 1337 (memory (+ ap (- 1))))"
+        ],
+        "source": [
+          "$Return.res == 1337"
+        ]
+      },
+      "pre": {
+        "sexpr": [
+          "true"
+        ],
+        "source": []
+      },
       "storage_update": {
         "__main__.balance": [
           {
@@ -18,6 +26,7 @@
                 "10"
               ]
             ],
+            "source": "balance(t=10) := balance(t=10) + 1",
             "value": [
               "(+ (__main__.balance 10) 1)"
             ]
