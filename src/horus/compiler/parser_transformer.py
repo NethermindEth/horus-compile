@@ -50,7 +50,7 @@ class HorusTransformer(ParserTransformer):
         )
 
         if comment is not None:
-            possible_annotation = comment.strip()
+            possible_annotation: str = comment.strip()
 
             for annotation in [
                 "@pre",
@@ -68,6 +68,12 @@ class HorusTransformer(ParserTransformer):
                         expected_type=CodeElementAnnotation,
                         parser_context=self.parser_context,
                     )
+
+                    if isinstance(check, (CodeElementCheck, CodeElementStorageUpdate)):
+                        check.unpreprocessed_rep = " ".join(
+                            possible_annotation.split(" ")[1:]
+                        )
+
                     code_elem = super().commented_code_element(meta, [value[0], None])
                     code_elem.code_elm = AnnotatedCodeElement(
                         check, code_elm=code_elem.code_elm

@@ -1,30 +1,51 @@
 {
   "invariants": {
-    "__main__.add.next": [
-      "(< 0 (memory (+ fp (- 4))))"
-    ]
+    "__main__.add.next": {
+      "sexpr": [
+        "(< 0 (memory (+ fp (- 4))))"
+      ],
+      "source": [
+        "[fp - 4] > 0"
+      ]
+    }
   },
   "specifications": {
     "__main__.add": {
       "decls": {},
       "logical_variables": {},
-      "post": [
-        "(= (memory (+ ap (- 1))) (+ (memory (+ fp (- 3))) (memory (+ fp (- 4)))))"
-      ],
-      "pre": [
-        "true"
-      ],
+      "post": {
+        "sexpr": [
+          "(= (memory (+ ap (- 1))) (+ (memory (+ fp (- 3))) (memory (+ fp (- 4)))))"
+        ],
+        "source": [
+          "[ap - 1] == [fp - 3] + [fp - 4]"
+        ]
+      },
+      "pre": {
+        "sexpr": [
+          "true"
+        ],
+        "source": []
+      },
       "storage_update": {}
     },
     "__main__.main": {
       "decls": {},
       "logical_variables": {},
-      "post": [
-        "(= 5 (memory (+ ap (- 1))))"
-      ],
-      "pre": [
-        "true"
-      ],
+      "post": {
+        "sexpr": [
+          "(= 5 (memory (+ ap (- 1))))"
+        ],
+        "source": [
+          "[ap - 1] == 5"
+        ]
+      },
+      "pre": {
+        "sexpr": [
+          "true"
+        ],
+        "source": []
+      },
       "storage_update": {}
     }
   },

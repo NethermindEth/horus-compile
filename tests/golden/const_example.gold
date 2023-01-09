@@ -4,16 +4,25 @@
     "__main__.modify_account_balance": {
       "decls": {},
       "logical_variables": {},
-      "post": [
-        "(let ((a!1 (= (memory (+ ap (- 1)))",
-        "              (+ (memory (+ fp (- 4))) (memory (+ fp (- 3)))))))",
-        "  (and a!1",
-        "       (<= 0 (memory (+ ap (- 1))))",
-        "       (> 18446744073709551616 (memory (+ ap (- 1))))))"
-      ],
-      "pre": [
-        "true"
-      ],
+      "post": {
+        "sexpr": [
+          "(let ((a!1 (= (memory (+ ap (- 1)))",
+          "              (+ (memory (+ fp (- 4))) (memory (+ fp (- 3)))))))",
+          "  (and a!1",
+          "       (<= 0 (memory (+ ap (- 1))))",
+          "       (> 18446744073709551616 (memory (+ ap (- 1))))))"
+        ],
+        "source": [
+          "$Return.new_balance == balance + amount",
+          "$Return.new_balance >= 0 and $Return.new_balance < BALANCE_UPPER_BOUND"
+        ]
+      },
+      "pre": {
+        "sexpr": [
+          "true"
+        ],
+        "source": []
+      },
       "storage_update": {}
     }
   },

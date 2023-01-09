@@ -4,23 +4,39 @@
     "__main__.main": {
       "decls": {},
       "logical_variables": {},
-      "post": [
-        "(= 6 (memory (+ ap (- 1))))"
-      ],
-      "pre": [
-        "true"
-      ],
+      "post": {
+        "sexpr": [
+          "(= 6 (memory (+ ap (- 1))))"
+        ],
+        "source": [
+          "[ap - 1] == 6"
+        ]
+      },
+      "pre": {
+        "sexpr": [
+          "true"
+        ],
+        "source": []
+      },
       "storage_update": {}
     },
     "__main__.succ": {
       "decls": {},
       "logical_variables": {},
-      "post": [
-        "(= (memory (+ ap (- 1))) (+ (memory (+ fp (- 3))) 1))"
-      ],
-      "pre": [
-        "true"
-      ],
+      "post": {
+        "sexpr": [
+          "(= (memory (+ ap (- 1))) (+ (memory (+ fp (- 3))) 1))"
+        ],
+        "source": [
+          "[ap - 1] == [fp - 3] + 1"
+        ]
+      },
+      "pre": {
+        "sexpr": [
+          "true"
+        ],
+        "source": []
+      },
       "storage_update": {}
     }
   },

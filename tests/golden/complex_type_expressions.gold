@@ -14,17 +14,26 @@
         "$m": "(felt, __main__.Point)",
         "$n": "__main__.NestedStruct"
       },
-      "post": [
-        "(and (= $n.point.x (memory (+ ap (- 6))))",
-        "     (= $n.point.y (memory (+ ap (- 5))))",
-        "     (= $n.z (memory (+ ap (- 4))))",
-        "     (= $m.0 (memory (+ ap (- 3))))",
-        "     (= $m.1.x (memory (+ ap (- 2))))",
-        "     (= $m.1.y (memory (+ ap (- 1)))))"
-      ],
-      "pre": [
-        "true"
-      ],
+      "post": {
+        "sexpr": [
+          "(and (= $n.point.x (memory (+ ap (- 6))))",
+          "     (= $n.point.y (memory (+ ap (- 5))))",
+          "     (= $n.z (memory (+ ap (- 4))))",
+          "     (= $m.0 (memory (+ ap (- 3))))",
+          "     (= $m.1.x (memory (+ ap (- 2))))",
+          "     (= $m.1.y (memory (+ ap (- 1)))))"
+        ],
+        "source": [
+          "$n == $Return.a",
+          "$m == $Return.b"
+        ]
+      },
+      "pre": {
+        "sexpr": [
+          "true"
+        ],
+        "source": []
+      },
       "storage_update": {}
     }
   },

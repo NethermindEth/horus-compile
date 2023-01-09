@@ -35,10 +35,14 @@ from horus.compiler.code_elements import (
     CodeElementLogicalVariableDeclaration,
     CodeElementStorageUpdate,
 )
-from horus.compiler.contract_definition import FunctionAnnotations, StorageUpdate
+from horus.compiler.contract_definition import (
+    Annotation,
+    FunctionAnnotations,
+    StorageUpdate,
+)
 from horus.compiler.parser import *
 from horus.compiler.z3_transformer import *
-from horus.utils import get_decls, z3And
+from horus.utils import get_decls
 
 
 @dataclass
@@ -53,7 +57,7 @@ class HorusPreprocessor(StarknetPreprocessor):
         self.storage_vars: dict[ScopedName, IdentifierList] = kwargs.pop("storage_vars")
         super().__init__(**kwargs)
         self.specifications: dict[ScopedName, FunctionAnnotations] = {}
-        self.invariants: dict[ScopedName, z3.BoolRef] = {}
+        self.invariants: dict[ScopedName, Annotation] = {}
         self.logical_identifiers: dict[str, CairoType] = {}
 
         # This is used to defer pre/postcondition unfolding
@@ -70,8 +74,8 @@ class HorusPreprocessor(StarknetPreprocessor):
 
         for specification in self.specifications.values():
             specification.decls = {
-                **get_decls(specification.pre),
-                **get_decls(specification.post),
+                **get_decls(specification.pre.sexpr),
+                **get_decls(specification.post.sexpr),
             }
             for var in HORUS_DECLS.keys():
                 specification.decls.pop(var, None)
@@ -130,7 +134,10 @@ class HorusPreprocessor(StarknetPreprocessor):
                     is_post=False,
                 )
                 expr = z3_transformer.visit(annotated_code_element.annotation.formula)
-                self.invariants[self.current_scope + name] = expr
+                self.invariants[self.current_scope + name] = Annotation(
+                    sexpr=expr,
+                    source=[annotated_code_element.annotation.unpreprocessed_rep],
+                )
 
                 return self.visit(annotated_code_element.code_elm)
 
@@ -281,6 +288,7 @@ class HorusPreprocessor(StarknetPreprocessor):
                     is_post=True,
                 )
             ),
+            decl.unpreprocessed_rep,
         )
         storage_updates.append(storage_update)
         current_annotations.storage_update[decl_full_name] = storage_updates
@@ -290,18 +298,18 @@ class HorusPreprocessor(StarknetPreprocessor):
         def append_check(
             check_kind: CodeElementCheck.CheckKind,
             key: Optional[ScopedName],
-            check: z3.BoolRef,
+            check: Annotation,
         ):
             current_annotations = self.specifications.get(
                 self.current_scope, FunctionAnnotations()
             )
             if check_kind is CodeElementCheck.CheckKind.PRE_COND:
-                current_annotations.pre = z3And(current_annotations.pre, check)
+                current_annotations.pre = current_annotations.pre & check
             elif check_kind is CodeElementCheck.CheckKind.POST_COND:
-                current_annotations.post = z3And(current_annotations.post, check)
+                current_annotations.post = current_annotations.post & check
             elif check_kind is CodeElementCheck.CheckKind.INVARIANT:
-                current_invariant = self.invariants.get(key, z3.BoolVal(True))
-                self.invariants[key] = z3And(current_invariant, check)
+                current_invariant = self.invariants.get(key, Annotation())
+                self.invariants[key] = current_invariant & check
 
             self.specifications[self.current_scope] = current_annotations
 
@@ -341,12 +349,15 @@ class HorusPreprocessor(StarknetPreprocessor):
                     is_post,
                 )
                 expr = z3_transformer.visit(parsed_check.formula)
+                annotation = Annotation(
+                    sexpr=expr, source=[parsed_check.unpreprocessed_rep]
+                )
 
                 if parsed_check.check_kind == CodeElementCheck.CheckKind.INVARIANT:
                     append_check(
                         parsed_check.check_kind,
                         self.current_scope + code_elem.identifier.name,
-                        expr,
+                        annotation,
                     )
                 elif (
                     parsed_check.check_kind == CodeElementCheck.CheckKind.POST_COND
@@ -355,7 +366,7 @@ class HorusPreprocessor(StarknetPreprocessor):
                     append_check(
                         parsed_check.check_kind,
                         None,
-                        expr,
+                        annotation,
                     )
 
         self.current_checks = []

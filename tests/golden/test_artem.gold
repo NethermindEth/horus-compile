@@ -4,23 +4,43 @@
     "__main__.id": {
       "decls": {},
       "logical_variables": {},
-      "post": [
-        "(= (memory (+ ap (- 1))) (+ (memory (+ fp (- 3))) 1))"
-      ],
-      "pre": [
-        "(< 42 (memory (+ fp (- 3))))"
-      ],
+      "post": {
+        "sexpr": [
+          "(= (memory (+ ap (- 1))) (+ (memory (+ fp (- 3))) 1))"
+        ],
+        "source": [
+          "[ap - 1] == [fp - 3] + 1"
+        ]
+      },
+      "pre": {
+        "sexpr": [
+          "(< 42 (memory (+ fp (- 3))))"
+        ],
+        "source": [
+          "[fp - 3] > 42"
+        ]
+      },
       "storage_update": {}
     },
     "__main__.main": {
       "decls": {},
       "logical_variables": {},
-      "post": [
-        "(= 42 (memory (+ ap (- 1))))"
-      ],
-      "pre": [
-        "true"
-      ],
+      "post": {
+        "sexpr": [
+          "(= 42 (memory (+ ap (- 1))))"
+        ],
+        "source": [
+          "[ap - 1] == 42"
+        ]
+      },
+      "pre": {
+        "sexpr": [
+          "true"
+        ],
+        "source": [
+          "True"
+        ]
+      },
       "storage_update": {}
     }
   },

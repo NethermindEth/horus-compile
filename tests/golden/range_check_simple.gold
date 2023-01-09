@@ -4,13 +4,22 @@
     "__main__.apply_range_check": {
       "decls": {},
       "logical_variables": {},
-      "post": [
-        "(and (<= 0 (memory (+ fp (- 3))))",
-        "     (> 340282366920938463463374607431768211456 (memory (+ fp (- 3)))))"
-      ],
-      "pre": [
-        "true"
-      ],
+      "post": {
+        "sexpr": [
+          "(and (<= 0 (memory (+ fp (- 3))))",
+          "     (> 340282366920938463463374607431768211456 (memory (+ fp (- 3)))))"
+        ],
+        "source": [
+          "0 <= a",
+          "a < 2**128"
+        ]
+      },
+      "pre": {
+        "sexpr": [
+          "true"
+        ],
+        "source": []
+      },
       "storage_update": {}
     }
   },

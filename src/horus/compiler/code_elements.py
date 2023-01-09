@@ -127,6 +127,7 @@ class CodeElementCheck(CodeElementAnnotation):
     check_kind: CheckKind
     formula: BoolFormula
     location: Optional[Location] = LocationField
+    unpreprocessed_rep: str = ""
 
     def format(self, allowed_line_length):
         # TODO: implement better formatting
@@ -163,6 +164,7 @@ class CodeElementStorageUpdate(CodeElementAnnotation):
     arguments: ArgList
     value: Expression
     location: Optional[Location] = LocationField
+    unpreprocessed_rep: str = ""
 
     def format(self, allowed_line_length):
         return f"@storage_update {self.name}[{self.arguments.format()}] = {self.value.format()}"

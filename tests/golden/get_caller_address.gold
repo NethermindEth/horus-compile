@@ -6,12 +6,20 @@
         "%caller_address": 0
       },
       "logical_variables": {},
-      "post": [
-        "(= (memory (+ ap (- 1))) %caller_address)"
-      ],
-      "pre": [
-        "true"
-      ],
+      "post": {
+        "sexpr": [
+          "(= (memory (+ ap (- 1))) %caller_address)"
+        ],
+        "source": [
+          "$Return.user == get_caller_address()"
+        ]
+      },
+      "pre": {
+        "sexpr": [
+          "true"
+        ],
+        "source": []
+      },
       "storage_update": {}
     }
   },
