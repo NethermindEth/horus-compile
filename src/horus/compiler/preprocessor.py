@@ -3,7 +3,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Optional
 
-import z3
 from starkware.cairo.lang.compiler.ast.arguments import IdentifierList
 from starkware.cairo.lang.compiler.ast.code_elements import (
     CodeBlock,
@@ -21,7 +20,6 @@ from starkware.cairo.lang.compiler.identifier_definition import (
     StructDefinition,
 )
 from starkware.cairo.lang.compiler.identifier_utils import get_struct_definition
-from starkware.cairo.lang.compiler.resolve_search_result import resolve_search_result
 from starkware.cairo.lang.compiler.scoped_name import ScopedName
 from starkware.starknet.compiler.starknet_preprocessor import (
     StarknetPreprocessedProgram,
@@ -44,11 +42,16 @@ from horus.compiler.parser import *
 from horus.compiler.z3_transformer import *
 from horus.utils import get_decls
 
+PRE_COND = CodeElementCheck.CheckKind.PRE_COND
+POST_COND = CodeElementCheck.CheckKind.POST_COND
+ASSERT = CodeElementCheck.CheckKind.ASSERT
+INVARIANT = CodeElementCheck.CheckKind.INVARIANT
+
 
 @dataclass
 class HorusProgram(StarknetPreprocessedProgram):
     specifications: dict[ScopedName, FunctionAnnotations]
-    invariants: dict[ScopedName, z3.BoolRef]
+    invariants: dict[ScopedName, Annotation]
     storage_vars: dict[ScopedName, int]
 
 
@@ -83,9 +86,14 @@ class HorusPreprocessor(StarknetPreprocessor):
         storage_vars: dict[ScopedName, int] = {}
 
         for storage_var, args in self.storage_vars.items():
-            size = 0
-            for arg in args.identifiers:
-                size += self.get_size(arg.expr_type)
+            size = sum(
+                (
+                    self.get_size(arg.expr_type)
+                    if arg.expr_type is not None
+                    else self.get_size(TypeFelt())
+                    for arg in args.identifiers
+                )
+            )
 
             storage_vars[storage_var] = size
 
@@ -99,46 +107,42 @@ class HorusPreprocessor(StarknetPreprocessor):
     def visit_CodeBlock(self, code_block: CodeBlock):
         return super().visit_CodeBlock(code_block)
 
+    def add_dummy_label_with_assert(self, assrt: CodeElementCheck):
+        if not isinstance(
+            self.identifiers.get_by_full_name(self.current_scope),
+            FunctionDefinition,
+        ):
+            raise (
+                PreprocessorError(
+                    f"Cannot use @assert annotation outside of a function.",
+                    location=assrt.location,
+                )
+            )
+
+        name = f"!dummy_label_{self.current_fresh_index}"
+        self.current_fresh_index += 1
+        self.identifiers.add_identifier(
+            name=self.current_scope + name,
+            definition=FutureIdentifierDefinition(identifier_type=LabelDefinition),
+        )
+        self.add_label(ExprIdentifier(name))
+        z3_transformer = Z3Transformer(
+            self.identifiers,
+            self,
+            self.logical_identifiers,
+            self.storage_vars,
+            is_post=False,
+        )
+        expr = z3_transformer.visit(assrt.formula)
+        self.invariants[self.current_scope + name] = Annotation(
+            sexpr=expr,
+            source=[assrt.unpreprocessed_rep],
+        )
+
     def visit_AnnotatedCodeElement(self, annotated_code_element: AnnotatedCodeElement):
         if isinstance(annotated_code_element.annotation, CodeElementCheck):
-            if (
-                annotated_code_element.annotation.check_kind
-                == CodeElementCheck.CheckKind.ASSERT
-            ):
-
-                if not isinstance(
-                    self.identifiers.get_by_full_name(self.current_scope),
-                    FunctionDefinition,
-                ):
-                    raise (
-                        PreprocessorError(
-                            f"Cannot use @assert annotation outside of a function.",
-                            location=annotated_code_element.annotation.location,
-                        )
-                    )
-
-                name = f"!dummy_label_{self.current_fresh_index}"
-                self.current_fresh_index += 1
-                self.identifiers.add_identifier(
-                    name=self.current_scope + name,
-                    definition=FutureIdentifierDefinition(
-                        identifier_type=LabelDefinition
-                    ),
-                )
-                self.add_label(ExprIdentifier(name))
-                z3_transformer = Z3Transformer(
-                    self.identifiers,
-                    self,
-                    self.logical_identifiers,
-                    self.storage_vars,
-                    is_post=False,
-                )
-                expr = z3_transformer.visit(annotated_code_element.annotation.formula)
-                self.invariants[self.current_scope + name] = Annotation(
-                    sexpr=expr,
-                    source=[annotated_code_element.annotation.unpreprocessed_rep],
-                )
-
+            if annotated_code_element.annotation.check_kind == ASSERT:
+                self.add_dummy_label_with_assert(annotated_code_element.annotation)
                 return self.visit(annotated_code_element.code_elm)
 
         result = self.visit(annotated_code_element.code_elm)
@@ -303,11 +307,12 @@ class HorusPreprocessor(StarknetPreprocessor):
             current_annotations = self.specifications.get(
                 self.current_scope, FunctionAnnotations()
             )
-            if check_kind is CodeElementCheck.CheckKind.PRE_COND:
+            if check_kind == PRE_COND:
                 current_annotations.pre = current_annotations.pre & check
-            elif check_kind is CodeElementCheck.CheckKind.POST_COND:
+            elif check_kind == POST_COND:
                 current_annotations.post = current_annotations.post & check
-            elif check_kind is CodeElementCheck.CheckKind.INVARIANT:
+            elif check_kind == INVARIANT:
+                assert key is not None
                 current_invariant = self.invariants.get(key, Annotation())
                 self.invariants[key] = current_invariant & check
 
@@ -316,20 +321,20 @@ class HorusPreprocessor(StarknetPreprocessor):
         for parsed_check in self.current_checks:
             if (
                 isinstance(parsed_check, CodeElementCheck)
-                and parsed_check.check_kind is CodeElementCheck.CheckKind.INVARIANT
+                and parsed_check.check_kind == INVARIANT
             ):
                 if not isinstance(code_elem, CodeElementLabel):
                     raise PreprocessorError(
                         "@invariant annotation must be placed before a label",
                         code_elem.location,
                     )
-            else:
+            elif isinstance(parsed_check, CodeElementCheck):
                 if not (
                     isinstance(code_elem, CodeElementFunction)
                     and code_elem.element_type == "func"
                 ):
                     raise PreprocessorError(
-                        f"{parsed_check.format()} annotation is not allowed here",
+                        f"{parsed_check.check_kind} annotation is not allowed here",
                         code_elem.location,
                     )
 
@@ -338,9 +343,7 @@ class HorusPreprocessor(StarknetPreprocessor):
             elif isinstance(parsed_check, CodeElementStorageUpdate):
                 self.add_state_change(parsed_check)
             elif isinstance(parsed_check, CodeElementCheck):
-                is_post = (
-                    parsed_check.check_kind == CodeElementCheck.CheckKind.POST_COND
-                )
+                is_post = parsed_check.check_kind == POST_COND
                 z3_transformer = Z3Transformer(
                     self.identifiers,
                     self,
@@ -353,16 +356,13 @@ class HorusPreprocessor(StarknetPreprocessor):
                     sexpr=expr, source=[parsed_check.unpreprocessed_rep]
                 )
 
-                if parsed_check.check_kind == CodeElementCheck.CheckKind.INVARIANT:
+                if parsed_check.check_kind == INVARIANT:
                     append_check(
                         parsed_check.check_kind,
                         self.current_scope + code_elem.identifier.name,
                         annotation,
                     )
-                elif (
-                    parsed_check.check_kind == CodeElementCheck.CheckKind.POST_COND
-                    or parsed_check.check_kind == CodeElementCheck.CheckKind.PRE_COND
-                ):
+                elif parsed_check.check_kind in (PRE_COND, POST_COND):
                     append_check(
                         parsed_check.check_kind,
                         None,
