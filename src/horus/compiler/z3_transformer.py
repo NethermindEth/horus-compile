@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Optional
+from typing import Dict, Optional
 
 import z3
 from starkware.cairo.lang.compiler.ast.arguments import IdentifierList
@@ -257,8 +257,8 @@ class Z3Transformer(IdentifierAwareVisitor):
         self,
         identifiers: IdentifierManager,
         preprocessor: Preprocessor,
-        logical_identifiers: dict[str, CairoType],
-        storage_vars: dict[ScopedName, IdentifierList],
+        logical_identifiers: Dict[str, CairoType],
+        storage_vars: Dict[ScopedName, IdentifierList],
         is_post: bool = False,
     ):
         super().__init__(identifiers)
