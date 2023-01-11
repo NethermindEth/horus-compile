@@ -35,6 +35,10 @@ jobs:
           poetry run pip install mypy
           poetry run mypy .
 
+      - name: Check version
+        run: |
+          diff <(poetry run python3 ./scripts/ci/get_version.py) <(poetry version)
+
   test:
     runs-on: ubuntu-latest
 
