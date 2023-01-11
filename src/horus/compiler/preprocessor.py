@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Optional
+from typing import Dict, List, Optional
 
 from starkware.cairo.lang.compiler.ast.arguments import IdentifierList
 from starkware.cairo.lang.compiler.ast.code_elements import (
@@ -50,23 +50,23 @@ INVARIANT = CodeElementCheck.CheckKind.INVARIANT
 
 @dataclass
 class HorusProgram(StarknetPreprocessedProgram):
-    specifications: dict[ScopedName, FunctionAnnotations]
-    invariants: dict[ScopedName, Annotation]
-    storage_vars: dict[ScopedName, int]
+    specifications: Dict[ScopedName, FunctionAnnotations]
+    invariants: Dict[ScopedName, Annotation]
+    storage_vars: Dict[ScopedName, int]
 
 
 class HorusPreprocessor(StarknetPreprocessor):
     def __init__(self, **kwargs):
-        self.storage_vars: dict[ScopedName, IdentifierList] = kwargs.pop("storage_vars")
+        self.storage_vars: Dict[ScopedName, IdentifierList] = kwargs.pop("storage_vars")
         super().__init__(**kwargs)
-        self.specifications: dict[ScopedName, FunctionAnnotations] = {}
-        self.invariants: dict[ScopedName, Annotation] = {}
-        self.logical_identifiers: dict[str, CairoType] = {}
+        self.specifications: Dict[ScopedName, FunctionAnnotations] = {}
+        self.invariants: Dict[ScopedName, Annotation] = {}
+        self.logical_identifiers: Dict[str, CairoType] = {}
 
         # This is used to defer pre/postcondition unfolding
         # until the visitor steps into the body of the function
         # when the preprocessor stumbles upon a function.
-        self.current_checks: list[CodeElementAnnotation] = []
+        self.current_checks: List[CodeElementAnnotation] = []
         self.current_function = None
 
         # Used for dummy labels
@@ -83,7 +83,7 @@ class HorusPreprocessor(StarknetPreprocessor):
             for var in HORUS_DECLS.keys():
                 specification.decls.pop(var, None)
 
-        storage_vars: dict[ScopedName, int] = {}
+        storage_vars: Dict[ScopedName, int] = {}
 
         for storage_var, args in self.storage_vars.items():
             size = sum(
