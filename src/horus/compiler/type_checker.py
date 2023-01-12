@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import dataclasses
-from typing import Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 from starkware.cairo.lang.compiler.ast.arguments import IdentifierList
 from starkware.cairo.lang.compiler.ast.cairo_types import (
@@ -75,10 +75,10 @@ def get_expr_addr(expr: Expression):
 class HorusTypeChecker(TypeSystemVisitor):
     def __init__(
         self,
-        accessible_scopes: Optional[list[ScopedName]] = None,
+        accessible_scopes: Optional[List[ScopedName]] = None,
         identifiers: Optional[IdentifierManager] = None,
-        logical_identifiers: dict[str, CairoType] = {},
-        storage_vars: dict[ScopedName, IdentifierList] = {},
+        logical_identifiers: Dict[str, CairoType] = {},
+        storage_vars: Dict[ScopedName, IdentifierList] = {},
     ):
         super().__init__(identifiers)
         self.accessible_scopes = accessible_scopes
@@ -373,8 +373,8 @@ def substitute_identifiers(
 def simplify_and_get_type(
     expr: Expression,
     preprocessor: Preprocessor,
-    logical_identifiers: dict[str, CairoType],
-    storage_vars: dict[ScopedName, IdentifierList],
+    logical_identifiers: Dict[str, CairoType],
+    storage_vars: Dict[ScopedName, IdentifierList],
     is_post: bool,
 ) -> tuple[Expression, CairoType]:
     def get_identifier(expr: ExprIdentifier):
@@ -489,8 +489,8 @@ def simplify_and_get_type(
 def simplify(
     expr: Expression,
     preprocessor: Preprocessor,
-    logical_identifiers: dict[str, CairoType],
-    storage_vars: dict[ScopedName, IdentifierList],
+    logical_identifiers: Dict[str, CairoType],
+    storage_vars: Dict[ScopedName, IdentifierList],
     is_post: bool,
 ) -> Expression:
     return simplify_and_get_type(
