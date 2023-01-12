@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import field
+from typing import Dict, List
 
 import marshmallow.fields as mfields
 import marshmallow_dataclass
@@ -30,7 +31,7 @@ class SexpField(mfields.Field):
 
 @marshmallow_dataclass.dataclass
 class StorageUpdate:
-    arguments: "list[z3.IntNumRef]" = field(
+    arguments: List[z3.IntNumRef] = field(
         metadata=dict(marshmallow_field=mfields.List(SexpField())),
         default_factory=list,
     )
@@ -45,7 +46,7 @@ class Annotation:
     sexpr: z3.BoolRef = field(
         metadata=dict(marshmallow_field=SexpField()), default=z3.BoolVal(True)
     )
-    source: "list[str]" = field(
+    source: List[str] = field(
         metadata=dict(marshmallow_field=mfields.List(mfields.String())),
         default_factory=list,
     )
@@ -74,17 +75,17 @@ class FunctionAnnotations:
         ),
         default=Annotation(),
     )
-    logical_variables: "dict[ScopedName, CairoType]" = field(
+    logical_variables: Dict[ScopedName, CairoType] = field(
         metadata=dict(
             marshmallow_field=mfields.Dict(ScopedNameAsStr(), CairoTypeAsStr())
         ),
         default_factory=dict,
     )
-    decls: "dict[str, int]" = field(
+    decls: Dict[str, int] = field(
         metadata=dict(marshmallow_field=mfields.Dict(mfields.Str(), mfields.Int())),
         default_factory=dict,
     )
-    storage_update: "dict[ScopedName, list[StorageUpdate]]" = field(
+    storage_update: Dict[ScopedName, List[StorageUpdate]] = field(
         metadata=dict(
             marshmallow_field=mfields.Dict(
                 ScopedNameAsStr(),
@@ -99,7 +100,7 @@ class FunctionAnnotations:
 
 @marshmallow_dataclass.dataclass(frozen=True)
 class HorusDefinition(ContractClass):
-    specifications: "dict[ScopedName, FunctionAnnotations]" = field(
+    specifications: Dict[ScopedName, FunctionAnnotations] = field(
         metadata=dict(
             marshmallow_field=mfields.Dict(
                 ScopedNameAsStr(),
@@ -108,7 +109,7 @@ class HorusDefinition(ContractClass):
         ),
         default_factory=dict,
     )
-    invariants: "dict[ScopedName, Annotation]" = field(
+    invariants: Dict[ScopedName, Annotation] = field(
         metadata=dict(
             marshmallow_field=mfields.Dict(
                 ScopedNameAsStr(),
@@ -117,7 +118,7 @@ class HorusDefinition(ContractClass):
         ),
         default_factory=dict,
     )
-    storage_vars: "dict[ScopedName, int]" = field(
+    storage_vars: Dict[ScopedName, int] = field(
         metadata=dict(marshmallow_field=mfields.Dict(ScopedNameAsStr(), mfields.Int())),
         default_factory=dict,
     )

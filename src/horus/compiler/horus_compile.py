@@ -7,7 +7,7 @@ import json
 import os
 import sys
 import time
-from typing import Callable, Optional, Sequence, Tuple
+from typing import Callable, Dict, List, Optional, Sequence, Tuple
 
 import starkware.cairo.lang.compiler.ast.visitor
 import starkware.cairo.lang.compiler.parser
@@ -71,7 +71,7 @@ def assemble_horus_contract(
 class HorusStorageVarDeclVisitor(IdentifierAwareVisitor):
     def __init__(
         self,
-        storage_vars: dict[ScopedName, IdentifierList],
+        storage_vars: Dict[ScopedName, IdentifierList],
         identifiers: Optional[IdentifierManager] = None,
     ):
         self.storage_vars = storage_vars
@@ -131,7 +131,7 @@ def horus_pass_manager(
 
 @dataclasses.dataclass
 class HorusPassManagerContext(PassManagerContext):
-    storage_vars: dict[ScopedName, IdentifierList] = dataclasses.field(
+    storage_vars: Dict[ScopedName, IdentifierList] = dataclasses.field(
         default_factory=dict
     )
 
@@ -147,7 +147,7 @@ def preprocess_codes(
     codes: Sequence[Tuple[str, str]],
     pass_manager: PassManager,
     main_scope: ScopedName = ScopedName(),
-    start_codes: Optional[list[Tuple[str, str]]] = None,
+    start_codes: Optional[List[Tuple[str, str]]] = None,
 ):
     """
     Preprocesses a list of Cairo files and returns a PreprocessedProgram instance.
@@ -210,7 +210,7 @@ def horus_compile_common(
         codes = get_codes(args.files)
         out = args.output if args.output is not None else sys.stdout
 
-        cairo_path: list[str] = list(
+        cairo_path: List[str] = list(
             filter(
                 None,
                 args.cairo_path.split(":") + os.getenv(LIBS_DIR_ENVVAR, "").split(":"),
