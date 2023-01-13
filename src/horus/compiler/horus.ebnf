@@ -39,7 +39,7 @@ logical_identifier: LOGICAL_IDENTIFIER ("." IDENTIFIER)*
 ?horus_bool_unary: horus_bool_atom
            | "not" horus_bool_atom -> bool_unary_neg
 
-?horus_bool_atom: bool_atom
+horus_bool_atom: bool_atom
          | expr "<=" expr   -> bool_expr_le
          | expr "<" expr    -> bool_expr_lt
          | expr ">=" expr   -> bool_expr_ge

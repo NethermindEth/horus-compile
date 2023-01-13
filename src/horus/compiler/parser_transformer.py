@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Optional
 
 import lark
+from starkware.cairo.lang.compiler.ast.bool_expr import BoolEqExpr
 from starkware.cairo.lang.compiler.ast.expr import *
 from starkware.cairo.lang.compiler.ast.expr import ExprIdentifier
 from starkware.cairo.lang.compiler.error_handling import InputFile
@@ -128,8 +129,11 @@ class HorusTransformer(ParserTransformer):
         return BoolConst(False)
 
     @lark.v_args(inline=True)
-    def bool_atom(self, expr):
-        return BoolExprAtom(expr)
+    def horus_bool_atom(self, expr):
+        if isinstance(expr, BoolEqExpr):
+            return BoolExprAtom(expr)
+
+        return expr
 
     @lark.v_args(inline=True)
     def bool_expr_le(self, lhs, rhs):
