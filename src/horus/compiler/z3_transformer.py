@@ -58,6 +58,7 @@ from starkware.cairo.lang.compiler.type_system_visitor import simplify_type_syst
 from horus.compiler.allowed_syscalls import allowed_syscalls
 from horus.compiler.code_elements import (
     BoolConst,
+    BoolExprAtom,
     BoolExprCompare,
     BoolFormula,
     BoolNegation,
@@ -396,6 +397,9 @@ class Z3Transformer(IdentifierAwareVisitor):
                 raise NotImplementedError("test")
 
         return result
+
+    def visit_BoolExprAtom(self, bool_expr_atom: BoolExprAtom):
+        return self.visit_BoolEqExpr(bool_expr_atom.bool_expr)
 
     def visit_BoolEqExpr(self, bool_expr: BoolEqExpr):
         a, a_type = simplify_and_get_type(
