@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import field
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 import marshmallow.fields as mfields
 import marshmallow_dataclass
@@ -12,6 +12,7 @@ from starkware.cairo.lang.compiler.fields import CairoTypeAsStr
 from starkware.cairo.lang.compiler.scoped_name import ScopedName, ScopedNameAsStr
 from starkware.starknet.services.api.contract_class import ContractClass
 
+import horus
 from horus.compiler.var_names import *
 from horus.utils import z3And
 
@@ -100,6 +101,9 @@ class FunctionAnnotations:
 
 @marshmallow_dataclass.dataclass(frozen=True)
 class HorusDefinition(ContractClass):
+    horus_version: Optional[str] = field(
+        metadata=dict(marshmallow_field=mfields.String()), default=horus.__version__
+    )
     specifications: Dict[ScopedName, FunctionAnnotations] = field(
         metadata=dict(
             marshmallow_field=mfields.Dict(
