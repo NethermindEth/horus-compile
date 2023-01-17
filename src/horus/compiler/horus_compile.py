@@ -62,6 +62,7 @@ def assemble_horus_contract(
 
     return HorusDefinition(
         **contract_definition.__dict__,
+        horus_version=horus.__version__,
         specifications=preprocessed_program.specifications,
         invariants=preprocessed_program.invariants,
         storage_vars=preprocessed_program.storage_vars,
