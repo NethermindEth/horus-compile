@@ -119,7 +119,7 @@ class HorusPreprocessor(StarknetPreprocessor):
                 )
             )
 
-        name = f"!dummy_label_{self.current_fresh_index}"
+        name = f"!anonymous_assert_label_{self.current_fresh_index}"
         self.current_fresh_index += 1
         self.identifiers.add_identifier(
             name=self.current_scope + name,
