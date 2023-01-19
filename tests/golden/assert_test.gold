@@ -1,6 +1,6 @@
 {
   "invariants": {
-    "__main__.main.!dummy_label_0": {
+    "__main__.main.!anonymous_assert_label_0": {
       "sexpr": [
         "(= 1 (memory ap))"
       ],
