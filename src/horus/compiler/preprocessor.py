@@ -19,6 +19,7 @@ from starkware.cairo.lang.compiler.identifier_definition import (
     LabelDefinition,
     StructDefinition,
 )
+from starkware.cairo.lang.compiler.identifier_manager import MissingIdentifierError
 from starkware.cairo.lang.compiler.identifier_utils import get_struct_definition
 from starkware.cairo.lang.compiler.scoped_name import ScopedName
 from starkware.starknet.compiler.starknet_preprocessor import (
@@ -319,55 +320,58 @@ class HorusPreprocessor(StarknetPreprocessor):
             self.specifications[self.current_scope] = current_annotations
 
         for parsed_check in self.current_checks:
-            if (
-                isinstance(parsed_check, CodeElementCheck)
-                and parsed_check.check_kind == INVARIANT
-            ):
-                if not isinstance(code_elem, CodeElementLabel):
-                    raise PreprocessorError(
-                        "@invariant annotation must be placed before a label",
-                        code_elem.location,
-                    )
-            elif isinstance(parsed_check, CodeElementCheck):
-                if not (
-                    isinstance(code_elem, CodeElementFunction)
-                    and code_elem.element_type == "func"
+            try:
+                if (
+                    isinstance(parsed_check, CodeElementCheck)
+                    and parsed_check.check_kind == INVARIANT
                 ):
-                    raise PreprocessorError(
-                        f"{parsed_check.check_kind} annotation is not allowed here",
-                        code_elem.location,
+                    if not isinstance(code_elem, CodeElementLabel):
+                        raise PreprocessorError(
+                            "@invariant annotation must be placed before a label",
+                            code_elem.location,
+                        )
+                elif isinstance(parsed_check, CodeElementCheck):
+                    if not (
+                        isinstance(code_elem, CodeElementFunction)
+                        and code_elem.element_type == "func"
+                    ):
+                        raise PreprocessorError(
+                            f"{parsed_check.check_kind} annotation is not allowed here",
+                            code_elem.location,
+                        )
+
+                if isinstance(parsed_check, CodeElementLogicalVariableDeclaration):
+                    self.add_logical_variable(parsed_check)
+                elif isinstance(parsed_check, CodeElementStorageUpdate):
+                    self.add_state_change(parsed_check)
+                elif isinstance(parsed_check, CodeElementCheck):
+                    is_post = parsed_check.check_kind == POST_COND
+                    z3_transformer = Z3Transformer(
+                        self.identifiers,
+                        self,
+                        self.logical_identifiers,
+                        self.storage_vars,
+                        is_post,
+                    )
+                    expr = z3_transformer.visit(parsed_check.formula)
+                    annotation = Annotation(
+                        sexpr=expr, source=[parsed_check.unpreprocessed_rep]
                     )
 
-            if isinstance(parsed_check, CodeElementLogicalVariableDeclaration):
-                self.add_logical_variable(parsed_check)
-            elif isinstance(parsed_check, CodeElementStorageUpdate):
-                self.add_state_change(parsed_check)
-            elif isinstance(parsed_check, CodeElementCheck):
-                is_post = parsed_check.check_kind == POST_COND
-                z3_transformer = Z3Transformer(
-                    self.identifiers,
-                    self,
-                    self.logical_identifiers,
-                    self.storage_vars,
-                    is_post,
-                )
-                expr = z3_transformer.visit(parsed_check.formula)
-                annotation = Annotation(
-                    sexpr=expr, source=[parsed_check.unpreprocessed_rep]
-                )
-
-                if parsed_check.check_kind == INVARIANT:
-                    append_check(
-                        parsed_check.check_kind,
-                        self.current_scope + code_elem.identifier.name,
-                        annotation,
-                    )
-                elif parsed_check.check_kind in (PRE_COND, POST_COND):
-                    append_check(
-                        parsed_check.check_kind,
-                        None,
-                        annotation,
-                    )
+                    if parsed_check.check_kind == INVARIANT:
+                        append_check(
+                            parsed_check.check_kind,
+                            self.current_scope + code_elem.identifier.name,
+                            annotation,
+                        )
+                    elif parsed_check.check_kind in (PRE_COND, POST_COND):
+                        append_check(
+                            parsed_check.check_kind,
+                            None,
+                            annotation,
+                        )
+            except MissingIdentifierError as e:
+                raise PreprocessorError(str(e), location=parsed_check.location)
 
         self.current_checks = []
 
