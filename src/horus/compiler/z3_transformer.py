@@ -51,6 +51,7 @@ from starkware.cairo.lang.compiler.preprocessor.preprocessor_error import (
 )
 from starkware.cairo.lang.compiler.resolve_search_result import resolve_search_result
 from starkware.cairo.lang.compiler.scoped_name import ScopedName
+from starkware.cairo.lang.compiler.type_casts import CairoTypeError
 from starkware.cairo.lang.compiler.type_system_visitor import *
 from starkware.cairo.lang.compiler.type_system_visitor import simplify_type_system
 
@@ -411,7 +412,12 @@ class Z3Transformer(IdentifierAwareVisitor):
             self.storage_vars,
             self.is_post,
         )
-        assert a_type == b_type, "Types of lhs and rhs must coincide"
+
+        if a_type != b_type:
+            raise CairoTypeError(
+                f"Types of lhs and rhs must coincide. Got {a_type.format()} and {b_type.format()}",
+                bool_expr.location,
+            )
 
         if isinstance(a_type, TypeStruct):
             result = self.make_struct_eq(bool_expr.a, bool_expr.b, a_type)
@@ -443,7 +449,11 @@ class Z3Transformer(IdentifierAwareVisitor):
             self.is_post,
         )
 
-        assert a_type == b_type, "Types of lhs and rhs must coincide"
+        if a_type != b_type:
+            raise CairoTypeError(
+                f"Types of lhs and rhs must coincide. Got {a_type.format()} and {b_type.format()}",
+                formula.location,
+            )
 
         if isinstance(a_type, (TypeFelt, TypePointer)):
             a = self.z3_expression_transformer.visit(a)
@@ -457,6 +467,11 @@ class Z3Transformer(IdentifierAwareVisitor):
                 return a >= b
             elif formula.comp == ">":
                 return a > b
+        else:
+            raise CairoTypeError(
+                f"Cannot compare values of type {a_type.format()}",
+                location=formula.location,
+            )
 
     def visit_BoolConst(self, formula: BoolConst):
         return z3.BoolVal(formula.const)
