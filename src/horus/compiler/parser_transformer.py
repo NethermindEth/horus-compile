@@ -131,21 +131,21 @@ class HorusTransformer(ParserTransformer):
     def bool_atom(self, expr):
         return BoolExprAtom(expr)
 
-    @lark.v_args(inline=True)
-    def bool_expr_le(self, lhs, rhs):
-        return BoolExprCompare(lhs, rhs, "<=")
+    @lark.v_args(inline=True, meta=True)
+    def bool_expr_le(self, meta, lhs, rhs):
+        return BoolExprCompare(lhs, rhs, "<=", location=self.meta2loc(meta))
 
-    @lark.v_args(inline=True)
-    def bool_expr_lt(self, lhs, rhs):
-        return BoolExprCompare(lhs, rhs, "<")
+    @lark.v_args(inline=True, meta=True)
+    def bool_expr_lt(self, meta, lhs, rhs):
+        return BoolExprCompare(lhs, rhs, "<", location=self.meta2loc(meta))
 
-    @lark.v_args(inline=True)
-    def bool_expr_ge(self, lhs, rhs):
-        return BoolExprCompare(lhs, rhs, ">=")
+    @lark.v_args(inline=True, meta=True)
+    def bool_expr_ge(self, meta, lhs, rhs):
+        return BoolExprCompare(lhs, rhs, ">=", location=self.meta2loc(meta))
 
-    @lark.v_args(inline=True)
-    def bool_expr_gt(self, lhs, rhs):
-        return BoolExprCompare(lhs, rhs, ">")
+    @lark.v_args(inline=True, meta=True)
+    def bool_expr_gt(self, meta, lhs, rhs):
+        return BoolExprCompare(lhs, rhs, ">", location=self.meta2loc(meta))
 
     @lark.v_args(inline=True)
     def bool_expr_parentheses(self, formula):
