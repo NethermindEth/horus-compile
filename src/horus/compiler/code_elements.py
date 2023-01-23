@@ -64,6 +64,7 @@ class BoolExprCompare(BoolFormula):
     a: Expression
     b: Expression
     comp: str
+    location: Optional[Location] = LocationField
 
     def get_children(self) -> Sequence[Optional["AstNode"]]:
         return [self.a, self.b]
