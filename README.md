@@ -15,12 +15,10 @@ pip install git+https://github.com/NethermindEth/horus-compile.git@master
 ## Usage
 
 ```console
-horus-compile [-h] [--abi ABI] [--disable_hint_validation]
-              [--account_contract] [--prime PRIME]
-              [--cairo_path CAIRO_PATH] [--preprocess]
-              [--output OUTPUT] [--no_debug_info]
-              [--cairo_dependencies CAIRO_DEPENDENCIES]
-              [--no_opt_unused_functions] [-v]
+horus-compile [-h] [--abi ABI] [--disable_hint_validation] [--account_contract]
+              [--spec_output SPEC_OUTPUT] [--prime PRIME] [--cairo_path CAIRO_PATH]
+              [--preprocess] [--output OUTPUT] [--no_debug_info] [--debug_info_with_source]
+              [--cairo_dependencies CAIRO_DEPENDENCIES] [--no_opt_unused_functions] [-v]
               file [file ...]
 ```
 A tool to compile checked StarkNet contracts.
@@ -54,6 +52,9 @@ program hints against a whitelist.
 
 Compile as account contract, which means the ABI will
 be checked for expected builtin entry points.
+
+`--spec_output SPEC_OUTPUT`
+The specification output file name (default: stdout).
 
 `--prime PRIME`
 
