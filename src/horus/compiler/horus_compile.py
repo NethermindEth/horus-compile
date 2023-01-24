@@ -46,6 +46,7 @@ from starkware.starknet.compiler.compile import assemble_starknet_contract, get_
 from starkware.starknet.compiler.starknet_pass_manager import starknet_pass_manager
 from starkware.starknet.compiler.storage_var import STORAGE_VAR_DECORATOR
 from starkware.starknet.compiler.validation_utils import has_decorator
+from starkware.starknet.services.api.contract_class import ContractClass
 
 import horus.compiler.parser
 from horus.compiler.code_elements import AnnotatedCodeElement
@@ -55,17 +56,19 @@ from horus.compiler.preprocessor import HorusPreprocessor, HorusProgram
 
 def assemble_horus_contract(
     preprocessed_program: HorusProgram, *args, **kwargs
-) -> HorusDefinition:
+) -> Tuple[ContractClass, HorusDefinition]:
     contract_definition = assemble_starknet_contract(
         preprocessed_program, *args, **kwargs
     )
 
-    return HorusDefinition(
-        **contract_definition.__dict__,
-        horus_version=horus.__version__,
-        specifications=preprocessed_program.specifications,
-        invariants=preprocessed_program.invariants,
-        storage_vars=preprocessed_program.storage_vars,
+    return (
+        contract_definition,
+        HorusDefinition(
+            horus_version=horus.__version__,
+            specifications=preprocessed_program.specifications,
+            invariants=preprocessed_program.invariants,
+            storage_vars=preprocessed_program.storage_vars,
+        ),
     )
 
 
@@ -210,6 +213,7 @@ def horus_compile_common(
     try:
         codes = get_codes(args.files)
         out = args.output if args.output is not None else sys.stdout
+        specs_out = args.spec_output if args.spec_output is not None else sys.stdout
 
         cairo_path: List[str] = list(
             filter(
@@ -241,7 +245,7 @@ def horus_compile_common(
                 for source_file in module_reader.source_files | set(args.files):
                     file_contents_for_debug_info[source_file] = open(source_file).read()
 
-            assembled_program = assemble_func(
+            assembled_program, specs = assemble_func(
                 preprocessed,
                 main_scope=MAIN_SCOPE,
                 add_debug_info=debug_info,
@@ -256,6 +260,15 @@ def horus_compile_common(
             )
             # Print a new line at the end.
             print(file=out)
+
+            json.dump(
+                specs.Schema().dump(specs),
+                specs_out,
+                indent=4,
+                sort_keys=True,
+            )
+            # Print a new line at the end.
+            print(file=specs_out)
 
         return preprocessed
     finally:
@@ -350,6 +363,11 @@ def main(args):
         "--account_contract",
         action="store_true",
         help="Compile as account contract, which means the ABI will be checked for expected builtin entry points.",
+    )
+    parser.add_argument(
+        "--spec_output",
+        type=argparse.FileType("w"),
+        help="The specification output file name (default: stdout).",
     )
 
     def pass_manager_factory(
