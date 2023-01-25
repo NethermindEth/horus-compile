@@ -9,6 +9,24 @@
       ]
     }
   },
-  "specifications": {},
+  "specifications": {
+    "__main__.main": {
+      "decls": {},
+      "logical_variables": {},
+      "post": {
+        "sexpr": [
+          "true"
+        ],
+        "source": []
+      },
+      "pre": {
+        "sexpr": [
+          "true"
+        ],
+        "source": []
+      },
+      "storage_update": {}
+    }
+  },
   "storage_vars": {}
 }
