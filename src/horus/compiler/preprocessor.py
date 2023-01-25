@@ -144,6 +144,13 @@ class HorusPreprocessor(StarknetPreprocessor):
         if isinstance(annotated_code_element.annotation, CodeElementCheck):
             if annotated_code_element.annotation.check_kind == ASSERT:
                 self.add_dummy_label_with_assert(annotated_code_element.annotation)
+
+                # Turning the function into annotated one.
+                current_annotations = self.specifications.get(
+                    self.current_scope, FunctionAnnotations()
+                )
+                self.specifications[self.current_scope] = current_annotations
+
                 return self.visit(annotated_code_element.code_elm)
 
         result = self.visit(annotated_code_element.code_elm)
