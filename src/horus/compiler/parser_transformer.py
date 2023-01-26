@@ -51,16 +51,17 @@ class HorusTransformer(ParserTransformer):
 
         if comment is not None:
             possible_annotation: str = comment.strip()
+            if possible_annotation.startswith("@"):
+                annotation_type = possible_annotation.split(" ")[0].strip()
 
-            for annotation in [
-                "@pre",
-                "@post",
-                "@assert",
-                "@invariant",
-                "@declare",
-                "@storage_update",
-            ]:
-                if possible_annotation.startswith(annotation):
+                if annotation_type in [
+                    "@pre",
+                    "@post",
+                    "@assert",
+                    "@invariant",
+                    "@declare",
+                    "@storage_update",
+                ]:
                     check = horus.compiler.parser.parse(
                         filename=self.input_file.filename,
                         code=possible_annotation,
@@ -79,6 +80,11 @@ class HorusTransformer(ParserTransformer):
                         check, code_elm=code_elem.code_elm
                     )
                     return code_elem
+                else:
+                    raise ParserError(
+                        f"Unexpected annotation type: {annotation_type}",
+                        location=self.meta2loc(meta),
+                    )
 
         return super().commented_code_element(meta, value)
 
