@@ -335,7 +335,7 @@ class HorusPreprocessor(StarknetPreprocessor):
                     if not isinstance(code_elem, CodeElementLabel):
                         raise PreprocessorError(
                             "@invariant annotation must be placed before a label",
-                            code_elem.location,
+                            parsed_check.location,
                         )
                 elif isinstance(parsed_check, CodeElementCheck):
                     if not (
@@ -344,7 +344,7 @@ class HorusPreprocessor(StarknetPreprocessor):
                     ):
                         raise PreprocessorError(
                             f"{parsed_check.check_kind} annotation is not allowed here",
-                            code_elem.location,
+                            parsed_check.location,
                         )
 
                 if isinstance(parsed_check, CodeElementLogicalVariableDeclaration):
