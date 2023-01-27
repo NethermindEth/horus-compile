@@ -9,7 +9,7 @@ documentation.
 Make sure you have Python 3 installed, and run:
 
 ```console
-pip install git+https://github.com/NethermindEth/horus-compile.git@master
+pip install git+ssh://git@github.com/NethermindEth/horus-compile.git@master
 ```
 
 ## Usage
