@@ -14,9 +14,9 @@ jobs:
         run: pipx install poetry
       - uses: actions/setup-python@v3
         with:
-          python-version: '3.7'
+          python-version: '3.9'
           cache: 'poetry'
-      - run: poetry env use 3.7
+      - run: poetry env use 3.9
       - run: poetry install
 
       - name: Check formatting
@@ -48,9 +48,9 @@ jobs:
         run: pipx install poetry
       - uses: actions/setup-python@v3
         with:
-          python-version: '3.7'
+          python-version: '3.9'
           cache: 'poetry'
-      - run: poetry env use 3.7
+      - run: poetry env use 3.9
       - run: poetry install
       - run: poetry run pip install pytest
       - name: Tests
