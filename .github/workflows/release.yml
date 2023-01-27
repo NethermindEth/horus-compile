@@ -1,0 +1,27 @@
+name: Release
+
+on:
+  push:
+    tags: "v*"
+  workflow_dispatch:
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install poetry
+        run: pipx install poetry
+      - uses: actions/setup-python@v3
+        with:
+          python-version: '3.7'
+          cache: 'poetry'
+      - run: poetry env use 3.7
+      - name: Build
+        run: poetry build
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: |
+            dist/*
