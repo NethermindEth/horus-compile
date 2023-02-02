@@ -18,7 +18,7 @@ skip_gitignore = true
 
 [tool.poetry]
 name = "horus-compile"
-version = "0.0.6.11"
+version = "0.0.6.12"
 authors = ["Nethermind <hello@nethermind.io>"]
 description = "Use formally verified annotations in your Cairo code"
 classifiers = [
@@ -27,6 +27,12 @@ classifiers = [
     ]
 packages = [ { include = "horus", from = "src" } ]
 include = [ "src/horus/compiler/horus.ebnf" ]
+readme = "README.md"
+license = "APACHE LICENSE, VERSION 2.0"
+maintainers = [
+  "Ganesh Tiwari <ganesh@nethermind.io>",
+  "Ilia Vlasov <ilia@nethermind.io>"
+]
 
 [tool.poetry.scripts]
 horus-compile = "horus.compiler.horus_compile:run"
