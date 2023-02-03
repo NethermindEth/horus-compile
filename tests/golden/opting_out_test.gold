@@ -1,0 +1,67 @@
+{
+  "invariants": {},
+  "specifications": {
+    "__main__._Stack.lit": {
+      "decls": {},
+      "logical_variables": {},
+      "post": {
+        "sexpr": [
+          "(let ((a!1 (memory (+ (memory (+ ap (- 1))) 1))))",
+          "  (and (= (memory (+ ap (- 2))) (memory (+ fp (- 3))))",
+          "       (= a!1 (memory (+ fp (- 4))))))"
+        ],
+        "source": [
+          "[ap - 2] == i and $Return.stack_.next == stack"
+        ]
+      },
+      "pre": {
+        "sexpr": [
+          "true"
+        ],
+        "source": []
+      },
+      "storage_update": {}
+    },
+    "__main__._Stack.top": {
+      "decls": {},
+      "logical_variables": {},
+      "post": {
+        "sexpr": [
+          "(= (memory (+ ap (- 1))) (memory (memory (+ fp (- 3)))))"
+        ],
+        "source": [
+          "$Return.res == stack.value"
+        ]
+      },
+      "pre": {
+        "sexpr": [
+          "(not (= 0 (memory (+ fp (- 3)))))"
+        ],
+        "source": [
+          "cast(stack, felt) != 0"
+        ]
+      },
+      "storage_update": {}
+    },
+    "__main__.main_": {
+      "decls": {},
+      "logical_variables": {},
+      "post": {
+        "sexpr": [
+          "(= 11 (memory (+ ap (- 1))))"
+        ],
+        "source": [
+          "$Return.res == 11"
+        ]
+      },
+      "pre": {
+        "sexpr": [
+          "true"
+        ],
+        "source": []
+      },
+      "storage_update": {}
+    }
+  },
+  "storage_vars": {}
+}

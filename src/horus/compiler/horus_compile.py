@@ -112,7 +112,6 @@ def horus_pass_manager(
     opt_unused_functions: bool = True,
     disable_hint_validation: bool = False,
 ) -> PassManager:
-
     manager = starknet_pass_manager(
         prime, read_module, opt_unused_functions, disable_hint_validation
     )
