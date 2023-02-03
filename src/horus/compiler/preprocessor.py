@@ -382,6 +382,20 @@ class HorusPreprocessor(StarknetPreprocessor):
 
         self.current_checks = []
 
+    def visit_CodeElementFunction(self, elm: CodeElementFunction):
+        new_scope = self.current_scope + elm.name
+
+        if elm.element_type == "func":
+            # Check if this function should be skipped.
+            if (
+                self.functions_to_compile is not None
+                and new_scope not in self.functions_to_compile
+            ):
+                self.current_function = None
+                self.current_checks = []
+
+        return super().visit_CodeElementFunction(elm)
+
     def visit_function_body_with_retries(
         self, code_block: CodeBlock, location: Optional[Location]
     ):
