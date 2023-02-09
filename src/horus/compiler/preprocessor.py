@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from functools import reduce
 from typing import Dict, List, Optional
 
-from starkware.cairo.lang.compiler.ast.arguments import IdentifierList
 from starkware.cairo.lang.compiler.ast.code_elements import (
     CodeBlock,
     CodeElement,
@@ -18,9 +18,13 @@ from starkware.cairo.lang.compiler.identifier_definition import (
     FutureIdentifierDefinition,
     LabelDefinition,
     StructDefinition,
+    TypeDefinition,
 )
 from starkware.cairo.lang.compiler.identifier_manager import MissingIdentifierError
-from starkware.cairo.lang.compiler.identifier_utils import get_struct_definition
+from starkware.cairo.lang.compiler.identifier_utils import (
+    get_struct_definition,
+    get_type_definition,
+)
 from starkware.cairo.lang.compiler.scoped_name import ScopedName
 from starkware.starknet.compiler.starknet_preprocessor import (
     StarknetPreprocessedProgram,
@@ -40,6 +44,7 @@ from horus.compiler.contract_definition import (
     StorageUpdate,
 )
 from horus.compiler.parser import *
+from horus.compiler.storage_info import StorageVarInfo
 from horus.compiler.z3_transformer import *
 from horus.utils import get_decls
 
@@ -58,7 +63,7 @@ class HorusProgram(StarknetPreprocessedProgram):
 
 class HorusPreprocessor(StarknetPreprocessor):
     def __init__(self, **kwargs):
-        self.storage_vars: Dict[ScopedName, IdentifierList] = kwargs.pop("storage_vars")
+        self.storage_vars: dict[ScopedName, StorageVarInfo] = kwargs.pop("storage_vars")
         super().__init__(**kwargs)
         self.specifications: Dict[ScopedName, FunctionAnnotations] = {}
         self.invariants: Dict[ScopedName, Annotation] = {}
@@ -73,6 +78,26 @@ class HorusPreprocessor(StarknetPreprocessor):
         # Used for dummy labels
         self.current_fresh_index: int = 0
 
+    def get_size_by_type_name(
+        self, type_name: ScopedName, location: Optional[Location]
+    ):
+        try:
+            res = self.get_identifier_definition(
+                name=type_name,
+                supported_types=(StructDefinition, TypeDefinition),
+                location=location,
+            )
+        except PreprocessorError as e:
+            res = self.identifiers.get(type_name).identifier_definition
+            if not res:
+                raise e
+
+        assert isinstance(res, (StructDefinition, TypeDefinition))
+        if isinstance(res, StructDefinition):
+            return res.size
+
+        return self.get_size(res.cairo_type)
+
     def get_program(self) -> HorusProgram:
         starknet_program = super().get_program()
 
@@ -86,17 +111,18 @@ class HorusPreprocessor(StarknetPreprocessor):
 
         storage_vars: Dict[ScopedName, int] = {}
 
-        for storage_var, args in self.storage_vars.items():
+        for storage_var, info in self.storage_vars.items():
             size = sum(
                 (
                     self.get_size(arg.expr_type)
                     if arg.expr_type is not None
                     else self.get_size(TypeFelt())
-                    for arg in args.identifiers
+                    for arg in info.args.identifiers
                 )
             )
 
-            storage_vars[storage_var] = size
+            for name in self.flatten_member(storage_var, info.ret_type):
+                storage_vars[name] = size
 
         return HorusProgram(
             **starknet_program.__dict__,
@@ -188,7 +214,7 @@ class HorusPreprocessor(StarknetPreprocessor):
 
             assert isinstance(
                 definition, StructDefinition
-            ), "TypeStruct must contain StructDefinition"
+            ), f"TypeStruct with the name {declaration.type.scope} must yield a StructDefinition.\n Got {definition.TYPE()}"
 
             for member_name, member_definition in definition.members.items():
                 self.add_logical_variable(
@@ -223,6 +249,65 @@ class HorusPreprocessor(StarknetPreprocessor):
 
         self.logical_identifiers[declaration.name] = declaration.type
 
+    def flatten_member(
+        self,
+        name: ScopedName,
+        mem_type: CairoType,
+        result: Optional[list[ScopedName]] = None,
+    ):
+        if result is None:
+            result = []
+
+        if isinstance(mem_type, TypeStruct):
+            definition = get_struct_definition(
+                struct_name=mem_type.scope, identifier_manager=self.identifiers
+            )
+            assert isinstance(
+                definition, StructDefinition
+            ), f"TypeStruct with the name {mem_type.scope} must yield a StructDefinition.\n Got {definition.TYPE()}"
+            for member_name, member_definition in definition.members.items():
+                if isinstance(member_definition.cairo_type, (TypeFelt, TypePointer)):
+                    result.append(name + member_name)
+                elif isinstance(member_definition.cairo_type, TypeStruct):
+                    self.flatten_member(
+                        name + member_name, member_definition.cairo_type, result
+                    )
+                elif isinstance(member_definition.cairo_type, TypeTuple):
+                    self.flatten_member(
+                        name + member_name, member_definition.cairo_type, result
+                    )
+                else:
+                    raise NotImplementedError(
+                        f"Type {member_definition.cairo_type.format()} is not supported."
+                    )
+        elif isinstance(mem_type, TypeTuple):
+            for i, member in enumerate(mem_type.members):
+                if member.name is not None:
+                    member_a = name + member.name
+                else:
+                    member_a = name + str(i)
+
+                if isinstance(member.typ, (TypeFelt, TypePointer)):
+                    result.append(member_a)
+                elif isinstance(member.typ, TypeIdentifier):
+                    res = self.identifiers.get(member.typ.name).identifier_definition
+                    if isinstance(res, StructDefinition):
+                        self.flatten_member(
+                            member_a,
+                            TypeStruct(res.full_name, location=res.location),
+                            result,
+                        )
+                    elif isinstance(res, TypeDefinition):
+                        self.flatten_member(member_a, res.cairo_type, result)
+                elif isinstance(member.typ, TypeStruct):
+                    self.flatten_member(member_a, member.typ, result)
+                elif isinstance(member.typ, TypeTuple):
+                    self.flatten_member(member_a, member.typ, result)
+        else:
+            result.append(name)
+
+        return result
+
     def add_state_change(self, decl: CodeElementStorageUpdate):
         z3_transformer = Z3Transformer(
             self.identifiers,
@@ -230,9 +315,6 @@ class HorusPreprocessor(StarknetPreprocessor):
             self.logical_identifiers,
             self.storage_vars,
             is_post=True,
-        )
-        z3_expr_transformer = Z3ExpressionTransformer(
-            identifiers=self.identifiers, z3_transformer=z3_transformer
         )
 
         decl_full_name = self.identifiers.search(
@@ -244,27 +326,19 @@ class HorusPreprocessor(StarknetPreprocessor):
                 f"{decl_full_name} is not a storage variable", location=decl.location
             )
 
-        storage_var_args = get_struct_definition(
-            decl_full_name + "read" + "Args", self.identifiers
-        )
-        assert isinstance(storage_var_args, StructDefinition)
+        storage_var_args = self.storage_vars[decl_full_name].args
 
-        if len(storage_var_args.members) != len(decl.arguments.args):
+        if len(storage_var_args.identifiers) != len(decl.arguments.args):
             raise PreprocessorError(
                 f"Incorrect number of arguments for a storage map.",
                 location=decl.location,
             )
 
-        for storage_def in storage_var_args.members.values():
-            assert isinstance(
-                storage_def.cairo_type, TypeFelt
-            ), "Non-felt arguments of storage maps are not supported yet."
-
         args = []
-        for [storage_arg_name, storage_def], arg in zip(
-            storage_var_args.members.items(), decl.arguments.args
+        for arg_identifier, arg in zip(
+            storage_var_args.identifiers, decl.arguments.args
         ):
-            if arg.identifier and arg.identifier.name != storage_arg_name:
+            if arg.identifier and arg.identifier.name != arg_identifier.name:
                 raise PreprocessorError(
                     f"Wrong argument name: {arg.identifier.name}",
                     location=decl.location,
@@ -278,33 +352,88 @@ class HorusPreprocessor(StarknetPreprocessor):
                 is_post=True,
             )
 
-            if not isinstance(arg_type, TypeFelt):
-                raise PreprocessorError(
-                    f"Argument value must have type {TypeFelt().format}",
-                    location=decl.location,
-                )
-            args.append(z3_expr_transformer.visit(arg_expr))
+            args += z3_transformer.flatten_expr(arg_expr)
 
         current_annotations = self.specifications.get(
             self.current_scope, FunctionAnnotations()
         )
-        storage_updates = current_annotations.storage_update.get(decl_full_name, [])
-        storage_update = StorageUpdate(
-            args,
-            z3_expr_transformer.visit(
-                simplify(
-                    decl.value,
-                    self,
-                    self.logical_identifiers,
-                    self.storage_vars,
-                    is_post=True,
+
+        if not decl.member_path:
+            raise PreprocessorError(
+                f"Storage update should be referenced via its return type members",
+                location=decl.location,
+            )
+
+        if not current_annotations.storage_update.get(decl_full_name, None) is None:
+            raise PreprocessorError(
+                f"Full state annotation has already been provided for {decl.name}.",
+                location=decl.location,
+            )
+
+        storage_var_return = self.storage_vars[decl_full_name].ret_type
+        assert isinstance(storage_var_return, TypeTuple)
+
+        current_member_type = storage_var_return
+
+        self.accessible_scopes.append(ScopedName())  # A hack to get
+        # the fully resolved type names searched.
+        for mem_name in decl.member_path:
+            if isinstance(current_member_type, TypeIdentifier):
+                current_member_type = self.resolve_type(current_member_type)
+
+            if isinstance(current_member_type, TypeStruct):
+                struct_def = get_struct_definition(
+                    current_member_type.scope, self.identifiers
                 )
-            ),
-            decl.unpreprocessed_rep,
+                current_member_type = struct_def.members[mem_name].cairo_type
+            elif isinstance(current_member_type, TypeTuple):
+                mems = [
+                    mem for mem in current_member_type.members if mem.name == mem_name
+                ]
+                if mems:
+                    current_member_type = mems[0].typ
+                else:
+                    raise PreprocessorError(
+                        f"Cannot find a member {mem_name} in type {current_member_type.format()}",
+                        location=decl.location,
+                    )
+            else:
+                raise PreprocessorError(
+                    f"Wrong type: {current_member_type.format()}. A struct or tuple was expected.",
+                    location=decl.location,
+                )
+
+        if isinstance(current_member_type, TypeIdentifier):
+            current_member_type = self.resolve_type(current_member_type)
+
+        self.accessible_scopes.pop()
+
+        storage_member_name = reduce(
+            ScopedName.__add__, decl.member_path, decl_full_name
         )
-        storage_updates.append(storage_update)
-        current_annotations.storage_update[decl_full_name] = storage_updates
-        self.specifications[self.current_scope] = current_annotations
+        storage_updates = current_annotations.storage_update.get(
+            storage_member_name, []
+        )
+
+        flattened, expr_type = z3_transformer.flatten_expr_and_get_type(decl.value)
+
+        if expr_type != current_member_type:
+            raise PreprocessorError(
+                f"{expr_type.format()} does not coincide with {current_member_type.format()}",
+                location=decl.value.location,
+            )
+
+        flattened_member = self.flatten_member(storage_member_name, expr_type)
+
+        for lhs, rhs in zip(flattened_member, flattened):
+            storage_update = StorageUpdate(
+                args,
+                rhs,
+                decl.unpreprocessed_rep,
+            )
+            storage_updates.append(storage_update)
+            current_annotations.storage_update[lhs] = storage_updates
+            self.specifications[self.current_scope] = current_annotations
 
     def compile_annotations(self, code_elem: CodeElement):
         def append_check(
