@@ -54,4 +54,4 @@ annotation: "@pre" horus_bool_formula  -> precond_annotation
           | "@assert" horus_bool_formula -> assert_annotation
           | "@invariant" horus_bool_formula -> invariant_annotation
           | "@declare" logical_identifier_def ":" type -> declare_annotation
-          | "@storage_update" identifier "(" arg_list ")" ":=" expr -> storage_update_annotation
+          | "@storage_update" identifier "(" arg_list ")" ("." identifier_def)+ ":=" expr -> storage_update_annotation

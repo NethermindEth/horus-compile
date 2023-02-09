@@ -7,7 +7,6 @@ from starkware.cairo.lang.compiler.ast.arguments import IdentifierList
 from starkware.cairo.lang.compiler.ast.cairo_types import (
     CairoType,
     TypeFelt,
-    TypeIdentifier,
     TypePointer,
     TypeStruct,
     TypeTuple,
@@ -34,6 +33,7 @@ from starkware.cairo.lang.compiler.identifier_definition import (
     FunctionDefinition,
     NamespaceDefinition,
     ReferenceDefinition,
+    StructDefinition,
     TypeDefinition,
 )
 from starkware.cairo.lang.compiler.identifier_manager import (
@@ -61,6 +61,7 @@ from starkware.crypto.signature.signature import FIELD_PRIME
 
 from horus.compiler.allowed_syscalls import allowed_syscalls
 from horus.compiler.code_elements import ExprLogicalIdentifier
+from horus.compiler.storage_info import StorageVarInfo
 
 
 def get_expr_addr(expr: Expression):
@@ -154,22 +155,29 @@ class HorusTypeChecker(TypeSystemVisitor):
     def visit_ExprCast(self, expr: ExprCast) -> Tuple[Expression, CairoType]:
         if isinstance(expr.dest_type, TypeStruct):
             assert self.identifiers is not None
-            search_result = self.identifiers.search(
-                self.accessible_scopes, expr.dest_type.scope
-            )
-            definition = resolve_search_result(search_result, self.identifiers)
+            try:
+                search_result = self.identifiers.search(
+                    self.accessible_scopes, expr.dest_type.scope
+                )
+                definition = resolve_search_result(search_result, self.identifiers)
+                canonical_name = search_result.canonical_name
+            except MissingIdentifierError as e:
+                definition = self.identifiers.get_by_full_name(expr.dest_type.scope)
+                canonical_name = expr.dest_type.scope
+                if definition is None:
+                    raise e
 
             if isinstance(definition, NamespaceDefinition):
                 try:
                     self.identifiers.search(
-                        self.accessible_scopes, expr.dest_type.scope + "read"
+                        self.accessible_scopes, canonical_name + "read"
                     )
                     self.identifiers.search(
-                        self.accessible_scopes, expr.dest_type.scope + "write"
+                        self.accessible_scopes, canonical_name + "write"
                     )
 
                     ret_type_def = get_type_definition(
-                        search_result.canonical_name + "read" + "Return",
+                        canonical_name + "read" + "Return",
                         self.identifiers,
                     )
                     assert isinstance(ret_type_def, TypeDefinition)
@@ -189,8 +197,15 @@ class HorusTypeChecker(TypeSystemVisitor):
                         location=expr.location,
                     )
             elif isinstance(definition, FunctionDefinition):
-                if search_result.canonical_name in allowed_syscalls:
+                if canonical_name in allowed_syscalls:
                     return expr, TypeFelt(expr.location)
+                else:
+                    raise CairoTypeError(
+                        "Function calls are not allowed in assertions",
+                        location=expr.location,
+                    )
+            elif isinstance(definition, StructDefinition):
+                return expr, TypeStruct(canonical_name, location=expr.location)
 
         return super().visit_ExprCast(expr)  # type: ignore
 
@@ -229,7 +244,7 @@ class HorusTypeChecker(TypeSystemVisitor):
                     )
 
                 if len(expr.rvalue.arguments.args) != len(
-                    self.storage_vars[search_result.canonical_name].identifiers
+                    self.storage_vars[search_result.canonical_name].args.identifiers
                 ):
                     raise CairoTypeError(
                         f"Storage var {search_result.canonical_name} has {len(self.storage_vars[search_result.canonical_name].identifiers)} arguments. Provided {len(expr.rvalue.arguments.args)}",
@@ -238,7 +253,7 @@ class HorusTypeChecker(TypeSystemVisitor):
 
                 args_signature = self.storage_vars[
                     search_result.canonical_name
-                ].identifiers.copy()
+                ].args.identifiers.copy()
                 is_named = False
                 for arg in expr.rvalue.arguments.args:
                     assert isinstance(arg, ExprAssignment)
@@ -271,9 +286,14 @@ class HorusTypeChecker(TypeSystemVisitor):
 
                     _, arg_type = self.visit(arg.expr)
 
-                    if arg_type != found_arg.expr_type:
+                    assert self.accessible_scopes is not None
+                    self.accessible_scopes.append(ScopedName())
+                    resolved_type_arg = self.resolve_type(found_arg.expr_type)
+                    self.accessible_scopes.pop()
+
+                    if arg_type != resolved_type_arg:
                         raise CairoTypeError(
-                            f"The argument is expected to have type {found_arg.expr_type}",
+                            f"The argument is expected to have type {found_arg.expr_type.format()}",
                             location=arg.expr.location,
                         )
 
@@ -373,8 +393,8 @@ def substitute_identifiers(
 def simplify_and_get_type(
     expr: Expression,
     preprocessor: Preprocessor,
-    logical_identifiers: Dict[str, CairoType],
-    storage_vars: Dict[ScopedName, IdentifierList],
+    logical_identifiers: dict[str, CairoType],
+    storage_vars: dict[ScopedName, StorageVarInfo],
     is_post: bool,
 ) -> tuple[Expression, CairoType]:
     def get_identifier(expr: ExprIdentifier):
@@ -489,8 +509,8 @@ def simplify_and_get_type(
 def simplify(
     expr: Expression,
     preprocessor: Preprocessor,
-    logical_identifiers: Dict[str, CairoType],
-    storage_vars: Dict[ScopedName, IdentifierList],
+    logical_identifiers: dict[str, CairoType],
+    storage_vars: dict[ScopedName, StorageVarInfo],
     is_post: bool,
 ) -> Expression:
     return simplify_and_get_type(

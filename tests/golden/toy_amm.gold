@@ -17,7 +17,7 @@
         "source": []
       },
       "storage_update": {
-        "__main__.account_balance": [
+        "__main__.account_balance.balance": [
           {
             "arguments": [
               [
@@ -27,7 +27,7 @@
                 "1"
               ]
             ],
-            "source": "account_balance(account_id, TOKEN_TYPE_A) := account_balance(account_id, TOKEN_TYPE_A) + token_a_amount",
+            "source": "account_balance(account_id, TOKEN_TYPE_A).balance := account_balance(account_id, TOKEN_TYPE_A) + token_a_amount",
             "value": [
               "(+ (__main__.account_balance (memory (+ fp (- 5))) 1) (memory (+ fp (- 4))))"
             ]
@@ -41,7 +41,7 @@
                 "2"
               ]
             ],
-            "source": "account_balance(account_id, TOKEN_TYPE_B) := account_balance(account_id, TOKEN_TYPE_B) + token_b_amount",
+            "source": "account_balance(account_id, TOKEN_TYPE_B).balance := account_balance(account_id, TOKEN_TYPE_B) + token_b_amount",
             "value": [
               "(+ (__main__.account_balance (memory (+ fp (- 5))) 2) (memory (+ fp (- 3))))"
             ]
@@ -111,7 +111,7 @@
         ]
       },
       "storage_update": {
-        "__main__.account_balance": [
+        "__main__.account_balance.balance": [
           {
             "arguments": [
               [
@@ -121,7 +121,7 @@
                 "(memory (+ fp (- 5)))"
               ]
             ],
-            "source": "account_balance(account_id, token_from) := account_balance(account_id, token_from) - amount_from",
+            "source": "account_balance(account_id, token_from).balance := account_balance(account_id, token_from) - amount_from",
             "value": [
               "(- (__main__.account_balance (memory (+ fp (- 6))) (memory (+ fp (- 5))))",
               "   (memory (+ fp (- 3))))"
@@ -136,21 +136,21 @@
                 "(memory (+ fp (- 4)))"
               ]
             ],
-            "source": "account_balance(account_id, token_to) := account_balance(account_id, token_to) + $Return.amount_to",
+            "source": "account_balance(account_id, token_to).balance := account_balance(account_id, token_to) + $Return.amount_to",
             "value": [
               "(+ (__main__.account_balance (memory (+ fp (- 6))) (memory (+ fp (- 4))))",
               "   (memory (+ ap (- 2))))"
             ]
           }
         ],
-        "__main__.pool_balance": [
+        "__main__.pool_balance.balance": [
           {
             "arguments": [
               [
                 "(memory (+ fp (- 5)))"
               ]
             ],
-            "source": "pool_balance(token_from) := pool_balance(token_from) + amount_from",
+            "source": "pool_balance(token_from).balance := pool_balance(token_from) + amount_from",
             "value": [
               "(+ (__main__.pool_balance (memory (+ fp (- 5)))) (memory (+ fp (- 3))))"
             ]
@@ -161,7 +161,7 @@
                 "(memory (+ fp (- 4)))"
               ]
             ],
-            "source": "pool_balance(token_to) := pool_balance(token_to) - $Return.amount_to",
+            "source": "pool_balance(token_to).balance := pool_balance(token_to) - $Return.amount_to",
             "value": [
               "(- (__main__.pool_balance (memory (+ fp (- 4)))) (memory (+ ap (- 2))))"
             ]
@@ -254,14 +254,14 @@
         "source": []
       },
       "storage_update": {
-        "__main__.pool_balance": [
+        "__main__.pool_balance.balance": [
           {
             "arguments": [
               [
                 "1"
               ]
             ],
-            "source": "pool_balance(TOKEN_TYPE_A) := token_a",
+            "source": "pool_balance(TOKEN_TYPE_A).balance := token_a",
             "value": [
               "(memory (+ fp (- 4)))"
             ]
@@ -272,7 +272,7 @@
                 "2"
               ]
             ],
-            "source": "pool_balance(TOKEN_TYPE_B) := token_b",
+            "source": "pool_balance(TOKEN_TYPE_B).balance := token_b",
             "value": [
               "(memory (+ fp (- 3)))"
             ]
@@ -298,7 +298,7 @@
         ]
       },
       "storage_update": {
-        "__main__.account_balance": [
+        "__main__.account_balance.balance": [
           {
             "arguments": [
               [
@@ -308,7 +308,7 @@
                 "(memory (+ fp (- 4)))"
               ]
             ],
-            "source": "account_balance(account_id, token_type) := account_balance(account_id, token_type) + amount",
+            "source": "account_balance(account_id, token_type).balance := account_balance(account_id, token_type) + amount",
             "value": [
               "(+ (__main__.account_balance (memory (+ fp (- 5))) (memory (+ fp (- 4))))",
               "   (memory (+ fp (- 3))))"
@@ -335,14 +335,14 @@
         ]
       },
       "storage_update": {
-        "__main__.pool_balance": [
+        "__main__.pool_balance.balance": [
           {
             "arguments": [
               [
                 "(memory (+ fp (- 4)))"
               ]
             ],
-            "source": "pool_balance(token_type) := balance",
+            "source": "pool_balance(token_type).balance := balance",
             "value": [
               "(memory (+ fp (- 3)))"
             ]
@@ -398,7 +398,7 @@
         ]
       },
       "storage_update": {
-        "__main__.account_balance": [
+        "__main__.account_balance.balance": [
           {
             "arguments": [
               [
@@ -408,7 +408,7 @@
                 "(memory (+ fp (- 4)))"
               ]
             ],
-            "source": "account_balance(account_id, token_from) := account_balance(account_id, token_from) - amount_from",
+            "source": "account_balance(account_id, token_from).balance := account_balance(account_id, token_from) - amount_from",
             "value": [
               "(- (__main__.account_balance (memory (+ fp (- 5))) (memory (+ fp (- 4))))",
               "   (memory (+ fp (- 3))))"
@@ -423,21 +423,21 @@
                 "$token_to"
               ]
             ],
-            "source": "account_balance(account_id, $token_to) := account_balance(account_id, $token_to) + $Return.amount_to",
+            "source": "account_balance(account_id, $token_to).balance := account_balance(account_id, $token_to) + $Return.amount_to",
             "value": [
               "(+ (__main__.account_balance (memory (+ fp (- 5))) $token_to)",
               "   (memory (+ ap (- 1))))"
             ]
           }
         ],
-        "__main__.pool_balance": [
+        "__main__.pool_balance.balance": [
           {
             "arguments": [
               [
                 "(memory (+ fp (- 4)))"
               ]
             ],
-            "source": "pool_balance(token_from) := pool_balance(token_from) + amount_from",
+            "source": "pool_balance(token_from).balance := pool_balance(token_from) + amount_from",
             "value": [
               "(+ (__main__.pool_balance (memory (+ fp (- 4)))) (memory (+ fp (- 3))))"
             ]
@@ -448,7 +448,7 @@
                 "$token_to"
               ]
             ],
-            "source": "pool_balance($token_to) := pool_balance($token_to) - $Return.amount_to",
+            "source": "pool_balance($token_to).balance := pool_balance($token_to) - $Return.amount_to",
             "value": [
               "(- (__main__.pool_balance $token_to) (memory (+ ap (- 1))))"
             ]
@@ -557,7 +557,7 @@
     }
   },
   "storage_vars": {
-    "__main__.account_balance": 2,
-    "__main__.pool_balance": 1
+    "__main__.account_balance.balance": 2,
+    "__main__.pool_balance.balance": 1
   }
 }

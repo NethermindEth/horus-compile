@@ -11,8 +11,8 @@ func stack_ptr() -> (i: felt) {
 }
 
 // @pre stack_ptr() >= 2
-// @storage_update stack(i=stack_ptr() - 1) := stack(stack_ptr() - 2) + stack(stack_ptr() - 1)
-// @storage_update stack_ptr() := stack_ptr() - 1
+// @storage_update stack(i=stack_ptr() - 1).value := stack(stack_ptr() - 2) + stack(stack_ptr() - 1)
+// @storage_update stack_ptr().i := stack_ptr() - 1
 func stack_add{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}() {
     let (ptr) = stack_ptr.read();
     let (x) = stack.read(ptr - 2);
@@ -22,8 +22,8 @@ func stack_add{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
     return ();
 }
 
-// @storage_update stack(i=stack_ptr() - 1) := v
-// @storage_update stack_ptr() := stack_ptr() + 1
+// @storage_update stack(i=stack_ptr() - 1).value := v
+// @storage_update stack_ptr().i := stack_ptr() + 1
 func stack_lit{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(v: felt) {
     let (ptr) = stack_ptr.read();
     stack.write(ptr, v);
@@ -40,8 +40,8 @@ func stack_top{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
 }
 
 // @post $Return.res == 11
-// @storage_update stack(i=stack_ptr() - 1) := 11
-// @storage_update stack_ptr() := stack_ptr() + 1
+// @storage_update stack(i=stack_ptr() - 1).value := 11
+// @storage_update stack_ptr().i := stack_ptr() + 1
 func main{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}() -> (res: felt) {
     stack_lit(5);
     stack_lit(6);

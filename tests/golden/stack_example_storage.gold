@@ -19,23 +19,23 @@
         "source": []
       },
       "storage_update": {
-        "__main__.stack": [
+        "__main__.stack.value": [
           {
             "arguments": [
               [
                 "(+ __main__.stack_ptr (- 1))"
               ]
             ],
-            "source": "stack(i=stack_ptr() - 1) := 11",
+            "source": "stack(i=stack_ptr() - 1).value := 11",
             "value": [
               "11"
             ]
           }
         ],
-        "__main__.stack_ptr": [
+        "__main__.stack_ptr.i": [
           {
             "arguments": [],
-            "source": "stack_ptr() := stack_ptr() + 1",
+            "source": "stack_ptr().i := stack_ptr() + 1",
             "value": [
               "(+ __main__.stack_ptr 1)"
             ]
@@ -63,24 +63,24 @@
         ]
       },
       "storage_update": {
-        "__main__.stack": [
+        "__main__.stack.value": [
           {
             "arguments": [
               [
                 "(+ __main__.stack_ptr (- 1))"
               ]
             ],
-            "source": "stack(i=stack_ptr() - 1) := stack(stack_ptr() - 2) + stack(stack_ptr() - 1)",
+            "source": "stack(i=stack_ptr() - 1).value := stack(stack_ptr() - 2) + stack(stack_ptr() - 1)",
             "value": [
               "(+ (__main__.stack (+ __main__.stack_ptr (- 2)))",
               "   (__main__.stack (+ __main__.stack_ptr (- 1))))"
             ]
           }
         ],
-        "__main__.stack_ptr": [
+        "__main__.stack_ptr.i": [
           {
             "arguments": [],
-            "source": "stack_ptr() := stack_ptr() - 1",
+            "source": "stack_ptr().i := stack_ptr() - 1",
             "value": [
               "(+ __main__.stack_ptr (- 1))"
             ]
@@ -104,23 +104,23 @@
         "source": []
       },
       "storage_update": {
-        "__main__.stack": [
+        "__main__.stack.value": [
           {
             "arguments": [
               [
                 "(+ __main__.stack_ptr (- 1))"
               ]
             ],
-            "source": "stack(i=stack_ptr() - 1) := v",
+            "source": "stack(i=stack_ptr() - 1).value := v",
             "value": [
               "(memory (+ fp (- 3)))"
             ]
           }
         ],
-        "__main__.stack_ptr": [
+        "__main__.stack_ptr.i": [
           {
             "arguments": [],
-            "source": "stack_ptr() := stack_ptr() + 1",
+            "source": "stack_ptr().i := stack_ptr() + 1",
             "value": [
               "(+ __main__.stack_ptr 1)"
             ]
@@ -154,7 +154,7 @@
     }
   },
   "storage_vars": {
-    "__main__.stack": 1,
-    "__main__.stack_ptr": 0
+    "__main__.stack.value": 1,
+    "__main__.stack_ptr.i": 0
   }
 }

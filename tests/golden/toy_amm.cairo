@@ -30,7 +30,7 @@ func pool_balance(token_type: felt) -> (balance: felt) {
 // Assert before setting that the balance does not exceed the upper bound.
 
 // @pre token_type == TOKEN_TYPE_A or token_type == TOKEN_TYPE_B
-// @storage_update account_balance(account_id, token_type) := account_balance(account_id, token_type) + amount
+// @storage_update account_balance(account_id, token_type).balance := account_balance(account_id, token_type) + amount
 func modify_account_balance{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
     account_id: felt, token_type: felt, amount: felt
 ) {
@@ -53,7 +53,7 @@ func get_account_token_balance{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, r
 // Sets the pool's balance for the given token.
 // Asserts before setting that the balance does not exceed the upper bound.
 // @pre token_type == TOKEN_TYPE_A or token_type == TOKEN_TYPE_B
-// @storage_update pool_balance(token_type) := balance
+// @storage_update pool_balance(token_type).balance := balance
 func set_pool_token_balance{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
     token_type: felt, balance: felt
 ) {
@@ -93,12 +93,12 @@ func get_pool_token_balance{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, rang
 // @pre pool_balance(token_to) * amount_from < 2**128 * (pool_balance(token_from) + amount_from)
 //
 // Pool balance is updated
-// @storage_update pool_balance(token_from) := pool_balance(token_from) + amount_from
-// @storage_update pool_balance(token_to) := pool_balance(token_to) - $Return.amount_to
+// @storage_update pool_balance(token_from).balance := pool_balance(token_from) + amount_from
+// @storage_update pool_balance(token_to).balance := pool_balance(token_to) - $Return.amount_to
 //
 // Account balance is updated
-// @storage_update account_balance(account_id, token_from) := account_balance(account_id, token_from) - amount_from
-// @storage_update account_balance(account_id, token_to) := account_balance(account_id, token_to) + $Return.amount_to
+// @storage_update account_balance(account_id, token_from).balance := account_balance(account_id, token_from) - amount_from
+// @storage_update account_balance(account_id, token_to).balance := account_balance(account_id, token_to) + $Return.amount_to
 //
 // The returned amount_to is correct.
 // @post $old_pool_balance_to * amount_from == $Return.amount_to * ($old_pool_balance_from + amount_from) + $Return.r
@@ -155,12 +155,12 @@ func get_opposite_token(token_type: felt) -> (t: felt) {
 // @pre pool_balance($token_to) * amount_from < 2**128 * (pool_balance(token_from) + amount_from)
 //
 // Pool balance is updated
-// @storage_update pool_balance(token_from) := pool_balance(token_from) + amount_from
-// @storage_update pool_balance($token_to) := pool_balance($token_to) - $Return.amount_to
+// @storage_update pool_balance(token_from).balance := pool_balance(token_from) + amount_from
+// @storage_update pool_balance($token_to).balance := pool_balance($token_to) - $Return.amount_to
 //
 // Account balance is updated
-// @storage_update account_balance(account_id, token_from) := account_balance(account_id, token_from) - amount_from
-// @storage_update account_balance(account_id, $token_to) := account_balance(account_id, $token_to) + $Return.amount_to
+// @storage_update account_balance(account_id, token_from).balance := account_balance(account_id, token_from) - amount_from
+// @storage_update account_balance(account_id, $token_to).balance := account_balance(account_id, $token_to) + $Return.amount_to
 func swap{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
     account_id: felt, token_from: felt, amount_from: felt
 ) -> (amount_to: felt) {
@@ -202,8 +202,8 @@ func swap{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
 }
 
 // Adds demo tokens to the given account.
-// @storage_update account_balance(account_id, TOKEN_TYPE_A) := account_balance(account_id, TOKEN_TYPE_A) + token_a_amount
-// @storage_update account_balance(account_id, TOKEN_TYPE_B) := account_balance(account_id, TOKEN_TYPE_B) + token_b_amount
+// @storage_update account_balance(account_id, TOKEN_TYPE_A).balance := account_balance(account_id, TOKEN_TYPE_A) + token_a_amount
+// @storage_update account_balance(account_id, TOKEN_TYPE_B).balance := account_balance(account_id, TOKEN_TYPE_B) + token_b_amount
 func add_demo_token{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
     account_id: felt, token_a_amount: felt, token_b_amount: felt
 ) {
@@ -217,8 +217,8 @@ func add_demo_token{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_
 }
 
 // Until we have LPs, for testing, we'll need to initialize the AMM somehow.
-// @storage_update pool_balance(TOKEN_TYPE_A) := token_a
-// @storage_update pool_balance(TOKEN_TYPE_B) := token_b
+// @storage_update pool_balance(TOKEN_TYPE_A).balance := token_a
+// @storage_update pool_balance(TOKEN_TYPE_B).balance := token_b
 func init_pool{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
     token_a: felt, token_b: felt
 ) {
