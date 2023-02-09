@@ -27,6 +27,12 @@ classifiers = [
     ]
 packages = [ { include = "horus", from = "src" } ]
 include = [ "src/horus/compiler/horus.ebnf" ]
+readme = "README.md"
+license = "APACHE LICENSE, VERSION 2.0"
+maintainers = [
+  "Ganesh Tiwari <ganesh@nethermind.io>",
+  "Ilia Vlasov <ilia@nethermind.io>"
+]
 
 [tool.poetry.scripts]
 horus-compile = "horus.compiler.horus_compile:run"
