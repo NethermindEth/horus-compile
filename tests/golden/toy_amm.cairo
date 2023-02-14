@@ -30,7 +30,7 @@ func pool_balance(token_type: felt) -> (balance: felt) {
 // Assert before setting that the balance does not exceed the upper bound.
 
 // @pre token_type == TOKEN_TYPE_A or token_type == TOKEN_TYPE_B
-// @storage_update account_balance(account_id, token_type).balance := account_balance(account_id, token_type) + amount
+// @storage_update account_balance(account_id, token_type).balance := account_balance(account_id, token_type).balance + amount
 func modify_account_balance{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
     account_id: felt, token_type: felt, amount: felt
 ) {
@@ -43,7 +43,7 @@ func modify_account_balance{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, rang
 
 // Returns the account's balance for the given token.
 // @pre token_type == TOKEN_TYPE_A or token_type == TOKEN_TYPE_B
-// @post $Return.balance == account_balance(account_id, token_type)
+// @post $Return.balance == account_balance(account_id, token_type).balance
 func get_account_token_balance{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
     account_id: felt, token_type: felt
 ) -> (balance: felt) {
@@ -64,7 +64,7 @@ func set_pool_token_balance{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, rang
 
 // Returns the pool's balance.
 // @pre token_type == TOKEN_TYPE_A or token_type == TOKEN_TYPE_B
-// @post $Return.balance == pool_balance(token_type)
+// @post $Return.balance == pool_balance(token_type).balance
 func get_pool_token_balance{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
     token_type: felt
 ) -> (balance: felt) {
@@ -75,30 +75,30 @@ func get_pool_token_balance{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, rang
 //
 // @declare $old_pool_balance_from: felt
 // @declare $old_pool_balance_to: felt
-// @pre pool_balance(token_from) == $old_pool_balance_from
-// @pre pool_balance(token_to) == $old_pool_balance_to
+// @pre pool_balance(token_from).balance == $old_pool_balance_from
+// @pre pool_balance(token_to).balance == $old_pool_balance_to
 //
 // Tokens should be different
 // @pre (token_from == TOKEN_TYPE_A and token_to == TOKEN_TYPE_B) or (token_from == TOKEN_TYPE_B and token_to == TOKEN_TYPE_A)
 //
 // The account has enough balance
-// @pre 0 < amount_from and amount_from < account_balance(account_id, token_from)
+// @pre 0 < amount_from and amount_from < account_balance(account_id, token_from).balance
 //
 // The pool balances are positive
-// @pre pool_balance(token_to) >= 0
-// @pre pool_balance(token_from) >= 0
+// @pre pool_balance(token_to).balance >= 0
+// @pre pool_balance(token_from).balance >= 0
 //
 // Assumptions needed for unsigned_div_rem to not overflow
-// @pre pool_balance(token_from) + amount_from <= 10633823966279326983230456482242756608
-// @pre pool_balance(token_to) * amount_from < 2**128 * (pool_balance(token_from) + amount_from)
+// @pre pool_balance(token_from).balance + amount_from <= 10633823966279326983230456482242756608
+// @pre pool_balance(token_to).balance * amount_from < 2**128 * (pool_balance(token_from).balance + amount_from)
 //
 // Pool balance is updated
-// @storage_update pool_balance(token_from).balance := pool_balance(token_from) + amount_from
-// @storage_update pool_balance(token_to).balance := pool_balance(token_to) - $Return.amount_to
+// @storage_update pool_balance(token_from).balance := pool_balance(token_from).balance + amount_from
+// @storage_update pool_balance(token_to).balance := pool_balance(token_to).balance - $Return.amount_to
 //
 // Account balance is updated
-// @storage_update account_balance(account_id, token_from).balance := account_balance(account_id, token_from) - amount_from
-// @storage_update account_balance(account_id, token_to).balance := account_balance(account_id, token_to) + $Return.amount_to
+// @storage_update account_balance(account_id, token_from).balance := account_balance(account_id, token_from).balance - amount_from
+// @storage_update account_balance(account_id, token_to).balance := account_balance(account_id, token_to).balance + $Return.amount_to
 //
 // The returned amount_to is correct.
 // @post $old_pool_balance_to * amount_from == $Return.amount_to * ($old_pool_balance_from + amount_from) + $Return.r
@@ -143,24 +143,24 @@ func get_opposite_token(token_type: felt) -> (t: felt) {
 // @pre $token_to == TOKEN_TYPE_B
 //
 // Enough balance
-// @pre 0 < amount_from and amount_from < account_balance(account_id, token_from)
-// @pre pool_balance($token_to) > 0
+// @pre 0 < amount_from and amount_from < account_balance(account_id, token_from).balance
+// @pre pool_balance($token_to).balance > 0
 //
 // The pool balances are positive
-// @pre pool_balance(token_from) >= 0
-// @pre pool_balance($token_to) >= 0
+// @pre pool_balance(token_from).balance >= 0
+// @pre pool_balance($token_to).balance >= 0
 //
 // Assumptions needed for unsigned_div_rem to not overflow
-// @pre pool_balance(token_from) + amount_from <= 10633823966279326983230456482242756608
-// @pre pool_balance($token_to) * amount_from < 2**128 * (pool_balance(token_from) + amount_from)
+// @pre pool_balance(token_from).balance + amount_from <= 10633823966279326983230456482242756608
+// @pre pool_balance($token_to).balance * amount_from < 2**128 * (pool_balance(token_from).balance + amount_from)
 //
 // Pool balance is updated
-// @storage_update pool_balance(token_from).balance := pool_balance(token_from) + amount_from
-// @storage_update pool_balance($token_to).balance := pool_balance($token_to) - $Return.amount_to
+// @storage_update pool_balance(token_from).balance := pool_balance(token_from).balance + amount_from
+// @storage_update pool_balance($token_to).balance := pool_balance($token_to).balance - $Return.amount_to
 //
 // Account balance is updated
-// @storage_update account_balance(account_id, token_from).balance := account_balance(account_id, token_from) - amount_from
-// @storage_update account_balance(account_id, $token_to).balance := account_balance(account_id, $token_to) + $Return.amount_to
+// @storage_update account_balance(account_id, token_from).balance := account_balance(account_id, token_from).balance - amount_from
+// @storage_update account_balance(account_id, $token_to).balance := account_balance(account_id, $token_to).balance + $Return.amount_to
 func swap{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
     account_id: felt, token_from: felt, amount_from: felt
 ) -> (amount_to: felt) {
@@ -202,8 +202,8 @@ func swap{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
 }
 
 // Adds demo tokens to the given account.
-// @storage_update account_balance(account_id, TOKEN_TYPE_A).balance := account_balance(account_id, TOKEN_TYPE_A) + token_a_amount
-// @storage_update account_balance(account_id, TOKEN_TYPE_B).balance := account_balance(account_id, TOKEN_TYPE_B) + token_b_amount
+// @storage_update account_balance(account_id, TOKEN_TYPE_A).balance := account_balance(account_id, TOKEN_TYPE_A).balance + token_a_amount
+// @storage_update account_balance(account_id, TOKEN_TYPE_B).balance := account_balance(account_id, TOKEN_TYPE_B).balance + token_b_amount
 func add_demo_token{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}(
     account_id: felt, token_a_amount: felt, token_b_amount: felt
 ) {

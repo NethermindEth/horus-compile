@@ -27,6 +27,7 @@ from starkware.cairo.lang.compiler.ast.expr_func_call import (
     ExprFuncCall,
     RvalueFuncCall,
 )
+from starkware.cairo.lang.compiler.error_handling import Location
 from starkware.cairo.lang.compiler.expression_simplifier import ExpressionSimplifier
 from starkware.cairo.lang.compiler.identifier_definition import (
     ConstDefinition,
@@ -95,29 +96,187 @@ class HorusTypeChecker(TypeSystemVisitor):
     ) -> tuple[ExprLogicalIdentifier, CairoType]:
         return (expr, self.logical_identifiers[expr.name])
 
+    def try_get_storage_type(
+        self, name: ScopedName, location: Optional[Location] = None
+    ) -> CairoType:
+        assert self.identifiers is not None
+        try:
+            search_result = self.identifiers.search(self.accessible_scopes, name)
+            definition = resolve_search_result(search_result, self.identifiers)
+            canonical_name = search_result.canonical_name
+        except MissingIdentifierError as e:
+            definition = self.identifiers.get_by_full_name(name)
+            canonical_name = name
+            if definition is None:
+                raise e
+
+        if isinstance(definition, NamespaceDefinition):
+            try:
+                scopes = [*self.accessible_scopes, ScopedName()]  # type: ignore
+                self.identifiers.search(scopes, canonical_name + "read")
+                self.identifiers.search(scopes, canonical_name + "write")
+
+                ret_type_def = get_type_definition(
+                    canonical_name + "read" + "Return",
+                    self.identifiers,
+                )
+                assert isinstance(ret_type_def, TypeDefinition)
+                assert isinstance(ret_type_def.cairo_type, TypeTuple)
+
+                if len(ret_type_def.cairo_type.members) != 1:
+                    raise CairoTypeError(
+                        "Storage maps with return tuple of length higher than 1 are not supported yet",
+                        location=location,
+                    )
+
+                return ret_type_def.cairo_type
+            except MissingIdentifierError:
+                # Failed to find the storage variable stuff.
+                raise CairoTypeError(
+                    "Function calls are not allowed in assertions",
+                    location=location,
+                )
+
+    def visit_RvalueFuncCall(self, expr: RvalueFuncCall):
+        name, *members = expr.func_ident.name.split(".")
+        typ = self.try_get_storage_type(
+            ScopedName.from_string(name), location=expr.location
+        )
+
+        for mem in members:
+            if isinstance(typ, TypeTuple):
+                mems_with_name = [
+                    ty_mem for ty_mem in typ.members if ty_mem.name == mem
+                ]
+                if not mems_with_name:
+                    raise CairoTypeError(
+                        f"Type {typ.format()} does not have a member {mem}",
+                        location=expr.location,
+                    )
+
+                typ = mems_with_name.pop(0).typ
+            elif isinstance(typ, TypeStruct):
+                struct_def = get_struct_definition(
+                    struct_name=typ.scope,
+                    identifier_manager=self.identifiers,
+                )
+                if mem not in struct_def.members:
+                    raise CairoTypeError(
+                        f"Member '{mem}' does not appear in definition of struct "
+                        f"'{typ.format()}'.",
+                        location=expr.location,
+                    )
+                typ = struct_def.members[mem].cairo_type
+
+        return expr, typ
+
     def visit_ExprDot(self, expr: ExprDot):
         inner_expr, inner_type = self.visit(expr.expr)
         inner_type = self.resolve_type(inner_type)
         if isinstance(inner_expr, ExprLogicalIdentifier):
-            if not isinstance(inner_type, (TypeStruct, TypeTuple)):
-                raise CairoTypeError("wrong type", location=expr.location)
+            if isinstance(inner_type, TypeStruct):
+                struct_def = get_struct_definition(
+                    struct_name=inner_type.scope,
+                    identifier_manager=self.identifiers,
+                )
+                if expr.member.name not in struct_def.members:
+                    raise CairoTypeError(
+                        f"Member '{expr.member.name}' does not appear in definition of struct "
+                        f"'{inner_type.format()}'.",
+                        location=expr.location,
+                    )
 
-            struct_def = get_struct_definition(
-                struct_name=inner_type.scope,
-                identifier_manager=self.identifiers,
-            )
-            if expr.member.name not in struct_def.members:
+                return (
+                    ExprLogicalIdentifier(
+                        f"{inner_expr.name}.{expr.member.name}", location=expr.location
+                    ),
+                    struct_def.members[expr.member.name].cairo_type,
+                )
+            elif isinstance(inner_type, TypeTuple):
+                members_with_name = [
+                    mem for mem in inner_type.members if mem.name == expr.member.name
+                ]
+                if not members_with_name:
+                    raise CairoTypeError(
+                        f"Member '{expr.member.name}' does not appear in definition of tuple "
+                        f"'{inner_type.format()}'.",
+                        location=expr.location,
+                    )
+
+                return (
+                    ExprLogicalIdentifier(
+                        f"{inner_expr.name}.{expr.member.name}", location=expr.location
+                    ),
+                    members_with_name.pop(0).typ,
+                )
+            else:
                 raise CairoTypeError(
-                    f"Member '{expr.member.name}' does not appear in definition of struct "
-                    f"'{inner_type.format()}'.",
+                    f"Expected a tuple or struct. Got {inner_type.format()}",
                     location=expr.location,
                 )
+        elif isinstance(inner_expr, ExprFuncCall):
+            storage_name = ScopedName.from_string(inner_expr.rvalue.func_ident.name)
+            storage_type = self.try_get_storage_type(storage_name, inner_expr.location)
 
-            return (
-                ExprLogicalIdentifier(
-                    f"{inner_expr.name}.{expr.member.name}", location=expr.location
-                ),
-                struct_def.members[expr.member.name].cairo_type,
+            if isinstance(storage_type, TypeTuple):
+                if storage_type.members[0].name != expr.member.name:
+                    raise CairoTypeError(
+                        f"Storage variable {storage_name} doesn't have a member {expr.member.name}",
+                        location=expr.location,
+                    )
+                name = f"{storage_name}.{expr.member.name}"
+                return (
+                    RvalueFuncCall(
+                        ExprIdentifier(name),
+                        inner_expr.rvalue.arguments,
+                        None,
+                        location=inner_expr.location,
+                    ),
+                    storage_type.members[0].typ,
+                )
+            else:
+                raise CairoTypeError(
+                    f"Storage variable {storage_name} should be of a tuple type. Got: {storage_type.format()}",
+                    location=expr.location,
+                )
+        elif isinstance(inner_expr, RvalueFuncCall):
+            if isinstance(inner_type, TypeTuple):
+                for mem in inner_type.members:
+                    if mem.name == expr.member.name:
+                        return (
+                            RvalueFuncCall(
+                                ExprIdentifier(f"{inner_expr.name}.{expr.member.name}"),
+                                inner_expr.arguments,
+                                None,
+                                location=inner_expr.location,
+                            ),
+                            mem.typ,
+                        )
+            elif isinstance(inner_type, TypeStruct):
+                struct_def = get_struct_definition(
+                    struct_name=inner_type.scope,
+                    identifier_manager=self.identifiers,
+                )
+                if expr.member.name not in struct_def.members:
+                    raise CairoTypeError(
+                        f"Member '{expr.member.name}' does not appear in definition of struct "
+                        f"'{inner_type.format()}'.",
+                        location=expr.location,
+                    )
+                name = f"{inner_expr.func_ident.name}.{expr.member.name}"
+                return (
+                    RvalueFuncCall(
+                        ExprIdentifier(name),
+                        inner_expr.arguments,
+                        None,
+                        location=inner_expr.location,
+                    ),
+                    struct_def.members[expr.member.name].cairo_type,
+                )
+
+            raise CairoTypeError(
+                f"Storage variable {inner_expr.name} doesn't have a member {expr.member.name}",
+                location=expr.location,
             )
         else:
             return super().visit_ExprDot(expr)
@@ -297,7 +456,7 @@ class HorusTypeChecker(TypeSystemVisitor):
                             location=arg.expr.location,
                         )
 
-                return expr, ret_type_def.cairo_type.members[0].typ
+                return expr, ret_type_def.cairo_type
             except MissingIdentifierError as e:
                 # Failed to find the storage variable stuff.
                 raise CairoTypeError(
@@ -469,7 +628,7 @@ def simplify_and_get_type(
                         location=expr.location,
                     )
 
-                return expr
+                return expr, ret_type_def.cairo_type
             except MissingIdentifierError as e:
                 # Failed to find the storage variable stuff.
                 raise CairoTypeError(

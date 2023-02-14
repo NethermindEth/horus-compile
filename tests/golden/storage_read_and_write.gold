@@ -26,9 +26,9 @@
                 "10"
               ]
             ],
-            "source": "balance(t=10).res := balance(t=10) + 1",
+            "source": "balance(t=10).res := balance(t=10).res + 1",
             "value": [
-              "(+ (__main__.balance 10) 1)"
+              "(+ (balance.res 10) 1)"
             ]
           }
         ]

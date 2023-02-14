@@ -33,7 +33,10 @@ from starkware.cairo.lang.compiler.ast.expr import (
     ExprSubscript,
     ExprTuple,
 )
-from starkware.cairo.lang.compiler.ast.expr_func_call import ExprFuncCall
+from starkware.cairo.lang.compiler.ast.expr_func_call import (
+    ExprFuncCall,
+    RvalueFuncCall,
+)
 from starkware.cairo.lang.compiler.expression_simplifier import ExpressionSimplifier
 from starkware.cairo.lang.compiler.identifier_definition import (
     FunctionDefinition,
@@ -155,6 +158,29 @@ class Z3ExpressionTransformer(IdentifierAwareVisitor):
             location=expr.location,
         )
 
+    def visit_RvalueFuncCall(self, expr: RvalueFuncCall):
+        storage_var = z3.Function(
+            expr.func_ident.name,
+            *[z3.IntSort() for _ in expr.arguments.args],
+            z3.IntSort(),
+        )
+
+        assert self.z3_transformer is not None
+
+        args = [
+            self.visit(
+                simplify(
+                    arg.expr,
+                    self.z3_transformer.preprocessor,
+                    self.z3_transformer.logical_identifiers,
+                    self.z3_transformer.storage_vars,
+                    is_post=self.z3_transformer.is_post,
+                )
+            )
+            for arg in expr.arguments.args
+        ]
+        return storage_var(*args)
+
     def visit_ExprCast(self, expr: ExprCast):
         if isinstance(expr.dest_type, TypeStruct):
             assert self.identifiers is not None
@@ -184,7 +210,18 @@ class Z3ExpressionTransformer(IdentifierAwareVisitor):
 
                 assert isinstance(expr.expr, ExprTuple)
 
-                args = [self.visit(arg.expr) for arg in expr.expr.members.args]
+                args = [
+                    self.visit(
+                        simplify(
+                            arg.expr,
+                            self.z3_transformer.preprocessor,
+                            self.z3_transformer.logical_identifiers,
+                            self.z3_transformer.storage_vars,
+                            is_post=self.z3_transformer.is_post,
+                        )
+                    )
+                    for arg in expr.expr.members.args
+                ]
 
                 return storage_var(*args)
             elif isinstance(definition, FunctionDefinition):
@@ -226,7 +263,18 @@ class Z3ExpressionTransformer(IdentifierAwareVisitor):
                 z3.IntSort(),
             )
 
-            args = [self.visit(arg.expr) for arg in expr.rvalue.arguments.args]
+            args = [
+                self.visit(
+                    simplify(
+                        arg.expr,
+                        self.z3_transformer.preprocessor,
+                        self.z3_transformer.logical_identifiers,
+                        self.z3_transformer.storage_vars,
+                        is_post=self.z3_transformer.is_post,
+                    )
+                )
+                for arg in expr.rvalue.arguments.args
+            ]
 
             return storage_var(*args)
 
@@ -254,10 +302,6 @@ class Z3ExpressionTransformer(IdentifierAwareVisitor):
         )
 
 
-def get_smt_expression(expr: Expression, identifiers: IdentifierManager):
-    return Z3ExpressionTransformer(identifiers).visit(expr)
-
-
 class Z3Transformer(IdentifierAwareVisitor):
     def __init__(
         self,
@@ -277,6 +321,9 @@ class Z3Transformer(IdentifierAwareVisitor):
     def visit(self, formula: BoolFormula):
         funcname = f"visit_{type(formula).__name__}"
         return getattr(self, funcname)(formula)
+
+    def get_smt_expression(self, expr: Expression, identifiers: IdentifierManager):
+        return self.z3_expression_transformer.visit(expr)
 
     def get_element_at(self, expr: Expression, ind: int):
         if isinstance(expr, ExprTuple):
@@ -336,7 +383,7 @@ class Z3Transformer(IdentifierAwareVisitor):
                 if isinstance(member_definition.cairo_type, (TypeFelt, TypePointer)):
                     result.append(
                         z3.simplify(
-                            get_smt_expression(
+                            self.get_smt_expression(
                                 simplify(
                                     member_a,
                                     self.preprocessor,
@@ -385,7 +432,7 @@ class Z3Transformer(IdentifierAwareVisitor):
                 if isinstance(member.typ, (TypeFelt, TypePointer)):
                     result.append(
                         z3.simplify(
-                            get_smt_expression(
+                            self.get_smt_expression(
                                 simplify(
                                     member_a,
                                     self.preprocessor,
@@ -446,7 +493,7 @@ class Z3Transformer(IdentifierAwareVisitor):
             if isinstance(member.typ, (TypeFelt, TypePointer)):
                 result = z3And(
                     result,
-                    get_smt_expression(
+                    self.get_smt_expression(
                         simplify(
                             member_a,
                             self.preprocessor,
@@ -456,7 +503,7 @@ class Z3Transformer(IdentifierAwareVisitor):
                         ),
                         self.identifiers,
                     )
-                    == get_smt_expression(
+                    == self.get_smt_expression(
                         simplify(
                             member_b,
                             self.preprocessor,
@@ -494,7 +541,7 @@ class Z3Transformer(IdentifierAwareVisitor):
             if isinstance(member_definition.cairo_type, (TypeFelt, TypePointer)):
                 result = z3And(
                     result,
-                    get_smt_expression(
+                    self.get_smt_expression(
                         simplify(
                             member_a,
                             self.preprocessor,
@@ -504,7 +551,7 @@ class Z3Transformer(IdentifierAwareVisitor):
                         ),
                         self.identifiers,
                     )
-                    == get_smt_expression(
+                    == self.get_smt_expression(
                         simplify(
                             member_b,
                             self.preprocessor,
