@@ -122,6 +122,10 @@ class HorusDefinition:
         default_factory=dict,
     )
     storage_vars: Dict[ScopedName, int] = field(
-        metadata=dict(marshmallow_field=mfields.Dict(ScopedNameAsStr(), mfields.Int())),
+        metadata=dict(
+            marshmallow_field=mfields.Dict(
+                ScopedNameAsStr(), mfields.Tuple((mfields.Int(), mfields.Int()))
+            )
+        ),
         default_factory=dict,
     )

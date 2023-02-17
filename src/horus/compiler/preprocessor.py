@@ -53,6 +53,8 @@ POST_COND = CodeElementCheck.CheckKind.POST_COND
 ASSERT = CodeElementCheck.CheckKind.ASSERT
 INVARIANT = CodeElementCheck.CheckKind.INVARIANT
 
+Arity, Coarity = int, int
+
 
 @dataclass
 class HorusProgram(StarknetPreprocessedProgram):
@@ -109,7 +111,7 @@ class HorusPreprocessor(StarknetPreprocessor):
             for var in HORUS_DECLS.keys():
                 specification.decls.pop(var, None)
 
-        storage_vars: Dict[ScopedName, int] = {}
+        storage_vars: Dict[ScopedName, Tuple[Arity, Coarity]] = {}
 
         for storage_var, info in self.storage_vars.items():
             size = sum(
@@ -121,8 +123,8 @@ class HorusPreprocessor(StarknetPreprocessor):
                 )
             )
 
-            for name in self.flatten_member(storage_var, info.ret_type):
-                storage_vars[name] = size
+            coarity = len(self.flatten_member(storage_var, info.ret_type))
+            storage_vars[storage_var] = (size, coarity)
 
         return HorusProgram(
             **starknet_program.__dict__,
