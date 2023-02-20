@@ -31,6 +31,7 @@ class SexpField(mfields.Field):
 
 @marshmallow_dataclass.dataclass
 class StorageUpdate:
+    declaration_name: str = field(metadata=dict(marshmallow_field=mfields.String()), default="")
     arguments: List[z3.IntNumRef] = field(
         metadata=dict(marshmallow_field=mfields.List(SexpField())),
         default_factory=list,

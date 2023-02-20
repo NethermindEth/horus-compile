@@ -377,8 +377,9 @@ class HorusPreprocessor(StarknetPreprocessor):
 
         current_member_type = storage_var_return
 
-        self.accessible_scopes.append(ScopedName())  # A hack to get
-        # the fully resolved type names searched.
+        # A hack to get the fully resolved type names searched.
+        self.accessible_scopes.append(ScopedName())
+
         for mem_name in decl.member_path:
             if isinstance(current_member_type, TypeIdentifier):
                 current_member_type = self.resolve_type(current_member_type)
@@ -427,14 +428,29 @@ class HorusPreprocessor(StarknetPreprocessor):
 
         flattened_member = self.flatten_member(storage_member_name, expr_type)
 
-        for lhs, rhs in zip(flattened_member, flattened):
+        print("")
+        print("Source:", decl.unpreprocessed_rep)
+        print("Declaration member path:", decl.member_path)
+        print("Flattened list of expressions:", flattened)
+        print("Flattened member:", flattened_member)
+        print("Args:", args)
+
+        # The left-hand side and right-hand side of a flattened storage update annotation.
+        for i, (lhs, rhs) in enumerate(zip(flattened_member, flattened)):
             storage_update = StorageUpdate(
+                decl_full_name,
                 args,
                 rhs,
                 decl.unpreprocessed_rep,
             )
             storage_updates.append(storage_update)
+            print("Iteration:", i)
+            print("Storage update lhs:", lhs)
+            print("Storage update rhs:", rhs)
+            print("Storage member name:", storage_member_name)
+            print("Decl full name:", decl_full_name)
             current_annotations.storage_update[lhs] = storage_updates
+            print("Current scope:", self.current_scope)
             self.specifications[self.current_scope] = current_annotations
 
     def compile_annotations(self, code_elem: CodeElement):
