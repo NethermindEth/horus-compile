@@ -19,7 +19,7 @@
         "source": []
       },
       "storage_update": {
-        "__main__.balance.res": [
+        "__main__.balance 0": [
           {
             "arguments": [
               [
@@ -28,7 +28,7 @@
             ],
             "source": "balance(t=10).res := balance(t=10).res + 1",
             "value": [
-              "(+ (balance.res 10) 1)"
+              "(+ (balance 0 10) 1)"
             ]
           }
         ]
@@ -36,6 +36,9 @@
     }
   },
   "storage_vars": {
-    "__main__.balance.res": 1
+    "__main__.balance": [
+      1,
+      1
+    ]
   }
 }

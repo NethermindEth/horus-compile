@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-from typing import Dict, Optional
+from typing import Optional
 
 import z3
-from starkware.cairo.lang.compiler.ast.arguments import IdentifierList
 from starkware.cairo.lang.compiler.ast.bool_expr import BoolEqExpr
 from starkware.cairo.lang.compiler.ast.cairo_types import (
     CairoType,
@@ -37,7 +36,7 @@ from starkware.cairo.lang.compiler.ast.expr_func_call import (
     ExprFuncCall,
     RvalueFuncCall,
 )
-from starkware.cairo.lang.compiler.expression_simplifier import ExpressionSimplifier
+from starkware.cairo.lang.compiler.error_handling import Location
 from starkware.cairo.lang.compiler.identifier_definition import (
     FunctionDefinition,
     MemberDefinition,
@@ -46,7 +45,10 @@ from starkware.cairo.lang.compiler.identifier_definition import (
     TypeDefinition,
 )
 from starkware.cairo.lang.compiler.identifier_manager import IdentifierManager
-from starkware.cairo.lang.compiler.identifier_utils import get_struct_definition
+from starkware.cairo.lang.compiler.identifier_utils import (
+    get_struct_definition,
+    get_struct_member_offsets,
+)
 from starkware.cairo.lang.compiler.instruction import Register
 from starkware.cairo.lang.compiler.preprocessor.identifier_aware_visitor import (
     IdentifierAwareVisitor,
@@ -59,7 +61,6 @@ from starkware.cairo.lang.compiler.resolve_search_result import resolve_search_r
 from starkware.cairo.lang.compiler.scoped_name import ScopedName
 from starkware.cairo.lang.compiler.type_casts import CairoTypeError
 from starkware.cairo.lang.compiler.type_system_visitor import *
-from starkware.cairo.lang.compiler.type_system_visitor import simplify_type_system
 
 from horus.compiler.allowed_syscalls import allowed_syscalls
 from horus.compiler.code_elements import (
@@ -72,7 +73,11 @@ from horus.compiler.code_elements import (
     ExprLogicalIdentifier,
 )
 from horus.compiler.storage_info import StorageVarInfo
-from horus.compiler.type_checker import simplify, simplify_and_get_type
+from horus.compiler.type_checker import (
+    simplify,
+    simplify_and_get_type,
+    try_get_storage_type,
+)
 from horus.compiler.var_names import *
 from horus.utils import z3And, z3True
 
@@ -158,14 +163,74 @@ class Z3ExpressionTransformer(IdentifierAwareVisitor):
             location=expr.location,
         )
 
+    def get_deep_member_offset(
+        self, member: ScopedName, typ: CairoType, location: Optional[Location] = None
+    ) -> int:
+        offset = 0
+        for mem_name in member.path:
+            if isinstance(typ, TypeIdentifier):
+                assert self.z3_transformer is not None
+                self.z3_transformer.preprocessor.accessible_scopes.append(ScopedName())
+                typ = self.z3_transformer.preprocessor.resolve_type(typ)
+                self.z3_transformer.preprocessor.accessible_scopes.pop()
+
+            if isinstance(typ, TypeTuple):
+                mem_with_name = [mem for mem in typ.members if mem.name == mem_name]
+
+                if not mem_with_name:
+                    raise CairoTypeError(
+                        f"There is no member with name {mem_name} in type {typ.format()}",
+                        location=location,
+                    )
+
+                ind = typ.members.index(mem_with_name[0])
+                assert self.z3_transformer is not None
+                offset += sum(
+                    map(
+                        lambda m: self.z3_transformer.preprocessor.get_size(m.typ),  # type: ignore
+                        typ.members[0:ind],
+                    )
+                )
+                typ = mem_with_name[0].typ
+            elif isinstance(typ, TypeStruct):
+                assert self.z3_transformer is not None
+                struct_def = get_struct_definition(
+                    typ.scope, self.z3_transformer.preprocessor.identifiers
+                )
+                offset += struct_def.members[mem_name].offset
+                typ = struct_def.members[mem_name].cairo_type
+            elif isinstance(typ, TypeFelt):
+                break
+
+        return offset
+
     def visit_RvalueFuncCall(self, expr: RvalueFuncCall):
+        name = expr.func_ident.name.split("#")[0]
+
         storage_var = z3.Function(
-            expr.func_ident.name,
+            name,
+            z3.IntSort(),
             *[z3.IntSort() for _ in expr.arguments.args],
             z3.IntSort(),
         )
 
         assert self.z3_transformer is not None
+
+        typ = try_get_storage_type(
+            ScopedName.from_string(name),
+            self.z3_transformer.preprocessor,
+            self.z3_transformer.logical_identifiers,
+            self.z3_transformer.storage_vars,
+            expr.location,
+        )
+
+        assert isinstance(typ, TypeTuple)
+
+        offset = self.get_deep_member_offset(
+            ScopedName.from_string(expr.func_ident.name.split("#")[1]),
+            typ,
+            expr.location,
+        )
 
         args = [
             self.visit(
@@ -179,7 +244,7 @@ class Z3ExpressionTransformer(IdentifierAwareVisitor):
             )
             for arg in expr.arguments.args
         ]
-        return storage_var(*args)
+        return storage_var(offset, *args)
 
     def visit_ExprCast(self, expr: ExprCast):
         if isinstance(expr.dest_type, TypeStruct):

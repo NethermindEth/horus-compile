@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import field
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 
 import marshmallow.fields as mfields
 import marshmallow_dataclass
@@ -85,10 +85,10 @@ class FunctionAnnotations:
         metadata=dict(marshmallow_field=mfields.Dict(mfields.Str(), mfields.Int())),
         default_factory=dict,
     )
-    storage_update: Dict[ScopedName, List[StorageUpdate]] = field(
+    storage_update: Dict[str, List[StorageUpdate]] = field(
         metadata=dict(
             marshmallow_field=mfields.Dict(
-                ScopedNameAsStr(),
+                mfields.Str(),
                 mfields.List(
                     mfields.Nested(marshmallow_dataclass.class_schema(StorageUpdate))
                 ),
@@ -121,7 +121,11 @@ class HorusDefinition:
         ),
         default_factory=dict,
     )
-    storage_vars: Dict[ScopedName, int] = field(
-        metadata=dict(marshmallow_field=mfields.Dict(ScopedNameAsStr(), mfields.Int())),
+    storage_vars: Dict[ScopedName, Tuple[int, int]] = field(
+        metadata=dict(
+            marshmallow_field=mfields.Dict(
+                ScopedNameAsStr(), mfields.Tuple((mfields.Int(), mfields.Int()))
+            )
+        ),
         default_factory=dict,
     )

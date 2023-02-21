@@ -21,10 +21,7 @@ from starkware.cairo.lang.compiler.identifier_definition import (
     TypeDefinition,
 )
 from starkware.cairo.lang.compiler.identifier_manager import MissingIdentifierError
-from starkware.cairo.lang.compiler.identifier_utils import (
-    get_struct_definition,
-    get_type_definition,
-)
+from starkware.cairo.lang.compiler.identifier_utils import get_struct_definition
 from starkware.cairo.lang.compiler.scoped_name import ScopedName
 from starkware.starknet.compiler.starknet_preprocessor import (
     StarknetPreprocessedProgram,
@@ -58,7 +55,7 @@ INVARIANT = CodeElementCheck.CheckKind.INVARIANT
 class HorusProgram(StarknetPreprocessedProgram):
     specifications: Dict[ScopedName, FunctionAnnotations]
     invariants: Dict[ScopedName, Annotation]
-    storage_vars: Dict[ScopedName, int]
+    storage_vars: Dict[ScopedName, Tuple[int, int]]
 
 
 class HorusPreprocessor(StarknetPreprocessor):
@@ -109,10 +106,10 @@ class HorusPreprocessor(StarknetPreprocessor):
             for var in HORUS_DECLS.keys():
                 specification.decls.pop(var, None)
 
-        storage_vars: Dict[ScopedName, int] = {}
+        storage_vars: Dict[ScopedName, Tuple[int, int]] = {}
 
         for storage_var, info in self.storage_vars.items():
-            size = sum(
+            arity = sum(
                 (
                     self.get_size(arg.expr_type)
                     if arg.expr_type is not None
@@ -121,8 +118,9 @@ class HorusPreprocessor(StarknetPreprocessor):
                 )
             )
 
-            for name in self.flatten_member(storage_var, info.ret_type):
-                storage_vars[name] = size
+            coarity = self.get_size(info.ret_type)
+
+            storage_vars[storage_var] = (arity, coarity)
 
         return HorusProgram(
             **starknet_program.__dict__,
@@ -364,12 +362,6 @@ class HorusPreprocessor(StarknetPreprocessor):
                 location=decl.location,
             )
 
-        if not current_annotations.storage_update.get(decl_full_name, None) is None:
-            raise PreprocessorError(
-                f"Full state annotation has already been provided for {decl.name}.",
-                location=decl.location,
-            )
-
         storage_var_return = self.storage_vars[decl_full_name].ret_type
         assert isinstance(storage_var_return, TypeTuple)
 
@@ -411,9 +403,6 @@ class HorusPreprocessor(StarknetPreprocessor):
         storage_member_name = reduce(
             ScopedName.__add__, decl.member_path, decl_full_name
         )
-        storage_updates = current_annotations.storage_update.get(
-            storage_member_name, []
-        )
 
         flattened, expr_type = z3_transformer.flatten_expr_and_get_type(decl.value)
 
@@ -426,13 +415,23 @@ class HorusPreprocessor(StarknetPreprocessor):
         flattened_member = self.flatten_member(storage_member_name, expr_type)
 
         for lhs, rhs in zip(flattened_member, flattened):
+            lhs_str = str(lhs)
+            mem_path = ScopedName.from_string(lhs_str[len(str(decl_full_name)) + 1 :])
+            offset = z3_transformer.z3_expression_transformer.get_deep_member_offset(
+                mem_path, storage_var_return, decl.location
+            )
             storage_update = StorageUpdate(
                 args,
                 rhs,
                 decl.unpreprocessed_rep,
             )
+            storage_updates = current_annotations.storage_update.get(
+                str(decl_full_name) + " " + str(offset), []
+            )
             storage_updates.append(storage_update)
-            current_annotations.storage_update[lhs] = storage_updates
+            current_annotations.storage_update[
+                str(decl_full_name) + " " + str(offset)
+            ] = storage_updates
             self.specifications[self.current_scope] = current_annotations
 
     def compile_annotations(self, code_elem: CodeElement):
