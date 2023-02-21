@@ -139,6 +139,10 @@ class HorusTypeChecker(TypeSystemVisitor):
 
     def visit_RvalueFuncCall(self, expr: RvalueFuncCall):
         name, *members = expr.func_ident.name.split(".")
+
+        if "#" in name:
+            members.insert(0, name.split("#")[1])
+            name = name.split("#")[0]
         typ = self.try_get_storage_type(
             ScopedName.from_string(name), location=expr.location
         )
@@ -224,7 +228,7 @@ class HorusTypeChecker(TypeSystemVisitor):
                         f"Storage variable {storage_name} doesn't have a member {expr.member.name}",
                         location=expr.location,
                     )
-                name = f"{storage_name}.{expr.member.name}"
+                name = f"{storage_name}#{expr.member.name}"
                 return (
                     RvalueFuncCall(
                         ExprIdentifier(name),
@@ -675,3 +679,18 @@ def simplify(
     return simplify_and_get_type(
         expr, preprocessor, logical_identifiers, storage_vars, is_post
     )[0]
+
+
+def try_get_storage_type(
+    name: ScopedName,
+    preprocessor: Preprocessor,
+    logical_identifiers: dict[str, CairoType],
+    storage_vars: dict[ScopedName, StorageVarInfo],
+    location: Optional[Location] = None,
+) -> CairoType:
+    return HorusTypeChecker(
+        preprocessor.accessible_scopes,
+        preprocessor.identifiers,
+        logical_identifiers,
+        storage_vars,
+    ).try_get_storage_type(name, location)

@@ -5,8 +5,7 @@
       "decls": {
         "$a.ilk.Art": 0,
         "$a.ilk.rate": 0,
-        "_ilks.ilk.Art": 1,
-        "_ilks.ilk.rate": 1
+        "_ilks": 2
       },
       "logical_variables": {
         "$a": "(ilk: __main__.Ilk)"
@@ -19,8 +18,8 @@
       },
       "pre": {
         "sexpr": [
-          "(let ((a!1 (= $a.ilk.Art (_ilks.ilk.Art (memory (+ fp (- 4))))))",
-          "      (a!2 (= $a.ilk.rate (_ilks.ilk.rate (memory (+ fp (- 4)))))))",
+          "(let ((a!1 (= $a.ilk.Art (_ilks 0 (memory (+ fp (- 4))))))",
+          "      (a!2 (= $a.ilk.rate (_ilks 1 (memory (+ fp (- 4)))))))",
           "  (and a!1 a!2))"
         ],
         "source": [
@@ -28,7 +27,7 @@
         ]
       },
       "storage_update": {
-        "__main__._ilks.ilk.Art": [
+        "__main__._ilks 0": [
           {
             "arguments": [
               [
@@ -47,8 +46,7 @@
       "decls": {
         "$a.Art": 0,
         "$a.rate": 0,
-        "_ilks.ilk.Art": 1,
-        "_ilks.ilk.rate": 1
+        "_ilks": 2
       },
       "logical_variables": {
         "$a": "__main__.Ilk"
@@ -61,8 +59,8 @@
       },
       "pre": {
         "sexpr": [
-          "(let ((a!1 (= $a.Art (_ilks.ilk.Art (memory (+ fp (- 4))))))",
-          "      (a!2 (= $a.rate (_ilks.ilk.rate (memory (+ fp (- 4)))))))",
+          "(let ((a!1 (= $a.Art (_ilks 0 (memory (+ fp (- 4))))))",
+          "      (a!2 (= $a.rate (_ilks 1 (memory (+ fp (- 4)))))))",
           "  (and a!1 a!2))"
         ],
         "source": [
@@ -70,7 +68,7 @@
         ]
       },
       "storage_update": {
-        "__main__._ilks.ilk.Art": [
+        "__main__._ilks 0": [
           {
             "arguments": [
               [
@@ -101,7 +99,7 @@
         "source": []
       },
       "storage_update": {
-        "__main__.state.res.a": [
+        "__main__.state 0": [
           {
             "arguments": [
               [
@@ -118,9 +116,13 @@
     }
   },
   "storage_vars": {
-    "__main__._ilks.ilk.Art": 1,
-    "__main__._ilks.ilk.rate": 1,
-    "__main__.state.res.a": 1,
-    "__main__.state.res.b": 1
+    "__main__._ilks": [
+      1,
+      2
+    ],
+    "__main__.state": [
+      1,
+      2
+    ]
   }
 }

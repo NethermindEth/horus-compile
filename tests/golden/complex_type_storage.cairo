@@ -33,7 +33,10 @@ func complex_var_2(arg: NestedStruct) -> (res: NestedStruct) {
 // @storage_update complex_var($c[1], $b[1]).res := 40
 // @storage_update complex_var_1($c[1]).s := $b[1]
 // @storage_update complex_var_2($a).res := $a
-// @storage_update complex_var_2($a).res.z := $Return.b[0]
+// @storage_update complex_var_2($a).res.z := complex_var_2($a).res.point.x
+// @storage_update complex_var_2($a).res.z := complex_var_2($a).res.point.y
+// @storage_update complex_var_2($a).res.z := complex_var_2($a).res.z
+// @storage_update complex_var_2($a).res := complex_var_2($a).res
 // @storage_update complex_var_2($a).res.point := $Return.b[1]
 func _main{syscall_ptr: felt*, pedersen_ptr: HashBuiltin*, range_check_ptr}() -> (
     a: NestedStruct, b: (felt, Point)
