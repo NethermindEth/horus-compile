@@ -6,6 +6,7 @@ from typing import Dict, List, Optional
 import marshmallow.fields as mfields
 import marshmallow_dataclass
 import z3
+from marshmallow import post_dump
 from marshmallow.exceptions import ValidationError
 from starkware.cairo.lang.compiler.ast.cairo_types import CairoType
 from starkware.cairo.lang.compiler.fields import CairoTypeAsStr
@@ -29,6 +30,22 @@ class SexpField(mfields.Field):
         return refs[0]  # type: ignore
 
 
+class OptionalSexpField(mfields.Field):
+    def _serialize(self, value: Optional[z3.ExprRef], attr, obj, **kwargs):
+        if value is not None:
+            return super()._serialize(value.sexpr().split("\n"), attr, obj, **kwargs)
+        else:
+            return None
+
+    def _deserialize(self, value, attr, data, **kwargs) -> z3.ExprRef:
+        v = super()._deserialize(value, attr, data, **kwargs)
+        ref_str = "\n".join(v)
+        refs = z3.parse_smt2_string(ref_str, decls=HORUS_DECLS)
+        if len(refs) != 1:
+            raise ValidationError(f"Can't deserialize '{ref_str}'")
+        return refs[0]  # type: ignore
+
+
 @marshmallow_dataclass.dataclass
 class StorageUpdate:
     arguments: List[z3.IntNumRef] = field(
@@ -39,6 +56,18 @@ class StorageUpdate:
         metadata=dict(marshmallow_field=SexpField()), default=z3.IntVal(0)
     )
     source: str = field(metadata=dict(marshmallow_field=mfields.String()), default="")
+    axiom: Optional[z3.BoolRef] = field(
+        metadata=dict(marshmallow_field=OptionalSexpField(), required=False),
+        default=None,
+    )
+
+    @post_dump
+    def remove_skip_values(self, data, **kwargs):
+        return {
+            key: value
+            for key, value in data.items()
+            if value is not None and not (key == "axiom" and value == ["true"])
+        }
 
 
 @marshmallow_dataclass.dataclass(frozen=False)
@@ -50,11 +79,28 @@ class Annotation:
         metadata=dict(marshmallow_field=mfields.List(mfields.String())),
         default_factory=list,
     )
+    axiom: Optional[z3.BoolRef] = field(
+        metadata=dict(marshmallow_field=OptionalSexpField(), required=False),
+        default=None,
+    )
 
     def __and__(self, other):
         return Annotation(
-            sexpr=z3And(self.sexpr, other.sexpr), source=self.source + other.source
+            sexpr=z3And(self.sexpr, other.sexpr),
+            source=self.source + other.source,
+            axiom=z3And(
+                self.axiom if self.axiom is not None else z3.BoolVal(True),
+                other.axiom if other.axiom is not None else z3.BoolVal(True),
+            ),
         )
+
+    @post_dump
+    def remove_skip_values(self, data, **kwargs):
+        return {
+            key: value
+            for key, value in data.items()
+            if value is not None and not (key == "axiom" and value == ["true"])
+        }
 
 
 @marshmallow_dataclass.dataclass(frozen=False)

@@ -138,6 +138,7 @@ class HorusPreprocessor(StarknetPreprocessor):
         self.invariants[self.current_scope + name] = Annotation(
             sexpr=expr,
             source=[assrt.unpreprocessed_rep],
+            axiom=z3.And(*z3_transformer.axioms) if z3_transformer.axioms else None,
         )
 
     def visit_AnnotatedCodeElement(self, annotated_code_element: AnnotatedCodeElement):
@@ -301,6 +302,7 @@ class HorusPreprocessor(StarknetPreprocessor):
                 )
             ),
             decl.unpreprocessed_rep,
+            z3.And(*z3_expr_transformer.axioms) if z3_expr_transformer.axioms else None,
         )
         storage_updates.append(storage_update)
         current_annotations.storage_update[decl_full_name] = storage_updates
@@ -362,7 +364,11 @@ class HorusPreprocessor(StarknetPreprocessor):
                     )
                     expr = z3_transformer.visit(parsed_check.formula)
                     annotation = Annotation(
-                        sexpr=expr, source=[parsed_check.unpreprocessed_rep]
+                        sexpr=expr,
+                        source=[parsed_check.unpreprocessed_rep],
+                        axiom=z3.And(*z3_transformer.axioms)
+                        if z3_transformer.axioms
+                        else None,
                     )
 
                     if parsed_check.check_kind == INVARIANT:

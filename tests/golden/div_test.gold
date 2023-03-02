@@ -1,0 +1,61 @@
+{
+  "invariants": {
+    "__main__.main.!anonymous_assert_label_0": {
+      "axiom": [
+        "(let ((a!1 (= (* x!2 (memory (+ fp (- 3)))) 1)))",
+        "  (and a!1))"
+      ],
+      "sexpr": [
+        "(= 10 (* (memory (+ fp (- 4))) x!2))"
+      ],
+      "source": [
+        "x / y == 10"
+      ]
+    }
+  },
+  "specifications": {
+    "__main__.main": {
+      "decls": {
+        "x!0": 0
+      },
+      "logical_variables": {},
+      "post": {
+        "axiom": [
+          "(let ((a!1 (= (* x!0 (memory (+ fp (- 3)))) 1)))",
+          "  (and a!1))"
+        ],
+        "sexpr": [
+          "(= 10 (* (memory (+ fp (- 4))) x!0))"
+        ],
+        "source": [
+          "x / y == 10"
+        ]
+      },
+      "pre": {
+        "sexpr": [
+          "true"
+        ],
+        "source": []
+      },
+      "storage_update": {
+        "__main__.test2": [
+          {
+            "arguments": [],
+            "axiom": [
+              "(let ((a!1 (= (* x!1 (memory (+ fp (- 4)))) 1)))",
+              "  (and a!1))"
+            ],
+            "source": "test2() := test1() / x",
+            "value": [
+              "(* __main__.test1 x!1)"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "storage_vars": {
+    "__main__.test1": 0,
+    "__main__.test2": 0
+  }
+}

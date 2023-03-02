@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Dict, Optional
+from typing import Dict, List, Optional
 
 import z3
 from starkware.cairo.lang.compiler.ast.arguments import IdentifierList
@@ -78,6 +78,7 @@ class Z3ExpressionTransformer(IdentifierAwareVisitor):
         self.prime = z3.Int(PRIME_CONST_NAME)
         self.memory = z3.Function(MEMORY_MAP_NAME, z3.IntSort(), z3.IntSort())
         self.z3_transformer = z3_transformer
+        self.axioms: List[z3.BoolRef] = []
         if z3_transformer is not None:
             self.storage_vars = z3_transformer.storage_vars
         super().__init__(identifiers)
@@ -118,7 +119,9 @@ class Z3ExpressionTransformer(IdentifierAwareVisitor):
         elif expr.op == "*":
             return a * b
         elif expr.op == "/":
-            return a / b
+            inverse_b = z3.FreshInt()
+            self.axioms.append(inverse_b * b == 1)
+            return a * inverse_b
 
     def visit_ExprPow(self, expr: ExprPow):
         raise PreprocessorError("Non-constant powers in assertions are not supported.")
@@ -268,6 +271,10 @@ class Z3Transformer(IdentifierAwareVisitor):
         self.is_post = is_post
         self.storage_vars = storage_vars
         self.z3_expression_transformer = Z3ExpressionTransformer(identifiers, self)
+
+    @property
+    def axioms(self) -> List[z3.BoolRef]:
+        return self.z3_expression_transformer.axioms
 
     def visit(self, formula: BoolFormula):
         funcname = f"visit_{type(formula).__name__}"
