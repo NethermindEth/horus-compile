@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Optional
 
 import lark
+from starkware.cairo.lang.compiler.ast.bool_expr import BoolEqExpr
 from starkware.cairo.lang.compiler.ast.expr import *
 from starkware.cairo.lang.compiler.ast.expr import ExprIdentifier
 from starkware.cairo.lang.compiler.error_handling import InputFile
@@ -134,8 +135,11 @@ class HorusTransformer(ParserTransformer):
         return BoolConst(False)
 
     @lark.v_args(inline=True)
-    def bool_atom(self, expr):
-        return BoolExprAtom(expr)
+    def horus_bool_atom(self, expr):
+        if isinstance(expr, BoolEqExpr):
+            return BoolExprAtom(expr)
+
+        return expr
 
     @lark.v_args(inline=True, meta=True)
     def bool_expr_le(self, meta, lhs, rhs):
@@ -187,10 +191,22 @@ class HorusTransformer(ParserTransformer):
             identifier.name, type, location=self.meta2loc(meta)
         )
 
-    @lark.v_args(inline=True, meta=True)
-    def storage_update_annotation(self, meta, identifier, args, result):
+    @lark.v_args(inline=False, meta=True)
+    def storage_update_annotation(self, meta, args):
+        """
+        Parses a storage update annotation.
+        In particular extracts its member name.
+        """
+        identifier_name = args[0].name
+        storage_args = args[1]
+        member_path = [iden.name for iden in args[2:-1]]
+        result = args[-1]
         return CodeElementStorageUpdate(
-            identifier.name, args, result, location=self.meta2loc(meta)
+            identifier_name,
+            storage_args,
+            result,
+            member_path,
+            location=self.meta2loc(meta),
         )
 
     def transform(self, tree: lark.Tree):

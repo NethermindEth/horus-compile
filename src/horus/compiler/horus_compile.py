@@ -15,6 +15,7 @@ import starkware.cairo.lang.compiler.preprocessor.preprocess_codes
 import starkware.cairo.lang.version
 from starkware.cairo.lang.cairo_constants import DEFAULT_PRIME
 from starkware.cairo.lang.compiler.ast.arguments import IdentifierList
+from starkware.cairo.lang.compiler.ast.cairo_types import TypeIdentifier, TypeTuple
 from starkware.cairo.lang.compiler.ast.code_elements import CodeElementFunction
 from starkware.cairo.lang.compiler.cairo_compile import (
     LIBS_DIR_ENVVAR,
@@ -52,6 +53,7 @@ import horus.compiler.parser
 from horus.compiler.code_elements import AnnotatedCodeElement
 from horus.compiler.contract_definition import HorusDefinition
 from horus.compiler.preprocessor import HorusPreprocessor, HorusProgram
+from horus.compiler.storage_info import StorageVarInfo
 
 
 def assemble_horus_contract(
@@ -75,7 +77,7 @@ def assemble_horus_contract(
 class HorusStorageVarDeclVisitor(IdentifierAwareVisitor):
     def __init__(
         self,
-        storage_vars: Dict[ScopedName, IdentifierList],
+        storage_vars: dict[ScopedName, StorageVarInfo],
         identifiers: Optional[IdentifierManager] = None,
     ):
         self.storage_vars = storage_vars
@@ -84,12 +86,47 @@ class HorusStorageVarDeclVisitor(IdentifierAwareVisitor):
     def _visit_default(self, obj):
         return obj
 
-    def visit_CodeElementFunction(self, elm: CodeElementFunction):
-        is_storage_var, storage_var_location = has_decorator(
-            elm=elm, decorator_name=STORAGE_VAR_DECORATOR
+    def add_storage_var_info(self, elm: CodeElementFunction):
+        """
+        Collects info of a storage variable encoded as its corresponding `CodeElementFunction` for
+        later use.
+        This is done due to removal of unused read/write function for storage vars at the further preprocessing steps.
+        """
+        args = dataclasses.replace(elm.arguments)
+        args.identifiers = list(
+            map(
+                lambda arg: dataclasses.replace(  # type: ignore
+                    arg,
+                    expr_type=TypeIdentifier(
+                        name=ScopedName.from_string("__main__") + arg.expr_type.name
+                    ),
+                )
+                if isinstance(arg.expr_type, TypeIdentifier)
+                else arg,
+                args.identifiers,
+            )
         )
+        returns = dataclasses.replace(elm.returns)
+        assert isinstance(returns, TypeTuple)
+        returns.members = list(
+            map(
+                lambda member: dataclasses.replace(  # type: ignore
+                    member,
+                    typ=TypeIdentifier(
+                        name=ScopedName.from_string("__main__") + member.typ.name
+                    ),
+                )
+                if isinstance(member.typ, TypeIdentifier)
+                else member,
+                returns.members,
+            )
+        )
+        self.storage_vars[self.current_scope + elm.name] = StorageVarInfo(args, returns)
+
+    def visit_CodeElementFunction(self, elm: CodeElementFunction):
+        is_storage_var, _ = has_decorator(elm=elm, decorator_name=STORAGE_VAR_DECORATOR)
         if is_storage_var:
-            self.storage_vars[self.current_scope + elm.name] = elm.arguments
+            self.add_storage_var_info(elm)
         return elm
 
 
@@ -134,7 +171,7 @@ def horus_pass_manager(
 
 @dataclasses.dataclass
 class HorusPassManagerContext(PassManagerContext):
-    storage_vars: Dict[ScopedName, IdentifierList] = dataclasses.field(
+    storage_vars: dict[ScopedName, StorageVarInfo] = dataclasses.field(
         default_factory=dict
     )
 

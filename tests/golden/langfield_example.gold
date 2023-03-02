@@ -1,0 +1,126 @@
+{
+  "invariants": {},
+  "specifications": {
+    "__main__.frob": {
+      "decls": {
+        "$a.ilk.Art": 0,
+        "$a.ilk.rate": 0,
+        "_ilks.ilk.Art": 1,
+        "_ilks.ilk.rate": 1
+      },
+      "logical_variables": {
+        "$a": "(ilk: __main__.Ilk)"
+      },
+      "post": {
+        "sexpr": [
+          "true"
+        ],
+        "source": []
+      },
+      "pre": {
+        "sexpr": [
+          "(let ((a!1 (= $a.ilk.Art (_ilks.ilk.Art (memory (+ fp (- 4))))))",
+          "      (a!2 (= $a.ilk.rate (_ilks.ilk.rate (memory (+ fp (- 4)))))))",
+          "  (and a!1 a!2))"
+        ],
+        "source": [
+          "$a == _ilks(i)"
+        ]
+      },
+      "storage_update": {
+        "__main__._ilks.ilk.Art": [
+          {
+            "arguments": [
+              [
+                "(memory (+ fp (- 4)))"
+              ]
+            ],
+            "source": "_ilks(i=i).ilk.Art := $a.ilk.Art + x",
+            "value": [
+              "(+ $a.ilk.Art (memory (+ fp (- 3))))"
+            ]
+          }
+        ]
+      }
+    },
+    "__main__.frob2": {
+      "decls": {
+        "$a.Art": 0,
+        "$a.rate": 0,
+        "_ilks.ilk.Art": 1,
+        "_ilks.ilk.rate": 1
+      },
+      "logical_variables": {
+        "$a": "__main__.Ilk"
+      },
+      "post": {
+        "sexpr": [
+          "true"
+        ],
+        "source": []
+      },
+      "pre": {
+        "sexpr": [
+          "(let ((a!1 (= $a.Art (_ilks.ilk.Art (memory (+ fp (- 4))))))",
+          "      (a!2 (= $a.rate (_ilks.ilk.rate (memory (+ fp (- 4)))))))",
+          "  (and a!1 a!2))"
+        ],
+        "source": [
+          "$a == _ilks(i).ilk"
+        ]
+      },
+      "storage_update": {
+        "__main__._ilks.ilk.Art": [
+          {
+            "arguments": [
+              [
+                "(memory (+ fp (- 4)))"
+              ]
+            ],
+            "source": "_ilks(i=i).ilk.Art := $a.Art + x",
+            "value": [
+              "(+ $a.Art (memory (+ fp (- 3))))"
+            ]
+          }
+        ]
+      }
+    },
+    "__main__.frob3": {
+      "decls": {},
+      "logical_variables": {},
+      "post": {
+        "sexpr": [
+          "true"
+        ],
+        "source": []
+      },
+      "pre": {
+        "sexpr": [
+          "true"
+        ],
+        "source": []
+      },
+      "storage_update": {
+        "__main__.state.res.a": [
+          {
+            "arguments": [
+              [
+                "0"
+              ]
+            ],
+            "source": "state(0).res.a := 1",
+            "value": [
+              "1"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "storage_vars": {
+    "__main__._ilks.ilk.Art": 1,
+    "__main__._ilks.ilk.rate": 1,
+    "__main__.state.res.a": 1,
+    "__main__.state.res.b": 1
+  }
+}

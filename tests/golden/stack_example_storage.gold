@@ -19,25 +19,25 @@
         "source": []
       },
       "storage_update": {
-        "__main__.stack": [
+        "__main__.stack.value": [
           {
             "arguments": [
               [
-                "(+ __main__.stack_ptr (- 1))"
+                "(+ stack_ptr.i (- 1))"
               ]
             ],
-            "source": "stack(i=stack_ptr() - 1) := 11",
+            "source": "stack(i=stack_ptr().i - 1).value := 11",
             "value": [
               "11"
             ]
           }
         ],
-        "__main__.stack_ptr": [
+        "__main__.stack_ptr.i": [
           {
             "arguments": [],
-            "source": "stack_ptr() := stack_ptr() + 1",
+            "source": "stack_ptr().i := stack_ptr().i + 1",
             "value": [
-              "(+ __main__.stack_ptr 1)"
+              "(+ stack_ptr.i 1)"
             ]
           }
         ]
@@ -45,7 +45,7 @@
     },
     "__main__.stack_add": {
       "decls": {
-        "__main__.stack_ptr": 0
+        "stack_ptr.i": 0
       },
       "logical_variables": {},
       "post": {
@@ -56,33 +56,32 @@
       },
       "pre": {
         "sexpr": [
-          "(<= 2 __main__.stack_ptr)"
+          "(<= 2 stack_ptr.i)"
         ],
         "source": [
-          "stack_ptr() >= 2"
+          "stack_ptr().i >= 2"
         ]
       },
       "storage_update": {
-        "__main__.stack": [
+        "__main__.stack.value": [
           {
             "arguments": [
               [
-                "(+ __main__.stack_ptr (- 1))"
+                "(+ stack_ptr.i (- 1))"
               ]
             ],
-            "source": "stack(i=stack_ptr() - 1) := stack(stack_ptr() - 2) + stack(stack_ptr() - 1)",
+            "source": "stack(i=stack_ptr().i - 1).value := stack(stack_ptr().i - 2).value + stack(stack_ptr().i - 1).value",
             "value": [
-              "(+ (__main__.stack (+ __main__.stack_ptr (- 2)))",
-              "   (__main__.stack (+ __main__.stack_ptr (- 1))))"
+              "(+ (stack.value (+ stack_ptr.i (- 2))) (stack.value (+ stack_ptr.i (- 1))))"
             ]
           }
         ],
-        "__main__.stack_ptr": [
+        "__main__.stack_ptr.i": [
           {
             "arguments": [],
-            "source": "stack_ptr() := stack_ptr() - 1",
+            "source": "stack_ptr().i := stack_ptr().i - 1",
             "value": [
-              "(+ __main__.stack_ptr (- 1))"
+              "(+ stack_ptr.i (- 1))"
             ]
           }
         ]
@@ -104,25 +103,25 @@
         "source": []
       },
       "storage_update": {
-        "__main__.stack": [
+        "__main__.stack.value": [
           {
             "arguments": [
               [
-                "(+ __main__.stack_ptr (- 1))"
+                "(+ stack_ptr.i (- 1))"
               ]
             ],
-            "source": "stack(i=stack_ptr() - 1) := v",
+            "source": "stack(i=stack_ptr().i - 1).value := v",
             "value": [
               "(memory (+ fp (- 3)))"
             ]
           }
         ],
-        "__main__.stack_ptr": [
+        "__main__.stack_ptr.i": [
           {
             "arguments": [],
-            "source": "stack_ptr() := stack_ptr() + 1",
+            "source": "stack_ptr().i := stack_ptr().i + 1",
             "value": [
-              "(+ __main__.stack_ptr 1)"
+              "(+ stack_ptr.i 1)"
             ]
           }
         ]
@@ -130,31 +129,31 @@
     },
     "__main__.stack_top": {
       "decls": {
-        "__main__.stack": 1,
-        "__main__.stack_ptr": 0
+        "stack.value": 1,
+        "stack_ptr.i": 0
       },
       "logical_variables": {},
       "post": {
         "sexpr": [
-          "(= (memory (+ ap (- 1))) (__main__.stack (+ __main__.stack_ptr (- 1))))"
+          "(= (memory (+ ap (- 1))) (stack.value (+ stack_ptr.i (- 1))))"
         ],
         "source": [
-          "$Return.res == stack(stack_ptr() - 1)"
+          "$Return.res == stack(stack_ptr().i - 1).value"
         ]
       },
       "pre": {
         "sexpr": [
-          "(<= 1 __main__.stack_ptr)"
+          "(<= 1 stack_ptr.i)"
         ],
         "source": [
-          "stack_ptr() >= 1"
+          "stack_ptr().i >= 1"
         ]
       },
       "storage_update": {}
     }
   },
   "storage_vars": {
-    "__main__.stack": 1,
-    "__main__.stack_ptr": 0
+    "__main__.stack.value": 1,
+    "__main__.stack_ptr.i": 0
   }
 }
