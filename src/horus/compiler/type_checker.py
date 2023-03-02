@@ -92,7 +92,10 @@ class HorusTypeChecker(TypeSystemVisitor):
     def visit_ExprLogicalIdentifier(
         self, expr: ExprLogicalIdentifier
     ) -> tuple[ExprLogicalIdentifier, CairoType]:
-        return (expr, self.logical_identifiers[expr.name])
+        try:
+            return (expr, self.logical_identifiers[expr.name])
+        except KeyError:
+            raise MissingIdentifierError(expr.name)
 
     def visit_ExprDot(self, expr: ExprDot):
         inner_expr, inner_type = self.visit(expr.expr)
